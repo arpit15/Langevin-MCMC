@@ -132,6 +132,10 @@ static void HandleHitLight(const int camDepth,
     const Vector3 &throughput = pathState.throughput;
     const Float lastBsdfPdf = pathState.lastBsdfPdf;
 
+    // std::cout << "======" << std::endl;
+    if (!std::isfinite(pathState.ssJacobian)) 
+        std::cout << "Problem in HandleHitLight" << std::endl;
+
     LightPrimID lPrimID;
     Vector3 emission;
     Float directPdf;
@@ -144,6 +148,10 @@ static void HandleHitLight(const int camDepth,
                     emission,
                     directPdf,
                     emissionPdf);
+
+    // std::cout << "emission : " << emission
+    //             << ", pdf : " << emissionPdf
+    //             << ". directPdf : " << directPdf << std::endl;
 
     if (emission.sum() > Float(0.0)) {
         if (hitSurface) {
@@ -165,6 +173,9 @@ static void HandleHitLight(const int camDepth,
             }
             const Float lensScore =
                 camDepth >= 2 ? Luminance(pathState.lensThroughput) : Float(0.0);
+
+            // std::cout << "pathState jac : " << pathState.ssJacobian
+            //         << ", score : " << score << std::endl;
             assert(std::isfinite(score * pathState.ssJacobian));
             assert(std::isfinite(lensScore));
             contribs.emplace_back(SubpathContrib{
@@ -299,6 +310,8 @@ static bool BSDFSampling(const int camDepth,
                          UniPathState &pathState,
                          SurfaceVertex &surfVertex,
                          Vector3 &bsdfContrib) {
+
+    // std::cout << "BSDFSampling - jac : " << pathState.ssJacobian << std::endl;           
     const ShapeInst &shapeInst = surfVertex.shapeInst;
     const BSDF *bsdf = shapeInst.obj->bsdf.get();
     const Vector3 &wi = pathState.wi;
@@ -312,6 +325,8 @@ static bool BSDFSampling(const int camDepth,
     surfVertex.useAbsoluteParam =
         BoolToFloat(bsdf->Roughness(shapeInst.st, surfVertex.bsdfDiscrete) > roughnessThreshold);
     if (!perturb || surfVertex.useAbsoluteParam == FFALSE) {
+        // std::cout << "BSDF S - jac : " << pathState.ssJacobian << std::endl;
+        
         if (!bsdf->Sample(wi,
                           isect.shadingNormal,
                           shapeInst.st,
@@ -322,13 +337,26 @@ static bool BSDFSampling(const int camDepth,
                           cosWo,
                           bsdfPdf,
                           bsdfPdfRev)) {
+            // std::cout << bsdf->GetBSDFTypeString() << " Sampling failed!" << std::endl;
             return false;
         }
+
+        // std::cout << "BSDF S + jac : " << pathState.ssJacobian << std::endl;
+
         if (surfVertex.useAbsoluteParam == FTRUE) {
             Float jacobian;
+
             surfVertex.bsdfRndParam = ToSphericalCoord(ray.dir, jacobian);
+            // if (!std::isfinite(jacobian))
+            //     std::cout << "BSDF Sampling wi : " << wi 
+            //             << "n : " << isect.shadingNormal 
+            //         << "wo : " << ray.dir << std::endl;
+            
             pathState.lcJacobian = inverse(jacobian);
+            // std::cout << "jac : " << jacobian <<  ", bsdfPdf : " << bsdfPdf << std::endl;
             jacobian *= bsdfPdf;
+            // if(!std::isfinite(jacobian)) 
+            // std::cout << "bsdfPdf : " << bsdfPdf << std::endl;
             pathState.ssJacobian *= jacobian;
         } else {
             pathState.lcJacobian = bsdfPdf;
@@ -336,6 +364,7 @@ static bool BSDFSampling(const int camDepth,
     } else {
         Float jacobian;
         ray.dir = SampleSphere(surfVertex.bsdfRndParam, jacobian);
+        std::cout << "bsdf type : " << bsdf->GetBSDFTypeString() << std::endl;
         bsdf->Evaluate(wi,
                        isect.shadingNormal,
                        ray.dir,
@@ -381,6 +410,8 @@ static bool BSDFSampling(const int camDepth,
 
     throughput = throughput.cwiseProduct(bsdfContrib);
     ray.org = isect.position;
+
+    // std::cout << "BSDFSampling + jac : " << pathState.ssJacobian << std::endl; 
     return true;
 }
 
@@ -427,7 +458,9 @@ void GeneratePath(const Scene *scene,
     UniPathState pathState;
     Init(pathState);
     SamplePrimary(camera, screenPos, time, pathState.raySeg);
+    // std::cout << "GenPath" << std::endl;
     for (int camDepth = 0;; camDepth++) {
+        // std::cout << "start camDepth : " << camDepth << ", jac : " << pathState.ssJacobian << std::endl;
         path.camSurfaceVertex.push_back(SurfaceVertex());
         SurfaceVertex &surfVertex = path.camSurfaceVertex.back();
         bool hitSurface =
@@ -454,9 +487,12 @@ void GeneratePath(const Scene *scene,
                     const Float invDist = sqrt(invDistSq);
                     dirToPrev *= invDist;
                     // Correct the jacobian since we've changed the sampling method
+                    // std::cout << "NEE d:" << camDepth << std::endl;
+                    // std::cout << "before jac : " << pathState.ssJacobian << std::endl;
                     pathState.ssJacobian *=
                         fabs(Dot(dirToPrev, pathState.isect.shadingNormal) * invDistSq) *
                         (pathState.lcJacobian / surfVertex.shapeInst.obj->SamplePdf());
+                    // std::cout << "after jac : " << pathState.ssJacobian << std::endl;
                 }
                 HandleHitLight(camDepth,
                                scene,
@@ -467,6 +503,7 @@ void GeneratePath(const Scene *scene,
                                screenPos,
                                path.envLightInst,
                                contribs);
+                // std::cout << "After HitLight camDepth : " << camDepth << ", jac : " << pathState.ssJacobian << std::endl;
                 // Assume lights have zero reflectance, makes light coordinates sampling easier to
                 // handle
                 return;
@@ -493,6 +530,7 @@ void GeneratePath(const Scene *scene,
 
         pathState.wi = -pathState.raySeg.ray.dir;
 
+        // std::cout << "Direct - camDepth : " << camDepth << ", jac : " << pathState.ssJacobian << std::endl;
         if (camDepth + 2 >= minDepth) {
             Float directLightPickProb = Float(1.0);
             DirectLightingInit(scene, surfVertex, directLightPickProb, rng);
@@ -505,16 +543,23 @@ void GeneratePath(const Scene *scene,
                            true,
                            surfVertex,
                            contribs);
+            // std::cout << "Direct + camDepth : " << camDepth << ", jac : " << pathState.ssJacobian << std::endl;
+        
         }
 
         surfVertex.bsdfRndParam = Vector2(uniDist(rng), uniDist(rng));
 
         Vector3 bsdfContrib;
 
+        // std::cout << "BSDF - camDepth : " << camDepth << ", jac : " << pathState.ssJacobian << std::endl;
+        
         if (!BSDFSampling(
                 camDepth, scene->options->roughnessThreshold, pathState, surfVertex, bsdfContrib)) {
             break;
         }
+
+        // std::cout << "BSDF + camDepth : " << camDepth << ", jac : " << pathState.ssJacobian << std::endl;
+        
 
         if (!RussianRoulette(
                 camDepth, bsdfContrib, surfVertex.rrWeight, pathState.throughput, rng)) {

@@ -47,7 +47,7 @@ void MLT(const Scene *scene, const std::shared_ptr<const PathFuncLib> pathFuncLi
     const Float normalization = avgScore;
 
     ProgressReporter reporter(totalSamples);
-    const int reportInterval = 16384;
+    const int reportInterval = 1000;
     int intervalImgId = 1;
 
     GlobalCache globalCache; 
@@ -89,6 +89,7 @@ void MLT(const Scene *scene, const std::shared_ptr<const PathFuncLib> pathFuncLi
         chain.globalCache = &globalCache;
         chain.ss = scene->options->malaStepsize;
         for (int sampleIdx = 0; sampleIdx < numSamplesThisChain; sampleIdx++) {
+            std::cout << "thread[" << chainId << "] mutationCtr[" << sampleIdx << "]" << std::endl;
             Float a = Float(1.0);
             bool isLargeStep = false;
             // In online exploration stage, use a smaller largestep prob to ensure MALA chain learns better pc. matrix
@@ -169,6 +170,7 @@ void MLT(const Scene *scene, const std::shared_ptr<const PathFuncLib> pathFuncLi
                 #endif 
             }
             if (sampleIdx > 0 && (sampleIdx % reportInterval == 0)) {
+                std::cout << "Reporting!" << std::endl;
                 reporter.Update(reportInterval);
                 const int reportIntervalSpp = scene->options->reportIntervalSpp;
                 if (threadIndex == 0 && reportIntervalSpp > 0) {

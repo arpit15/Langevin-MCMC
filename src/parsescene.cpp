@@ -376,6 +376,7 @@ std::shared_ptr<const BSDF> ParseBSDF(pugi::xml_node node,
         }
         return std::make_shared<Phong>(twoSided, diffuseReflectance, specularReflectance, exponent);
     } else if (type == "roughdielectric") {
+        // default params
         std::shared_ptr<const TextureRGB> specularReflectance =
             std::make_shared<const ConstantTextureRGB>(Vector3(1.0, 1.0, 1.0));
         std::shared_ptr<const TextureRGB> specularTransmittance =
@@ -384,6 +385,7 @@ std::shared_ptr<const BSDF> ParseBSDF(pugi::xml_node node,
         Float extIOR = 1.000277;
         Vector1 v(0.1);
         std::shared_ptr<const Texture1D> alpha = std::make_shared<const ConstantTexture1D>(v);
+
         for (auto child : node.children()) {
             std::string name = child.attribute("name").value();
             if (name == "intIOR") {
@@ -403,19 +405,22 @@ std::shared_ptr<const BSDF> ParseBSDF(pugi::xml_node node,
         return std::make_shared<RoughDielectric>(
             twoSided, specularReflectance, specularTransmittance, intIOR, extIOR, alpha);
     } else if (type == "roughconductor") {
+        // default params
         std::shared_ptr<const TextureRGB> specularReflectance =
             std::make_shared<const ConstantTextureRGB>(Vector3(1.0, 1.0, 1.0));
-        std::shared_ptr<const TextureRGB> specularTransmittance =
-            std::make_shared<const ConstantTextureRGB>(Vector3(1.0, 1.0, 1.0));
+        
         Float intIOR = 1.5046;
         Float extIOR = 1.000277;
         Vector1 v(0.1);
         std::shared_ptr<const Texture1D> alpha = std::make_shared<const ConstantTexture1D>(v);
+
+        std::cout << "parsing roughconductor" << std::endl;
         for (auto child : node.children()) {
             std::string name = child.attribute("name").value();
-            if (name == "intIOR") {
+            // std::cout << "name : " << name << std::endl;
+            if (name == "eta") {
                 intIOR = std::stof(child.attribute("value").value());
-            } else if (name == "extIOR") {
+            } else if (name == "extEta") {
                 extIOR = std::stof(child.attribute("value").value());
             } else if (name == "alpha") {
                 alpha = Parse1DMap(child, textureMap);
@@ -424,6 +429,11 @@ std::shared_ptr<const BSDF> ParseBSDF(pugi::xml_node node,
                 specularReflectance = Parse3DMap(child, textureMap);
             }
         }
+
+        std::cout << "RoughConductor [" << std::endl
+                    << "eta : " << intIOR << std::endl
+                    << "extIOR : " << extIOR << std::endl
+                    << "alpha : " << alpha->Avg() << std::endl;
         return std::make_shared<RoughConductor>(
             twoSided, specularReflectance, intIOR, extIOR, alpha);
     } else if (type == "twosided") {

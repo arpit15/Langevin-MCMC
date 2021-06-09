@@ -25,34 +25,34 @@ void Evaluate(const RoughConductor *bsdf,
               Float &cosWo,
               Float &pdf,
               Float &revPdf) {
-    Float cosWi = Dot(wi, normal);
+    
+    // Init
     contrib.setZero();
-    cosWo = Float(0.0);
     pdf = revPdf = Float(0.0);
-    if (fabs(cosWi) < c_CosEpsilon) {
-        return;
-    }
+
+    Float cosWi = Dot(wi, normal);
     cosWo = Dot(wo, normal);
-    if (fabs(cosWo) < c_CosEpsilon) {
+    
+    if ( (fabs(cosWi) < c_CosEpsilon) || (fabs(cosWo) < c_CosEpsilon) ||
+        ( cosWi < 0.f ) || (cosWo < 0.f)) {
         return;
     }
+
     Float eta_ = bsdf->eta;
     // reflection half-vector
-    Vector3 H;
-    H = Normalize(Vector3(wi + wo));
+    Vector3 H = Normalize(Vector3(wi + wo));
 
     Float cosHWi = Dot(wi, H);
     Float cosHWo = Dot(wo, H);
+
     if (fabs(cosHWi) < c_CosEpsilon || fabs(cosHWo) < c_CosEpsilon) {
         return;
     }
-    contrib = Vector3::Zero();
 
     // Geometry term
-    if (cosHWi * cosWi <= Float(0.0)) {
-        return;
-    }
-    if (cosHWo * cosWo <= Float(0.0)) {
+    if ( ( cosHWi * cosWi <= Float(0.0) ) || 
+            ( cosHWo * cosWo <= Float(0.0) )    
+        ) {
         return;
     }
 
@@ -62,6 +62,7 @@ void Evaluate(const RoughConductor *bsdf,
 
     Vector3 localH = Vector3(Dot(b0, H), Dot(b1, H), Dot(normal, H));
     Float alp = bsdf->alpha->Eval(st)[0];
+    
     Float D = BeckmennDistributionTerm(localH, alp, alp);
     if (D <= Float(0.0)) {
         return;
@@ -70,12 +71,13 @@ void Evaluate(const RoughConductor *bsdf,
     Float revCosHWi = cosHWo;
     Float revCosHWo = cosHWi;
 
-    Float F = FresnelConductorExact(cosHWi, bsdf->eta);
+    Float F = FresnelConductorExact(cosHWi, eta_);
 
     Float aCosWi = fabs(cosWi);
     Float aCosWo = fabs(cosWo);
 
     Float G = BeckmennGeometryTerm(alp, aCosWi, aCosWo);
+
     Float scaledAlpha = alp * (Float(1.2) - Float(0.2) * sqrt(aCosWi));
     Float scaledD = BeckmennDistributionTerm(localH, scaledAlpha, scaledAlpha);
     Float prob = localH[2] * scaledD;
@@ -133,7 +135,7 @@ bool Sample(const RoughConductor *bsdf,
             Float &revPdf) {
 
     Float cosWi = Dot(wi, normal);
-    if (fabs(cosWi) < c_CosEpsilon) {
+    if ( (fabs(cosWi) < c_CosEpsilon) || cosWi < 0.f) {
         return false;
     }
     Float alp = bsdf->alpha->Eval(st)[0];
@@ -168,13 +170,17 @@ bool Sample(const RoughConductor *bsdf,
     Float rev_dwh_dwo = inverse(Float(4.0) * revCosHWo);
     cosWo = Dot(wo, normal);
     
-    if (fabs(cosHWo) < c_CosEpsilon) {
+    if (fabs(cosWo) < c_CosEpsilon) {
         return false;
     }
 
     Float revScaledAlp = alp * (Float(1.2) - Float(0.2) * sqrt(fabs(cosWo)));
     Float revD = BeckmennDistributionTerm(localH, revScaledAlp, revScaledAlp);
     revPdf = fabs(F * revD * localH[2] * rev_dwh_dwo);
+
+    if (fabs(cosHWo) < c_CosEpsilon) {
+        return false;
+    }
 
     if (pdf < Float(1e-20)) {
         return false;
@@ -247,15 +253,12 @@ void EvaluateRoughConductor(const bool adjoint,
 
     ADFloat cosWi = Dot(wi, normal);
     cosWo = Dot(wo, normal);
-    ADFloat side = cosWi * cosWo;
-    std::vector<CondExprCPtr> vH = CreateCondExprVec(3);
     
     ADVector3 H = Normalize(ADVector3(wi + wo));
 
     ADFloat cosHWi = Dot(wi, H);
     ADFloat cosHWo = Dot(wo, H);
-    contrib = ADVector3(Const<ADFloat>(0.0), Const<ADFloat>(0.0), Const<ADFloat>(0.0));
-
+   
     ADVector3 b0;
     ADVector3 b1;
     CoordinateSystem(normal, b0, b1);
@@ -282,6 +285,7 @@ void EvaluateRoughConductor(const bool adjoint,
     contrib = Ks * scalar;
     pdf = fabs(prob * F / (Float(4.f) * cosHWo));
     revPdf = fabs(revProb * F / (Float(4.0) * revCosHWo));
+
 }
 
 void SampleRoughConductor(const bool adjoint,
@@ -337,4 +341,5 @@ void SampleRoughConductor(const bool adjoint,
     ADFloat numerator = D * G * cosHWi;
     ADFloat denominator = mPdf * aCosWi;
     contrib = refl * fabs(numerator / denominator);
+
 }
