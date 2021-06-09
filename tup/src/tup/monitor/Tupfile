@@ -1,3 +1,0 @@
-include_rules
-
-: $(TUP_MONITOR).c |> !cc |>
