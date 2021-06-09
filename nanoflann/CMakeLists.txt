@@ -68,7 +68,7 @@ install(TARGETS nanoflann
 add_library(nanoflann::nanoflann ALIAS nanoflann)
 
 # Examples
-option(BUILD_EXAMPLES "Build examples" ON)
+option(BUILD_EXAMPLES "Build examples" OFF)
 if(BUILD_EXAMPLES)
 	add_subdirectory(examples)
 endif()
