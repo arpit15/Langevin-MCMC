@@ -33,6 +33,14 @@ struct DptOptions {
     bool largeStepMultiplexed = false;               // turned off by default
 };
 
+// std::ostream& operator<<(std::ostream& os, const DptOptions o) { 
+//   return os << "h2mc : " << o.h2mc << std::endl
+//             << "mala : " << o.mala << std::endl
+//             << "spp : " << o.spp << std::endl
+//             << "minDepth : " << o.minDepth << std::endl
+//             << "maxDepth : " << o.maxDepth << std::endl;
+// }
+
 inline std::string GetLibPath() {
     return std::string(getenv("DPT_LIBPATH"));
 }

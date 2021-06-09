@@ -12,9 +12,13 @@
 #include "envlight.h"
 #include "lambertian.h"
 #include "phong.h"
+// #include "blendbsdf.h"
+#include "roughconductor.h"
 #include "roughdielectric.h"
 #include "constanttexture.h"
 #include "bitmaptexture.h"
+
+#include "spotlight.h"
 
 #include <iostream>
 #include <regex>
@@ -398,12 +402,51 @@ std::shared_ptr<const BSDF> ParseBSDF(pugi::xml_node node,
         }
         return std::make_shared<RoughDielectric>(
             twoSided, specularReflectance, specularTransmittance, intIOR, extIOR, alpha);
+    } else if (type == "roughconductor") {
+        std::shared_ptr<const TextureRGB> specularReflectance =
+            std::make_shared<const ConstantTextureRGB>(Vector3(1.0, 1.0, 1.0));
+        std::shared_ptr<const TextureRGB> specularTransmittance =
+            std::make_shared<const ConstantTextureRGB>(Vector3(1.0, 1.0, 1.0));
+        Float intIOR = 1.5046;
+        Float extIOR = 1.000277;
+        Vector1 v(0.1);
+        std::shared_ptr<const Texture1D> alpha = std::make_shared<const ConstantTexture1D>(v);
+        for (auto child : node.children()) {
+            std::string name = child.attribute("name").value();
+            if (name == "intIOR") {
+                intIOR = std::stof(child.attribute("value").value());
+            } else if (name == "extIOR") {
+                extIOR = std::stof(child.attribute("value").value());
+            } else if (name == "alpha") {
+                alpha = Parse1DMap(child, textureMap);
+            } else if (name == "specularReflectance") {
+                std::string value = child.attribute("value").value();
+                specularReflectance = Parse3DMap(child, textureMap);
+            }
+        }
+        return std::make_shared<RoughConductor>(
+            twoSided, specularReflectance, intIOR, extIOR, alpha);
     } else if (type == "twosided") {
         for (auto child : node.children()) {
             if (std::string(child.name()) == "bsdf") {
                 return ParseBSDF(child, textureMap, true);
             }
         }
+    // } else if (type == "blendbsdf") {
+    //     std::shared_ptr<const TextureRGB> weight =
+    //         std::make_shared<const ConstantTextureRGB>(Vector3(1.0, 1.0, 1.0));
+    //     std::shared_ptr<const BSDF> bsdfA, bsdfB;
+    //     for (auto child : node.children()) {
+    //         std::string name = child.attribute("name").value();
+    //         std::string type = child.attribute("type").value();
+    //         if ( name == "weight") {
+    //             std::string value = child.attribute("value").value();
+    //             weight = Parse3DMap(child, textureMap);
+    //         } else if ( type == "bsdf" ) {
+    //             bsdfA = ParseBSDF(child, textureMap, false);
+    //         }
+    //     }
+    //     return std::make_shared<BlendBSDF>(twoSided, weight, bsdfA, bsdfB);
     } else {
         printf("BSDF: %s not found.\n", type.c_str());
     }
@@ -507,7 +550,56 @@ std::shared_ptr<const Light> ParseEmitter(pugi::xml_node node,
             }
         }
         return std::make_shared<PointLight>(Float(1.0), pos, intensity);
-    } else if (type == "envmap") {
+    } 
+    // else if (type == "ies") {
+    //     AnimatedTransform toWorld =
+    //         MakeAnimatedTransform(Matrix4x4::Identity(), Matrix4x4::Identity());
+    //     Vector3 intensity(Float(1.0), Float(1.0), Float(1.0));
+    //     std::string ies_fname("");
+    //     for (auto child : node.children()) {
+    //         std::string name = child.attribute("name").value();
+    //         if (name == "toWorld") {
+    //             if (std::string(child.name()) == "transform") {
+    //                 Matrix4x4 m = ParseTransform(child);
+    //                 toWorld = MakeAnimatedTransform(m, m);
+    //             } else if (std::string(child.name()) == "animation") {
+    //                 toWorld = ParseAnimatedTransform(child);
+    //             }
+    //         } else if (name == "intensity") {
+    //             intensity = ParseVector3(child.attribute("value").value());
+    //         } else if (name == "filename") {
+    //             ies_fname = child.attribute("value").value();
+    //         }
+    //     }
+
+    //     return std::make_shared<IESLight>(Float(1.0), toWorld, intensity, ies_fname);
+    // } 
+    else if (type == "spot") {
+        AnimatedTransform toWorld =
+            MakeAnimatedTransform(Matrix4x4::Identity(), Matrix4x4::Identity());
+        Vector3 intensity(Float(1.0), Float(1.0), Float(1.0));
+        Float cutoffAngle(20.f), beamWidth(cutoffAngle * 3.f/4.f);
+        for (auto child : node.children()) {
+            std::string name = child.attribute("name").value();
+            if (name == "toWorld") {
+                if (std::string(child.name()) == "transform") {
+                    Matrix4x4 m = ParseTransform(child);
+                    toWorld = MakeAnimatedTransform(m, m);
+                } else if (std::string(child.name()) == "animation") {
+                    toWorld = ParseAnimatedTransform(child);
+                }
+            } else if (name == "intensity") {
+                intensity = ParseVector3(child.attribute("value").value());
+            } else if (name == "cutoffAngle") {
+                cutoffAngle = std::stof(child.attribute("value").value());
+            } else if (name == "beamWidth") {
+                beamWidth = std::stof(child.attribute("value").value());
+            }
+        }
+
+        return std::make_shared<SpotLight>(Float(1.0), toWorld, intensity, cutoffAngle, beamWidth);
+    } 
+    else if (type == "envmap") {
         std::string filename = "";
         AnimatedTransform toWorld =
             MakeAnimatedTransform(Matrix4x4::Identity(), Matrix4x4::Identity());
@@ -618,6 +710,9 @@ std::unique_ptr<Scene> ParseScene(pugi::xml_node node) {
             textureMap[id] = ParseTexture(child);
         } else if (name == "dpt") {
             options = ParseDptOptions(child);
+            std::cout << 
+                "spp : " << options->spp << std::endl <<
+                "maxDepth : " << options->maxDepth << std::endl;
         }
     }
     return std::unique_ptr<Scene>(

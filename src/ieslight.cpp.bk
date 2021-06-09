@@ -1,0 +1,164 @@
+#include "ieslight.h"
+#include "utils.h"
+#include "sampling.h"
+#include "animatedtransform.h"
+
+// how do to serialize texture
+int GetIESLightSerializedSize() {
+    return 1 +  // type
+           16 +     // toWorld
+           16 +     // toLight
+           3 +  // emission
+           91*181*3;  // ies profile
+
+}
+
+IESLight::IESLight(const Float &samplingWeight, const AnimatedTransform &toWorld, const Vector3 &emission, const std::string fname)
+    : Light(samplingWeight), 
+    toWorld(toWorld), 
+    toLight(Invert(toWorld)), 
+    emission(emission), 
+    iesProfile(fname) {
+}
+
+void IESLight::Serialize(const LightPrimID &lPrimID, Float *buffer) const {
+    buffer = ::Serialize((Float)LightType::IESLight, buffer);
+    buffer = ::Serialize(toWorld, buffer);
+    buffer = ::Serialize(toLight, buffer);
+    buffer = ::Serialize(emission, buffer);
+    ::Serialize(iesProfile, buffer);
+}
+
+Vector3 getIESVal(const Vector3 &local, const BitmapTextureRGB &iesProfile) {
+  Vector2 uv(
+            std::atan2(local[1], local[0]) * c_INVTWOPI,
+            std::acos(local[2]) * c_INVPI
+        );
+
+        if(uv[0]<0.f) uv[0] = 1.f+uv[0];
+
+  return iesProfile.Eval(uv);
+}
+
+template <typename FloatType>
+void _SampleDirectIESLight(const TAnimatedTransform<FloatType> &toLight, 
+                             const TVector3<FloatType> &emission,
+                             const TVector3<FloatType> &pos,
+                             const BitmapTextureRGB &iesProfile,
+                             FloatType &dist,
+                             TVector3<FloatType> &dirToLight,
+                             TVector3<FloatType> &lightContrib,
+                             FloatType &pdf) {
+    
+    Matrix4x4 trao = Interpolate(toLight, 0.f);
+
+    Vector3 lightPos = XformPoint(trao, Vector3(0.f));
+    dirToLight = lightPos - pos;
+    const FloatType distSq = LengthSquared(dirToLight);
+    pdf = distSq;
+    dist = sqrt(distSq);
+    dirToLight = dirToLight / dist;
+
+    
+    Vector3 local = XformVector(trao, -dirToLight);
+    lightContrib = emission * inverse(distSq) * getIESVal(local, iesProfile);
+}
+
+bool IESLight::SampleDirect(const BSphere & /*sceneSphere*/,
+                              const Vector3 &pos,
+                              const Vector3 & /*normal*/,
+                              const Vector2 /*rndParam*/,
+                              const Float /*time*/,
+                              LightPrimID &lPrimID,
+                              Vector3 &dirToLight,
+                              Float &dist,
+                              Vector3 &contrib,
+                              Float &cosAtLight,
+                              Float &directPdf,
+                              Float &emissionPdf) const {
+    _SampleDirectIESLight(toLight, emission, pos, iesProfile, dist, dirToLight, contrib, directPdf);
+    assert(dist > Float(0.0));
+    emissionPdf = c_INVFOURPI;
+    cosAtLight = Float(1.0);
+    lPrimID = 0;
+    return true;
+}
+
+void IESLight::Emit(const BSphere & /*sceneSphere*/,
+                      const Vector2 /*rndParamPos*/,
+                      const Vector2 rndParamDir,
+                      const Float /*time*/,
+                      LightPrimID & /*lPrimID*/,
+                      Ray &ray,
+                      Vector3 &emission,
+                      Float &cosAtLight,
+                      Float &emissionPdf,
+                      Float &directPdf) const {
+    
+    Matrix4x4 trao = Interpolate(toLight, 0.f);
+    Vector3 lightPos = XformPoint(trao, Vector3(0.f));
+
+    ray.org = lightPos;
+    ray.dir = SampleSphere(rndParamDir);
+
+    Vector3 local = ray.dir;
+
+    emission = this->emission * getIESVal(local, iesProfile);
+    emissionPdf = c_INVFOURPI;
+    cosAtLight = directPdf = Float(1.0);
+}
+
+void SampleDirectIESLight(const ADFloat *buffer,
+                            const ADBSphere & /*sceneSphere*/,
+                            const ADVector3 &pos,
+                            const ADVector3 & /*normal*/,
+                            const ADVector2 /*rndParam*/,
+                            const ADFloat /*time*/,
+                            const bool /*isStatic*/,
+                            ADVector3 &dirToLight,
+                            ADVector3 &lightContrib,
+                            ADFloat &cosAtLight,
+                            ADFloat &directPdf,
+                            ADFloat &emissionPdf) {
+    ADVector3 lightPos, emission;
+    ADAnimatedTransform toWorld, toLight;
+    buffer = Deserialize(buffer, toWorld);
+    buffer = Deserialize(buffer, toLight);
+    Deserialize(buffer, emission);
+    ADFloat dist;
+
+    ADFloat time = Const<ADFloat>(0.0);
+    ADMatrix4x4 trao = Interpolate(toLight, time);
+    lightPos = XformPoint(trao, ADVector3(0.f));
+    _SampleDirectIESLight(toLight, emission, pos, iesProfile, dist, dirToLight, lightContrib, directPdf);
+    emissionPdf = Const<ADFloat>(c_INVFOURPI);
+    cosAtLight = Const<ADFloat>(1.0);
+}
+
+void EmitIESLight(const ADFloat *buffer,
+                    const ADBSphere &sceneSphere,
+                    const ADVector2 rndParamPos,
+                    const ADVector2 rndParamDir,
+                    const ADFloat time,
+                    const bool /*isStatic*/,
+                    ADRay &ray,
+                    ADVector3 &emission,
+                    ADFloat &cosAtLight,
+                    ADFloat &emissionPdf,
+                    ADFloat &directPdf) {
+    ADVector3 lightPos, emission_;
+    ADAnimatedTransform toWorld, toLight;
+    buffer = Deserialize(buffer, toWorld);
+    buffer = Deserialize(buffer, toLight);
+    Deserialize(buffer, emission_);
+
+    ADFloat time = Const<ADFloat>(0.0);
+    ADMatrix4x4 trao = Interpolate(toLight, time);
+    lightPos = XformPoint(trao, ADVector3(0.f));
+    ray.org = lightPos;
+    ray.dir = SampleSphere(rndParamDir);
+    emission = emission_ * getIESVal(ray.dir, iesProfile);
+    emissionPdf = Const<ADFloat>(c_INVFOURPI);
+    cosAtLight = Const<ADFloat>(1.0);
+    directPdf = Const<ADFloat>(1.0);
+}

@@ -21,6 +21,28 @@ inline TVector3<FloatType> SampleSphere(const TVector2<FloatType> coord) {
     return SampleSphere(coord, jacobian);
 }
 
+template <typename FloatType>
+inline TVector3<FloatType> SampleCone(const TVector2<FloatType> coord, const FloatType cosCutoff, FloatType &jacobian) {
+    FloatType cosTheta = (1-coord[0]) + coord[0] * cosCutoff;
+    FloatType sinTheta = sqrt(1.0f - cosTheta * cosTheta);
+
+    FloatType sinPhi = sin(c_TWOPI * coord[1]),
+              cosPhi = cos(c_TWOPI * coord[1]);
+
+    TVector3<FloatType> dir(cosPhi * sinTheta,
+        sinPhi * sinTheta, cosTheta);
+    // jacobian = fabs(sinPhi);
+    jacobian = fabs(sinPhi) * c_TWOPI * c_PI;
+    return dir;
+}
+
+template <typename FloatType>
+inline TVector3<FloatType> SampleCone(const TVector2<FloatType> coord, const FloatType cosCutoff) {
+    FloatType jacobian;
+    return SampleCone(coord, cosCutoff, jacobian);
+}
+
+
 inline Float patan2(const Float y, const Float x) {
     if (y == Float(0.0) && x == Float(0.0)) {
         return Float(0.0);

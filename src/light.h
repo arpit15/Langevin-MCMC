@@ -4,7 +4,7 @@
 #include "bounds.h"
 #include "ray.h"
 
-enum class LightType { PointLight, AreaLight, EnvLight };
+enum class LightType { PointLight, SpotLight, AreaLight, EnvLight };
 
 int GetMaxLightSerializedSize();
 

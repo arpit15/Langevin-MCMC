@@ -3,7 +3,10 @@
 #include "commondef.h"
 #include <string>
 
-enum class BSDFType { Lambertian, Phong, RoughDielectric };
+enum class BSDFType { Lambertian, Phong, RoughDielectric, 
+                        RoughConductor,
+                        //  BlendBSDF 
+                         };
 
 int GetMaxBSDFSerializedSize();
 
@@ -59,8 +62,10 @@ struct BSDF {
             ret = "diffuse";
         else if (this->GetType() == BSDFType::RoughDielectric)
             ret = "glass";
-        else if (this->GetType() == BSDFType::Phong)
+        else if (this->GetType() == BSDFType::Phong || this->GetType() == BSDFType::RoughConductor)
             ret = "glossy";
+        // else if (this->GetType() == BSDFType::BlendBSDF)
+        //     ret = "unknown";
         else 
             ret = "unknown";
         return ret;

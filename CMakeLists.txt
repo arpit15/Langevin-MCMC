@@ -13,6 +13,11 @@ file(GLOB SRC_FILES
      "src/*.cpp"
 )
 
+# list(REMOVE_ITEM SRC_FILES
+# blendbsdf.cpp    
+# blendbsdf.h
+# )
+
 add_subdirectory(nanoflann)
 # add_subdirectory(oiio)
 

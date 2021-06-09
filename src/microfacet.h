@@ -163,6 +163,51 @@ inline ADFloat FresnelDielectricExt(const ADFloat cosThetaI_,
     return ret[0];
 }
 
+
+inline Float FresnelConductorExact(const Float cosThetaI_, const Float eta) {
+    Float cosThetaI2 = square(cosThetaI_),
+        sinThetaI2 = 1.f - cosThetaI2,
+        sinThetaI4 = sinThetaI2 * sinThetaI2;
+
+    Float temp1 = eta*eta - sinThetaI2,
+          a2pb2 = sqrt(temp1*temp1 + 4*eta*eta),
+          a     = sqrt(0.5f * (a2pb2 + temp1));
+
+    Float term1 = a2pb2 + cosThetaI2,
+          term2 = 2.f*a*cosThetaI_;
+
+    Float Rs2 = (term1 - term2) / (term1 + term2);
+
+    Float term3 = a2pb2*cosThetaI2 + sinThetaI4,
+          term4 = term2*sinThetaI2;
+
+    Float Rp2 = Rs2 * (term3 - term4) / (term3 + term4);
+
+    return 0.5f * (Rp2 + Rs2);
+}
+
+inline ADFloat FresnelConductorExact(const ADFloat cosThetaI_, const ADFloat eta) {
+    ADFloat cosThetaI2 = Float(1.f) * square(cosThetaI_),
+        sinThetaI2 = Float(1.f) - cosThetaI2,
+        sinThetaI4 = sinThetaI2 * sinThetaI2;
+
+    ADFloat temp1 = eta*eta - sinThetaI2,
+          a2pb2 = sqrt(temp1*temp1 + Float(4.f)*eta*eta),
+          a     = sqrt( Float(0.5f) * (a2pb2 + temp1));
+
+    ADFloat term1 = a2pb2 + cosThetaI2,
+          term2 = Float(2.f)*a*cosThetaI_;
+
+    ADFloat Rs2 = (term1 - term2) / (term1 + term2);
+
+    ADFloat term3 = a2pb2*cosThetaI2 + sinThetaI4,
+          term4 = term2*sinThetaI2;
+
+    ADFloat Rp2 = Rs2 * (term3 - term4) / (term3 + term4);
+
+    return Float(0.5f) * (Rp2 + Rs2);
+}
+
 template <typename FloatType>
 TVector3<FloatType> SampleMicronormal(const TVector2<FloatType> rndParam,
                                       const FloatType alpha,

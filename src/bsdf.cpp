@@ -1,13 +1,18 @@
 #include "bsdf.h"
 #include "lambertian.h"
+// #include "blendbsdf.h"
 #include "phong.h"
+#include "roughconductor.h"
 #include "roughdielectric.h"
 #include "utils.h"
 
 int GetMaxBSDFSerializedSize() {
     return std::max({GetLambertianSerializedSize(),
                      GetPhongSerializedSize(),
-                     GetRoughDielectricSerializedSize()});
+                     GetRoughDielectricSerializedSize(),
+                     GetRoughConductorSerializedSize(),
+                    //  GetBlendBSDFSerializedSize()
+                     });
 }
 
 const ADFloat *EvaluateBSDF(const bool adjoint,
@@ -37,6 +42,13 @@ const ADFloat *EvaluateBSDF(const bool adjoint,
         EvaluateRoughDielectric(adjoint, buffer, wi, normal, wo, st, contrib, cosWo, pdf, revPdf);
         SetCondOutput({contrib[0], contrib[1], contrib[2], cosWo, pdf, revPdf});
     }
+    BeginElseIf(Eq(type, (Float)BSDFType::RoughConductor));
+    {
+        ADVector3 contrib;
+        ADFloat cosWo, pdf, revPdf;
+        EvaluateRoughConductor(adjoint, buffer, wi, normal, wo, st, contrib, cosWo, pdf, revPdf);
+        SetCondOutput({contrib[0], contrib[1], contrib[2], cosWo, pdf, revPdf});
+    }
     BeginElseIf(Eq(type, (Float)BSDFType::Lambertian));
     {
         ADVector3 contrib;
@@ -44,6 +56,13 @@ const ADFloat *EvaluateBSDF(const bool adjoint,
         EvaluateLambertian(adjoint, buffer, wi, normal, wo, st, contrib, cosWo, pdf, revPdf);
         SetCondOutput({contrib[0], contrib[1], contrib[2], cosWo, pdf, revPdf});
     }
+    // BeginElseIf(Eq(type, (Float)BSDFType::BlendBSDF));
+    // {
+    //     ADVector3 contrib;
+    //     ADFloat cosWo, pdf, revPdf;
+    //     EvaluateBlendBSDF(adjoint, buffer, wi, normal, wo, st, contrib, cosWo, pdf, revPdf);
+    //     SetCondOutput({contrib[0], contrib[1], contrib[2], cosWo, pdf, revPdf});
+    // }
     BeginElse();
     {
         SetCondOutput({Const<ADFloat>(0.0),
@@ -122,6 +141,27 @@ const ADFloat *SampleBSDF(const bool adjoint,
         SetCondOutput(
             {wo[0], wo[1], wo[2], contrib[0], contrib[1], contrib[2], cosWo, pdf, revPdf});
     }
+    BeginElseIf(Eq(type, (Float)BSDFType::RoughConductor));
+    {
+        ADVector3 wo;
+        ADVector3 contrib;
+        ADFloat cosWo, pdf, revPdf;
+        SampleRoughConductor(adjoint,
+                              buffer,
+                              wi,
+                              normal,
+                              st,
+                              rndParam,
+                              uDiscrete,
+                              fixDiscrete,
+                              wo,
+                              contrib,
+                              cosWo,
+                              pdf,
+                              revPdf);
+        SetCondOutput(
+            {wo[0], wo[1], wo[2], contrib[0], contrib[1], contrib[2], cosWo, pdf, revPdf});
+    }
     BeginElseIf(Eq(type, (Float)BSDFType::Lambertian));
     {
         ADVector3 wo;
@@ -143,7 +183,27 @@ const ADFloat *SampleBSDF(const bool adjoint,
         SetCondOutput(
             {wo[0], wo[1], wo[2], contrib[0], contrib[1], contrib[2], cosWo, pdf, revPdf});
     }
-
+    // BeginElseIf(Eq(type, (Float)BSDFType::BlendBSDF));
+    // {
+    //     ADVector3 wo;
+    //     ADVector3 contrib;
+    //     ADFloat cosWo, pdf, revPdf;
+    //     SampleBlendBSDF(adjoint,
+    //                      buffer,
+    //                      wi,
+    //                      normal,
+    //                      st,
+    //                      rndParam,
+    //                      uDiscrete,
+    //                      fixDiscrete,
+    //                      wo,
+    //                      contrib,
+    //                      cosWo,
+    //                      pdf,
+    //                      revPdf);
+    //     SetCondOutput(
+    //         {wo[0], wo[1], wo[2], contrib[0], contrib[1], contrib[2], cosWo, pdf, revPdf});
+    // }
     BeginElse();
     {
         SetCondOutput({Const<ADFloat>(0.0),
