@@ -39,6 +39,7 @@ Float MALASmallStep::Mutate(const MLTState &mltState,
                             RNG &rng,
                             Chain *chain) 
 {
+    // std::cout << "-MALA mutate" << std::endl;
     const Scene *scene = mltState.scene;
     // Sometimes the derivatives are noisy so that the light paths
     // will "stuck" in some regions, we probabilistically switch to
@@ -201,6 +202,7 @@ Float MALASmallStep::Mutate(const MLTState &mltState,
                              &vGrad[0],
                              NULL);
                     if (!IsFinite(vGrad)) {
+                        std::cout << "OOPS!" << std::endl;
                         std::fill(vGrad.begin(), vGrad.end(), Float(0.0));
                     }
                     assert(IsFinite(vGrad));
@@ -274,5 +276,7 @@ Float MALASmallStep::Mutate(const MLTState &mltState,
     } else {
         a = Float(0.0);
     }
+
+    // std::cout << "+MALA mutate" << std::endl;
     return a;
 }

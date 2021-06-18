@@ -59,7 +59,31 @@ struct Path {
     // undefined for non subpath
     int camDepth;
     int lgtDepth;
+
+    // friend std::ostream& operator<<(std::ostream& os, const Path& p);
+
+    // Path operator=(const Path &p) {
+    //     std::cout << "camDepth:" << p.camDepth << ", lgtDepth:" << p.lgtDepth << std::endl;
+    //     time = p.time;
+    //     camVertex = p.camVertex;
+    //     camSurfaceVertex = p.camSurfaceVertex;
+    //     lgtVertex = p.lgtVertex;
+    //     lgtSurfaceVertex = p.lgtSurfaceVertex;
+    //     envLightInst = p.envLightInst;
+    //     lensVertexPos = p.lensVertexPos;
+    //     isSubpath = p.isSubpath;
+    //     camDepth = p.camDepth;
+    //     lgtDepth = p.lgtDepth;
+    // }
 };
+
+// std::ostream& operator<<(std::ostream& os, const Path& p)
+// {
+//     os << "t:" << p.time << std::endl
+//         << "camsurfvert:" << p.camSurfaceVertex.size() << std::endl
+//         << "lgtSurfaceVert:" << p.lgtSurfaceVertex.size() << std::endl;
+//     return os;
+// }
 
 struct SerializedSubpath {
     AlignedStdVector primary;

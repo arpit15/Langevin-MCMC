@@ -16,7 +16,9 @@ void RoughConductor::Serialize(const Vector2 st, Float *buffer) const {
 }
 
 template <bool adjoint>
-void Evaluate(const RoughConductor *bsdf,
+void Evaluate(
+                const bool twoSided,
+                const RoughConductor *bsdf,
               const Vector3 &wi,
               const Vector3 &normal,
               const Vector3 &wo,
@@ -32,6 +34,12 @@ void Evaluate(const RoughConductor *bsdf,
 
     Float cosWi = Dot(wi, normal);
     cosWo = Dot(wo, normal);
+
+    Vector3 normal_ = normal;
+    if (twoSided && cosWi < Float(0.0)) {
+        cosWi = -cosWi;
+        normal_ = -normal_;
+    }
     
     if ( (fabs(cosWi) < c_CosEpsilon) || (fabs(cosWo) < c_CosEpsilon) ||
         ( cosWi < 0.f ) || (cosWo < 0.f)) {
@@ -58,9 +66,9 @@ void Evaluate(const RoughConductor *bsdf,
 
     Vector3 b0;
     Vector3 b1;
-    CoordinateSystem(normal, b0, b1);
+    CoordinateSystem(normal_, b0, b1);
 
-    Vector3 localH = Vector3(Dot(b0, H), Dot(b1, H), Dot(normal, H));
+    Vector3 localH = Vector3(Dot(b0, H), Dot(b1, H), Dot(normal_, H));
     Float alp = bsdf->alpha->Eval(st)[0];
     
     Float D = BeckmennDistributionTerm(localH, alp, alp);
@@ -106,7 +114,10 @@ void RoughConductor::Evaluate(const Vector3 &wi,
                                Float &cosWo,
                                Float &pdf,
                                Float &revPdf) const {
-    ::Evaluate<false>(this, wi, normal, wo, st, contrib, cosWo, pdf, revPdf);
+    ::Evaluate<false>(twoSided, this, wi, normal, wo, st, contrib, cosWo, pdf, revPdf);
+
+    if (std::isnan(contrib.sum()))
+        std::cout << "contrib:" << contrib.transpose() << std::endl;
 }
 
 void RoughConductor::EvaluateAdjoint(const Vector3 &wi,
@@ -117,11 +128,16 @@ void RoughConductor::EvaluateAdjoint(const Vector3 &wi,
                                       Float &cosWo,
                                       Float &pdf,
                                       Float &revPdf) const {
-    ::Evaluate<true>(this, wi, normal, wo, st, contrib, cosWo, pdf, revPdf);
+    ::Evaluate<true>(twoSided, this, wi, normal, wo, st, contrib, cosWo, pdf, revPdf);
+
+    if (std::isnan(contrib.sum()))
+        std::cout << "Adjoint contrib:" << contrib.transpose() << std::endl;
 }
 
 template <bool adjoint>
-bool Sample(const RoughConductor *bsdf,
+bool Sample(
+            const bool twoSided,
+            const RoughConductor *bsdf,
             const Vector3 &wi,
             const Vector3 &normal,
             const Vector2 st,
@@ -135,6 +151,17 @@ bool Sample(const RoughConductor *bsdf,
             Float &revPdf) {
 
     Float cosWi = Dot(wi, normal);
+
+    Vector3 normal_ = normal;
+    if (cosWi < Float(0.0)) {
+        if (twoSided) {
+            cosWi = -cosWi;
+            normal_ = -normal_;
+        } else {
+            return false;
+        }
+    }
+    
     if ( (fabs(cosWi) < c_CosEpsilon) || cosWi < 0.f) {
         return false;
     }
@@ -145,8 +172,8 @@ bool Sample(const RoughConductor *bsdf,
     pdf = mPdf;
     Vector3 b0;
     Vector3 b1;
-    CoordinateSystem(normal, b0, b1);
-    Vector3 H = localH[0] * b0 + localH[1] * b1 + localH[2] * normal;
+    CoordinateSystem(normal_, b0, b1);
+    Vector3 H = localH[0] * b0 + localH[1] * b1 + localH[2] * normal_;
     Float cosHWi = Dot(wi, H);
     if (fabs(cosHWi) < c_CosEpsilon) {
         return false;
@@ -159,7 +186,7 @@ bool Sample(const RoughConductor *bsdf,
 
     wo = Reflect(wi, H);
     // side check
-    if (F <= Float(0.0) || Dot(normal, wo) * Dot(normal, wi) <= Float(0.0)) {
+    if (F <= Float(0.0) || Dot(normal_, wo) * Dot(normal_, wi) <= Float(0.0)) {
         return false;
     }
     refl = bsdf->Ks->Eval(st);
@@ -168,7 +195,7 @@ bool Sample(const RoughConductor *bsdf,
     
     Float revCosHWo = cosHWi;
     Float rev_dwh_dwo = inverse(Float(4.0) * revCosHWo);
-    cosWo = Dot(wo, normal);
+    cosWo = Dot(wo, normal_);
     
     if (fabs(cosWo) < c_CosEpsilon) {
         return false;
@@ -217,7 +244,10 @@ bool RoughConductor::Sample(const Vector3 &wi,
                              Float &pdf,
                              Float &revPdf) const {
     return ::Sample<false>(
-        this, wi, normal, st, rndParam, uDiscrete, wo, contrib, cosWo, pdf, revPdf);
+        twoSided, this, wi, normal, st, rndParam, uDiscrete, wo, contrib, cosWo, pdf, revPdf);
+
+    if (std::isnan(contrib.sum()))
+        std::cout << "Sample contrib:" << contrib.transpose() << std::endl;
 }
 
 bool RoughConductor::SampleAdjoint(const Vector3 &wi,
@@ -231,7 +261,10 @@ bool RoughConductor::SampleAdjoint(const Vector3 &wi,
                                     Float &pdf,
                                     Float &revPdf) const {
     return ::Sample<true>(
-        this, wi, normal, st, rndParam, uDiscrete, wo, contrib, cosWo, pdf, revPdf);
+        twoSided, this, wi, normal, st, rndParam, uDiscrete, wo, contrib, cosWo, pdf, revPdf);
+
+    if (std::isnan(contrib.sum()))
+        std::cout << "sample adjoint contrib:" << contrib.transpose() << std::endl;
 }
 
 void EvaluateRoughConductor(const bool adjoint,
@@ -251,8 +284,17 @@ void EvaluateRoughConductor(const bool adjoint,
     buffer = Deserialize(buffer, eta);
     buffer = Deserialize(buffer, alpha);
 
-    ADFloat cosWi = Dot(wi, normal);
-    cosWo = Dot(wo, normal);
+    ADFloat cosWi = Dot(normal, wi);
+    std::vector<CondExprCPtr> ret = CreateCondExprVec(4);
+    BeginIf(Gt(cosWi, Float(0.0)), ret);
+    { SetCondOutput({normal[0], normal[1], normal[2], cosWi}); }
+    BeginElse();
+    { SetCondOutput({-normal[0], -normal[1], -normal[2], -cosWi}); }
+    EndIf();
+    ADVector3 normal_(ret[0], ret[1], ret[2]);
+    cosWi = ret[3];
+
+    cosWo = Dot(wo, normal_);
     
     ADVector3 H = Normalize(ADVector3(wi + wo));
 
@@ -261,9 +303,9 @@ void EvaluateRoughConductor(const bool adjoint,
    
     ADVector3 b0;
     ADVector3 b1;
-    CoordinateSystem(normal, b0, b1);
+    CoordinateSystem(normal_, b0, b1);
 
-    ADVector3 localH = ADVector3(Dot(b0, H), Dot(b1, H), Dot(normal, H));
+    ADVector3 localH = ADVector3(Dot(b0, H), Dot(b1, H), Dot(normal_, H));
     ADFloat D = BeckmennDistributionTerm(localH, alpha, alpha);
     // This is confusing, but when computing reverse probability,
     // wo and wi are reversed
@@ -285,6 +327,8 @@ void EvaluateRoughConductor(const bool adjoint,
     contrib = Ks * scalar;
     pdf = fabs(prob * F / (Float(4.f) * cosHWo));
     revPdf = fabs(revProb * F / (Float(4.0) * revCosHWo));
+
+    // std::cout << "Eval AD contrib:" << contrib.transpose() << std::endl;
 
 }
 
@@ -308,14 +352,23 @@ void SampleRoughConductor(const bool adjoint,
     buffer = Deserialize(buffer, eta);
     buffer = Deserialize(buffer, alpha);
 
-    ADFloat cosWi = Dot(wi, normal);
+    ADFloat cosWi = Dot(normal, wi);
+    std::vector<CondExprCPtr> ret = CreateCondExprVec(4);
+    BeginIf(Gt(cosWi, Float(0.0)), ret);
+    { SetCondOutput({normal[0], normal[1], normal[2], cosWi}); }
+    BeginElse();
+    { SetCondOutput({-normal[0], -normal[1], -normal[2], -cosWi}); }
+    EndIf();
+    ADVector3 normal_(ret[0], ret[1], ret[2]);
+    cosWi = ret[3];
+
     ADFloat scaledAlpha = alpha * (Float(1.2) - Float(0.2) * sqrt(fabs(cosWi)));
     ADFloat mPdf;
     ADVector3 localH = SampleMicronormal(rndParam, scaledAlpha, mPdf);
     ADVector3 b0;
     ADVector3 b1;
-    CoordinateSystem(normal, b0, b1);
-    ADVector3 H = localH[0] * b0 + localH[1] * b1 + localH[2] * normal;
+    CoordinateSystem(normal_, b0, b1);
+    ADVector3 H = localH[0] * b0 + localH[1] * b1 + localH[2] * normal_;
     ADFloat cosHWi = Dot(wi, H);
 
     ADFloat F = FresnelConductorExact(cosHWi, eta);
@@ -329,7 +382,7 @@ void SampleRoughConductor(const bool adjoint,
     pdf = fabs(mPdf * F / (Float(4.0) * cosHWo));
     ADFloat revCosHWo = cosHWi;
     ADFloat rev_dwh_dwo = inverse(Float(4.0) * revCosHWo);
-    cosWo = Dot(wo, normal);
+    cosWo = Dot(wo, normal_);
     ADFloat revScaledAlp = alpha * (Float(1.2) - Float(0.2) * sqrt(fabs(cosWo)));
     ADFloat revD = BeckmennDistributionTerm(localH, revScaledAlp, revScaledAlp);
     revPdf = fabs(F * revD * localH[2] * rev_dwh_dwo);
@@ -341,5 +394,7 @@ void SampleRoughConductor(const bool adjoint,
     ADFloat numerator = D * G * cosHWi;
     ADFloat denominator = mPdf * aCosWi;
     contrib = refl * fabs(numerator / denominator);
+
+    // std::cout << "Sample AD contrib:" << contrib.transpose() << std::endl;
 
 }

@@ -58,7 +58,7 @@ struct BlendBSDF : public BSDF {
 
     Float Roughness(const Vector2 st, const Float /*uDiscrete*/) const override {
         // return std::max( bsdfA->Roughness(st), bsdfB->Roughness(st) );
-        return 0.1f;
+        return 1.0f;
     }
 
     std::shared_ptr<const TextureRGB> weight;

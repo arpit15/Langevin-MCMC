@@ -8,12 +8,12 @@
 int GetRoughConductorSerializedSize();
 
 struct RoughConductor : public BSDF {
-    RoughConductor(const bool /*twoSided*/,
+    RoughConductor(const bool twoSided,
                     const std::shared_ptr<const TextureRGB> &Ks,
                     const Float &intIOR,
                     const Float &extIOR,
                     const std::shared_ptr<const Texture1D> &alpha)
-        : Ks(Ks), eta(intIOR / extIOR), alpha(alpha) {
+        : twoSided(twoSided), Ks(Ks), eta(intIOR / extIOR), alpha(alpha) {
     }
 
     BSDFType GetType() const override {
@@ -58,9 +58,12 @@ struct RoughConductor : public BSDF {
                        Float &revPdf) const override;
 
     Float Roughness(const Vector2 st, const Float /*uDiscrete*/) const override {
-        return alpha->Eval(st)[0];
+        // return alpha->Eval(st)[0];
+        // similar to phong
+        return Float(1.0);
     }
 
+    const bool twoSided;
     std::shared_ptr<const TextureRGB> Ks;
     Float eta;
     std::shared_ptr<const Texture1D> alpha;

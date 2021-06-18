@@ -89,7 +89,7 @@ void MLT(const Scene *scene, const std::shared_ptr<const PathFuncLib> pathFuncLi
         chain.globalCache = &globalCache;
         chain.ss = scene->options->malaStepsize;
         for (int sampleIdx = 0; sampleIdx < numSamplesThisChain; sampleIdx++) {
-            std::cout << "thread[" << chainId << "] mutationCtr[" << sampleIdx << "]" << std::endl;
+            // std::cout << "-chainId[ " << chainId << "] mutationCtr[" << sampleIdx << "]" << std::endl;
             Float a = Float(1.0);
             bool isLargeStep = false;
             // In online exploration stage, use a smaller largestep prob to ensure MALA chain learns better pc. matrix
@@ -97,9 +97,13 @@ void MLT(const Scene *scene, const std::shared_ptr<const PathFuncLib> pathFuncLi
             Float lsScale = (sampleIdx > numSamplesThisChain * LS_RATIO) ? scene->options->largeStepProbScale : Float(1.0);
             if (!currentState.valid || uniDist(rng) < largeStepProb * lsScale) {
                 isLargeStep = true;
+                // std::cout << "-largeStep chainId[ " << chainId << "] mutationCtr[" << sampleIdx << "]" << std::endl;
                 a = largeStep->Mutate(mltState, normalization, currentState, proposalState, rng, &chain);
+                // std::cout << "+largeStep chainId[ " << chainId << "] mutationCtr[" << sampleIdx << "]" << std::endl;
             } else {
+                // std::cout << "-SmallStep chainId[ " << chainId << "] mutationCtr[" << sampleIdx << "]" << std::endl;
                 a = smallStep->Mutate(mltState, normalization, currentState, proposalState, rng, &chain);
+                // std::cout << "+SmallStep chainId[ " << chainId << "] mutationCtr[" << sampleIdx << "]" << std::endl;
             }
             if (currentState.valid && a < Float(1.0)) {
                 for (const auto splat : currentState.toSplat) {
@@ -151,12 +155,17 @@ void MLT(const Scene *scene, const std::shared_ptr<const PathFuncLib> pathFuncLi
                     if (adjacentReject > OUTLIER_WEAK_REJECT_CNT || 
                         (strongReject && adjacentReject > OUTLIER_STRONG_REJECT_CNT)) {
                         int _chainId = chainId, cnt = 0; 
+                        // std::cout << "-outlier rejection" << std::endl;
                         while (true) { 
                             currentState = initStates[_chainId];
+                            // std::cout << "%% outlier rejection path camDepth:" << initStates[_chainId].path.camDepth 
+                            //             << ", " << " lgtDepth:" << initStates[_chainId].path.lgtDepth 
+                            //             << ", lscore : " << currentState.spContrib.lsScore << std::endl; 
                             if (currentState.spContrib.lsScore < OUTLIER_RATIO_THRESHOLD * normalization)
                                 break;
                             _chainId = (_chainId + sampleIdx + cnt++) % numChains;
                         }
+                        // std::cout << "+outlier rejection" << std::endl;
                         currentState.valid = false;
                         currentState.gaussianInitialized = false; 
                         currentState.toSplat.clear();
@@ -170,7 +179,7 @@ void MLT(const Scene *scene, const std::shared_ptr<const PathFuncLib> pathFuncLi
                 #endif 
             }
             if (sampleIdx > 0 && (sampleIdx % reportInterval == 0)) {
-                std::cout << "Reporting!" << std::endl;
+                // std::cout << "Reporting!" << std::endl;
                 reporter.Update(reportInterval);
                 const int reportIntervalSpp = scene->options->reportIntervalSpp;
                 if (threadIndex == 0 && reportIntervalSpp > 0) {
@@ -193,10 +202,14 @@ void MLT(const Scene *scene, const std::shared_ptr<const PathFuncLib> pathFuncLi
                     }
                 }
             }
+
+            // std::cout << "+chainId[ " << chainId << "] mutationCtr[" << sampleIdx << "]" << std::endl;
         }
         reporter.Update(numSamplesThisChain % reportInterval);
+        
     }, numChains); 
-
+    
+    std::cout << "PARFOR done!" << std::endl;
     TerminateWorkerThreads();
     reporter.Done();
     Float elapsed = Tick(timer);

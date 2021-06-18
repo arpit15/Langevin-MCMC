@@ -430,10 +430,10 @@ std::shared_ptr<const BSDF> ParseBSDF(pugi::xml_node node,
             }
         }
 
-        std::cout << "RoughConductor [" << std::endl
-                    << "eta : " << intIOR << std::endl
-                    << "extIOR : " << extIOR << std::endl
-                    << "alpha : " << alpha->Avg() << std::endl;
+        // std::cout << "RoughConductor [" << std::endl
+        //             << "eta : " << intIOR << std::endl
+        //             << "extIOR : " << extIOR << std::endl
+        //             << "alpha : " << alpha->Avg() << std::endl;
         return std::make_shared<RoughConductor>(
             twoSided, specularReflectance, intIOR, extIOR, alpha);
     } else if (type == "twosided") {
