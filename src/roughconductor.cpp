@@ -33,16 +33,18 @@ void Evaluate(
     pdf = revPdf = Float(0.0);
 
     Float cosWi = Dot(wi, normal);
-    cosWo = Dot(wo, normal);
+    
 
     Vector3 normal_ = normal;
     if (twoSided && cosWi < Float(0.0)) {
         cosWi = -cosWi;
         normal_ = -normal_;
     }
+
+    cosWo = Dot(wo, normal_);
     
     if ( (fabs(cosWi) < c_CosEpsilon) || (fabs(cosWo) < c_CosEpsilon) ||
-        ( cosWi < 0.f ) || (cosWo < 0.f)) {
+        ( cosWi < c_CosEpsilon ) || (cosWo < c_CosEpsilon)) {
         return;
     }
 
@@ -53,7 +55,8 @@ void Evaluate(
     Float cosHWi = Dot(wi, H);
     Float cosHWo = Dot(wo, H);
 
-    if (fabs(cosHWi) < c_CosEpsilon || fabs(cosHWo) < c_CosEpsilon) {
+    if (fabs(cosHWi) < c_CosEpsilon || fabs(cosHWo) < c_CosEpsilon || 
+        cosHWi < c_CosEpsilon || cosHWo < c_CosEpsilon ) {
         return;
     }
 
