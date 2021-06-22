@@ -2,11 +2,17 @@
 #include "pointlight.h"
 #include "arealight.h"
 #include "envlight.h"
+// #include "deltalight.h"
+#include "collimatedlight.h"
 #include "utils.h"
 
 int GetMaxLightSerializedSize() {
     return std::max(
-        {GetPointLightSerializedSize(), GetAreaLightSerializedSize(), GetEnvLightSerializedSize()});
+        {GetPointLightSerializedSize(), GetAreaLightSerializedSize(), 
+            GetEnvLightSerializedSize()
+            // GetDeltaLightSerializedSize()
+            , GetCollimatedLightSerializedSize()
+            });
 }
 
 const ADFloat *SampleDirect(const ADFloat *buffer,
@@ -61,6 +67,35 @@ const ADFloat *SampleDirect(const ADFloat *buffer,
         ADFloat directPdf;
         ADFloat emissionPdf;
         SampleDirectAreaLight(buffer,
+                              sceneSphere,
+                              pos,
+                              normal,
+                              rndParam,
+                              time,
+                              isStatic,
+                              dirToLight,
+                              lightContrib,
+                              cosAtLight,
+                              directPdf,
+                              emissionPdf);
+        SetCondOutput({dirToLight[0],
+                       dirToLight[1],
+                       dirToLight[2],
+                       lightContrib[0],
+                       lightContrib[1],
+                       lightContrib[2],
+                       cosAtLight,
+                       directPdf,
+                       emissionPdf});
+    }
+    BeginElseIf(Eq(type, (Float)LightType::CollimatedLight));
+    {
+        ADVector3 dirToLight;
+        ADVector3 lightContrib;
+        ADFloat cosAtLight;
+        ADFloat directPdf;
+        ADFloat emissionPdf;
+        SampleDirectCollimatedLight(buffer,
                               sceneSphere,
                               pos,
                               normal,
@@ -157,6 +192,15 @@ const ADFloat *Emission(const ADFloat *buffer,
             buffer, sceneSphere, dirToLight, normalOnLight, time, emission, directPdf, emissionPdf);
         SetCondOutput({emission[0], emission[1], emission[2], directPdf, emissionPdf});
     }
+    BeginIf(Eq(type, (Float)LightType::CollimatedLight), ret);
+    {
+        ADVector3 emission;
+        ADFloat directPdf;
+        ADFloat emissionPdf;
+        EmissionCollimatedLight(
+            buffer, sceneSphere, dirToLight, normalOnLight, time, emission, directPdf, emissionPdf);
+        SetCondOutput({emission[0], emission[1], emission[2], directPdf, emissionPdf});
+    }
     BeginElseIf(Eq(type, (Float)LightType::EnvLight));
     {
         ADVector3 emission;
@@ -237,6 +281,37 @@ const ADFloat *Emit(const ADFloat *buffer,
         ADFloat emissionPdf;
         ADFloat directPdf;
         EmitAreaLight(buffer,
+                      sceneSphere,
+                      rndParamPos,
+                      rndParamDir,
+                      time,
+                      isStatic,
+                      ray,
+                      emission,
+                      cosAtLight,
+                      emissionPdf,
+                      directPdf);
+        SetCondOutput({ray.org[0],
+                       ray.org[1],
+                       ray.org[2],
+                       ray.dir[0],
+                       ray.dir[1],
+                       ray.dir[2],
+                       emission[0],
+                       emission[1],
+                       emission[2],
+                       cosAtLight,
+                       emissionPdf,
+                       directPdf});
+    }
+    BeginElseIf(Eq(type, (Float)LightType::CollimatedLight));
+    {
+        ADRay ray;
+        ADVector3 emission;
+        ADFloat cosAtLight;
+        ADFloat emissionPdf;
+        ADFloat directPdf;
+        EmitCollimatedLight(buffer,
                       sceneSphere,
                       rndParamPos,
                       rndParamDir,

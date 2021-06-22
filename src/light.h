@@ -4,7 +4,10 @@
 #include "bounds.h"
 #include "ray.h"
 
-enum class LightType { PointLight, SpotLight, AreaLight, EnvLight };
+enum class LightType { PointLight, SpotLight, AreaLight, EnvLight, 
+                // DeltaLight 
+                CollimatedLight
+                };
 
 int GetMaxLightSerializedSize();
 
@@ -20,6 +23,8 @@ struct Light {
     virtual LightPrimID SampleDiscrete(const Float uDiscrete) const {
         return INVALID_LPRIM_ID;
     }
+
+    // given hitPoint in scene find the direct contrib
     virtual bool SampleDirect(const BSphere &sceneSphere,
                               const Vector3 &pos,
                               const Vector3 &normal,
@@ -32,6 +37,9 @@ struct Light {
                               Float &cosAtLight,
                               Float &directPdf,
                               Float &emissionPdf) const = 0;
+
+    // find light contrib when directly hit using rayIntersect
+    // called from handlehitlight - get the emission along the sample direction and normal on light
     virtual void Emission(const BSphere &sceneSphere,
                           const Vector3 &dirToLight,
                           const Vector3 &normalOnLight,

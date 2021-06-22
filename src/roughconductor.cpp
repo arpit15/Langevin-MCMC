@@ -107,6 +107,11 @@ void Evaluate(
     pdf = fabs(prob * F / (Float(4.0) * cosHWo));
     revPdf = fabs(revProb * F / (Float(4.0) * revCosHWo));
     
+    // taken from phong.cpp
+    // Just for numerical stability
+    if (contrib.maxCoeff() < Float(1e-10)) {
+        contrib.setZero();
+    }
 }
 
 void RoughConductor::Evaluate(const Vector3 &wi,

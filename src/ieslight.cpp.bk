@@ -8,8 +8,8 @@ int GetIESLightSerializedSize() {
     return 1 +  // type
            16 +     // toWorld
            16 +     // toLight
-           3 +  // emission
-           91*181*3;  // ies profile
+           3;   // emission
+        //    91*181*3;  // ies profile
 
 }
 
@@ -26,7 +26,7 @@ void IESLight::Serialize(const LightPrimID &lPrimID, Float *buffer) const {
     buffer = ::Serialize(toWorld, buffer);
     buffer = ::Serialize(toLight, buffer);
     buffer = ::Serialize(emission, buffer);
-    ::Serialize(iesProfile, buffer);
+    // ::Serialize(iesProfile, buffer);
 }
 
 Vector3 getIESVal(const Vector3 &local, const BitmapTextureRGB &iesProfile) {
@@ -113,7 +113,7 @@ void SampleDirectIESLight(const ADFloat *buffer,
                             const ADVector3 &pos,
                             const ADVector3 & /*normal*/,
                             const ADVector2 /*rndParam*/,
-                            const ADFloat /*time*/,
+                            const ADFloat time,
                             const bool /*isStatic*/,
                             ADVector3 &dirToLight,
                             ADVector3 &lightContrib,
@@ -127,9 +127,8 @@ void SampleDirectIESLight(const ADFloat *buffer,
     Deserialize(buffer, emission);
     ADFloat dist;
 
-    ADFloat time = Const<ADFloat>(0.0);
-    ADMatrix4x4 trao = Interpolate(toLight, time);
-    lightPos = XformPoint(trao, ADVector3(0.f));
+    ADMatrix4x4 traoL = Interpolate(toLight, time);
+    lightPos = XformPoint(traoL, ADVector3(0.f));
     _SampleDirectIESLight(toLight, emission, pos, iesProfile, dist, dirToLight, lightContrib, directPdf);
     emissionPdf = Const<ADFloat>(c_INVFOURPI);
     cosAtLight = Const<ADFloat>(1.0);

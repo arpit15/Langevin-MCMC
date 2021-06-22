@@ -1183,7 +1183,7 @@ inline ExpressionCPtr pow(const float &expr0, const ExpressionCPtr &expr1) {
     return pow(Constant::Create(expr0), expr1);
 }
 
-inline ExpressionCPtr length3d(const ExpressionCPtr &x, const ExpressionCPtr &y) {
+inline ExpressionCPtr length2d(const ExpressionCPtr &x, const ExpressionCPtr &y) {
     if (x->IsConstant() && y->IsConstant()) {
         auto xVal = x->GetConstantVal();
         auto yVal = y->GetConstantVal();

@@ -137,6 +137,10 @@ inline FloatType DistanceSquared(const TVector3<FloatType> &v0, const TVector3<F
     return square(v0[0] - v1[0]) + square(v0[1] - v1[1]) + square(v0[2] - v1[2]);
 }
 
+inline Float length2d(const Float x, const Float y) {
+    return std::sqrt(x * x + y * y);
+}
+
 inline Float length3d(const Float x, const Float y, const Float z) {
     return std::sqrt(x * x + y * y + z * z);
 }
@@ -163,6 +167,11 @@ inline ADFloat Dot<ADFloat>(const TVector3<ADFloat> &v1, const TVector3<ADFloat>
 template <typename FloatType>
 inline FloatType Dot(const TVector4<FloatType> &v1, const TVector4<FloatType> &v2) {
     return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2] + v1[3] * v2[3];
+}
+
+template <typename FloatType>
+inline FloatType Length(const TVector2<FloatType> &v) {
+    return length2d(v[0], v[1]);
 }
 
 template <typename FloatType>

@@ -1,0 +1,227 @@
+#include "deltalight.h"
+#include "shape.h"
+#include "utils.h"
+#include "sampling.h"
+
+int GetDeltaLightSerializedSize() {
+    return 1 +                            // type
+           GetMaxShapeSerializedSize() +  // shape
+           3;                             // emission
+}
+
+DeltaLight::DeltaLight(const Float &samplingWeight, Shape *_shape, const Vector3 &emission)
+    : Light(samplingWeight), shape(_shape), emission(emission) {
+    _shape->SetAreaLight(this);
+}
+
+void DeltaLight::Serialize(const LightPrimID &lPrimID, Float *buffer) const {
+    buffer = ::Serialize((Float)LightType::DeltaLight, buffer);
+    shape->Serialize(lPrimID, buffer);
+    buffer += GetMaxShapeSerializedSize();
+    ::Serialize(emission, buffer);
+}
+
+LightPrimID DeltaLight::SampleDiscrete(const Float uDiscrete) const {
+    return shape->Sample(uDiscrete);
+}
+
+bool DeltaLight::SampleDirect(const BSphere & /*sceneSphere*/,
+                             const Vector3 &pos,
+                             const Vector3 &normal,
+                             const Vector2 rndParam,
+                             const Float time,
+                             LightPrimID &lPrimID,
+                             Vector3 &dirToLight,
+                             Float &dist,
+                             Vector3 &contrib,
+                             Float &cosAtLight,
+                             Float &directPdf,
+                             Float &emissionPdf) const {
+    Vector3 posOnLight;
+    Vector3 normalOnLight;
+    Float shapePdf;
+    shape->Sample(rndParam, time, lPrimID, posOnLight, normalOnLight, &shapePdf);
+    dirToLight = -Normalize(normalOnLight);  
+    Float distSq = LengthSquared(posOnLight - pos);
+    dist = sqrt(distSq);
+    assert(dist > Float(0.0));
+    dirToLight = dirToLight / dist;
+
+    // unclear about the coordinate frame of this ray
+    RaySegment raySegment(Ray(pos, dirToLight), 0.f, INFINITY);
+    Intersection isect;
+    if ( shape->Intersect(lPrimID, time, ray, isect, st)) {
+        contrib = (1.f / (distSq * shapePdf)) * emission;
+        directPdf = 1.f;
+        return true;
+    } else{
+        directPdf = 0.f;
+        contrib.setZero();
+        return false;
+    }
+
+}
+
+void DeltaLight::Emission(const BSphere & /*sceneSphere*/,
+                         const Vector3 &dirToLight,
+                         const Vector3 &normalOnLight,
+                         const Float time,
+                         LightPrimID &lPrimID,
+                         Vector3 &emission,
+                         Float &directPdf,
+                         Float &emissionPdf) const {
+    Float cosAtLight = -Dot(normalOnLight, dirToLight);
+    if (cosAtLight > (1-c_CosEpsilon)) {
+        emission = this->emission;
+        directPdf = shape->SamplePdf();
+        emissionPdf = cosAtLight * directPdf * c_INVPI;
+    } else {
+        emission = Vector3::Zero();
+        directPdf = Float(0.0);
+        emissionPdf = Float(0.0);
+    }
+}
+
+void DeltaLight::Emit(const BSphere & /*sceneSphere*/,
+                     const Vector2 rndParamPos,
+                     const Vector2 rndParamDir,
+                     const Float time,
+                     LightPrimID &lPrimID,
+                     Ray &ray,
+                     Vector3 &emission,
+                     Float &cosAtLight,
+                     Float &emissionPdf,
+                     Float &directPdf) const {
+    Vector3 normal;
+    Float shapePdf;
+    shape->Sample(rndParamPos, time, lPrimID, ray.org, normal, &shapePdf);
+    assert(shapePdf > Float(0.0));
+
+    ray.dir = normal;
+    emission = this->emission * (Float(M_PI) / shapePdf);
+    cosAtLight = 1.f;
+    emissionPdf = c_INVPI * shapePdf;
+    directPdf = shapePdf;
+}
+
+// template <typename FloatType>
+// void _SampleDirectDeltaLight(const FloatType *buffer,
+//                             const TVector3<FloatType> &pos,
+//                             const TVector3<FloatType> &normal,
+//                             const TVector2<FloatType> rndParam,
+//                             const FloatType time,
+//                             const bool isStatic,
+//                             TVector3<FloatType> &dirToLight,
+//                             TVector3<FloatType> &lightContrib,
+//                             FloatType &cosAtLight,
+//                             FloatType &directPdf,
+//                             FloatType &emissionPdf) {
+//     TVector3<FloatType> posOnLight;
+//     TVector3<FloatType> normalOnLight;
+//     FloatType shapePdf;
+//     SampleShape(buffer, rndParam, time, isStatic, posOnLight, normalOnLight, shapePdf);
+//     buffer += GetMaxShapeSerializedSize();
+//     TVector3<FloatType> emission;
+//     Deserialize(buffer, emission);
+
+//     dirToLight = -Normalize(normalOnLight);
+//     FloatType distSq = LengthSquared(posOnLight - pos);
+//     FloatType dist = sqrt(distSq);
+//     dirToLight = dirToLight / dist;
+
+//     // TODO: Add intersection test
+//     cosAtLight = FloatType(1.f);
+//     directPdf = shapePdf * distSq / cosAtLight;
+//     lightContrib = emission / directPdf;
+//     emissionPdf = shapePdf * cosAtLight * c_INVPI;
+
+// }
+
+void SampleDirectDeltaLight(const ADFloat *buffer,
+                           const ADBSphere & /*sceneSphere*/,
+                           const ADVector3 &pos,
+                           const ADVector3 &normal,
+                           const ADVector2 rndParam,
+                           const ADFloat time,
+                           const bool isStatic,
+                           ADVector3 &dirToLight,
+                           ADVector3 &lightContrib,
+                           ADFloat &cosAtLight,
+                           ADFloat &directPdf,
+                           ADFloat &emissionPdf) {
+    ADVector3 posOnLight;
+    ADVector3 normalOnLight;
+    ADFloat shapePdf;
+    SampleShape(buffer, rndParam, time, isStatic, posOnLight, normalOnLight, shapePdf);
+    buffer += GetMaxShapeSerializedSize();
+    ADVector3 emission;
+    Deserialize(buffer, emission);
+
+    dirToLight = -Normalize(normalOnLight);
+    ADFloat distSq = LengthSquared(posOnLight - pos);
+    ADFloat dist = sqrt(distSq);
+    dirToLight = dirToLight / dist;
+
+    // TODO: Add intersection test
+    // unclear how to check if intersected or not in the differentiable intersect
+        
+    cosAtLight = ADFloat(1.f);
+    directPdf = shapePdf * distSq / cosAtLight;
+    lightContrib = emission / directPdf;
+    emissionPdf = shapePdf * cosAtLight * c_INVPI;
+}
+
+void EmissionDeltaLight(const ADFloat *buffer,
+                       const ADBSphere &sceneSphere,
+                       const ADVector3 &dirToLight,
+                       const ADVector3 &normalOnLight,
+                       const ADFloat time,
+                       ADVector3 &emission,
+                       ADFloat &directPdf,
+                       ADFloat &emissionPdf) {
+    ADFloat shapePdf;
+    buffer = SampleShapePdf(buffer, shapePdf);
+    ADVector3 emission_;
+    Deserialize(buffer, emission_);
+    ADFloat cosAtLight = -Dot(normalOnLight, dirToLight);
+    
+    std::vector<CondExprCPtr> ret = CreateCondExprVec(4);
+    BeginIf(Gt(cosAtLight, Float(1.f - c_CosEpsilon)), ret);
+    {
+        SetCondOutput({emission_[0], emission_[1], emission_[2], ADFloat(1.f)});
+    }
+    BeginElse();
+    {
+        SetCondOutput({ADFloat(0.f), ADFloat(0.f), ADFloat(0.f), ADFloat(0.f)});
+    }
+    EndIf();
+    
+    emission = ADVector3(ret[0], ret[1], ret[2]);
+    directPdf = ret[3];
+    emissionPdf = cosAtLight * directPdf * c_INVPI;
+}
+
+void EmitDeltaLight(const ADFloat *buffer,
+                   const ADBSphere &sceneSphere,
+                   const ADVector2 rndParamPos,
+                   const ADVector2 rndParamDir,
+                   const ADFloat time,
+                   const bool isStatic,
+                   ADRay &ray,
+                   ADVector3 &emission,
+                   ADFloat &cosAtLight,
+                   ADFloat &emissionPdf,
+                   ADFloat &directPdf) {
+    ADVector3 normalOnLight;
+    ADFloat shapePdf;
+    SampleShape(buffer, rndParamPos, time, isStatic, ray.org, normalOnLight, shapePdf);
+    buffer += GetMaxShapeSerializedSize();
+    ADVector3 emission_;
+    Deserialize(buffer, emission_);
+
+    ray.dir = normalOnLight;
+    emission = emission_ * (Float(M_PI) / shapePdf);
+    cosAtLight = ADFloat(1.f);
+    emissionPdf = c_INVPI * shapePdf;
+    directPdf = shapePdf;
+}

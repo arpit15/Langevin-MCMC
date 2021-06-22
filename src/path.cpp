@@ -1360,6 +1360,8 @@ void GeneratePathBidir(const Scene *scene,
 
         prevLensContrib = lightPathStates[lgtDepth + 1].lensContrib;
         raySeg.ray.org = lightPathStates[lgtDepth].isect.position;
+        // std::cout << "Noting light path contribs : " << prevLensContrib.transpose() << std::endl;
+        
     }
 
     BidirPathState camPathState;

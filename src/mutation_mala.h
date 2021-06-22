@@ -202,7 +202,7 @@ Float MALASmallStep::Mutate(const MLTState &mltState,
                              &vGrad[0],
                              NULL);
                     if (!IsFinite(vGrad)) {
-                        std::cout << "OOPS!" << std::endl;
+                        std::cout << "MALA mut vgrads infinite!" << std::endl;
                         std::fill(vGrad.begin(), vGrad.end(), Float(0.0));
                     }
                     assert(IsFinite(vGrad));

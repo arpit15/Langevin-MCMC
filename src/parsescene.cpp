@@ -9,6 +9,8 @@
 #include "loadserialized.h"
 #include "pointlight.h"
 #include "arealight.h"
+// #include "deltalight.h"
+#include "collimatedlight.h"
 #include "envlight.h"
 #include "lambertian.h"
 #include "phong.h"
@@ -608,6 +610,34 @@ std::shared_ptr<const Light> ParseEmitter(pugi::xml_node node,
         }
 
         return std::make_shared<SpotLight>(Float(1.0), toWorld, intensity, cutoffAngle, beamWidth);
+    }
+    else if (type == "collimatedbeam") {
+        AnimatedTransform toWorld =
+            MakeAnimatedTransform(Matrix4x4::Identity(), Matrix4x4::Identity());
+        Vector3 intensity(Float(1.0), Float(1.0), Float(1.0));
+        Float radius(0.01f);
+        for (auto child : node.children()) {
+            std::string name = child.attribute("name").value();
+            if (name == "toWorld") {
+                if (std::string(child.name()) == "transform") {
+                    Matrix4x4 m = ParseTransform(child);
+                    toWorld = MakeAnimatedTransform(m, m);
+                } else if (std::string(child.name()) == "animation") {
+                    toWorld = ParseAnimatedTransform(child);
+                }
+            } else if (name == "intensity") {
+                intensity = ParseVector3(child.attribute("value").value());
+            } else if (name == "radius") {
+                radius = std::stof(child.attribute("value").value());
+            } 
+        }
+        Matrix4x4 traof = Interpolate(toWorld, 0.f);
+        std::cout << "CollimatedLight[" << std::endl
+                << "radius : " << radius << std::endl
+                << "intensity : " << intensity << std::endl
+                << "transform : " << traof << std::endl
+                << "]" << std::endl;
+        return std::make_shared<CollimatedLight>(Float(1.0), toWorld, radius, intensity);
     } 
     else if (type == "envmap") {
         std::string filename = "";
