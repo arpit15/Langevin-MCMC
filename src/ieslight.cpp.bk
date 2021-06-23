@@ -8,8 +8,8 @@ int GetIESLightSerializedSize() {
     return 1 +  // type
            16 +     // toWorld
            16 +     // toLight
-           3;   // emission
-        //    91*181*3;  // ies profile
+           3 +   // emission
+           1;  // ies profile
 
 }
 
@@ -26,7 +26,7 @@ void IESLight::Serialize(const LightPrimID &lPrimID, Float *buffer) const {
     buffer = ::Serialize(toWorld, buffer);
     buffer = ::Serialize(toLight, buffer);
     buffer = ::Serialize(emission, buffer);
-    // ::Serialize(iesProfile, buffer);
+    ::Serialize(iesProfile.Name(), buffer);
 }
 
 Vector3 getIESVal(const Vector3 &local, const BitmapTextureRGB &iesProfile) {
@@ -40,6 +40,32 @@ Vector3 getIESVal(const Vector3 &local, const BitmapTextureRGB &iesProfile) {
   return iesProfile.Eval(uv);
 }
 
+ADVector3 getIESVal(const ADVector3 &local, const BitmapTextureRGB &iesProfile) {
+    
+    ADFloat u = ATan2(local[1], local[0]),
+        v = ACos(local[2]);
+    ADVector2 uv(
+             u * ADFloat(1.f / (2.f * M_PI)),
+             v * ADFloat(1.f / (M_PI))
+        );
+
+    // if(uv[0]<0.f) uv[0] = 1.f+uv[0];
+    std::vector<CondExprCPtr> ret = CreateCondExprVec(1);
+    BeginIf( Lt( uv[0], Float(0.f)), ret);
+    {
+        SetCondOutput({Float(1.f) + uv[0]});
+    }
+    BeginElse();
+    {
+        SetCondOutput({uv[0]});
+    }
+    EndIf();
+
+    uv[0] = ret[0];
+
+    return iesProfile.Eval(uv);
+}
+
 template <typename FloatType>
 void _SampleDirectIESLight(const TAnimatedTransform<FloatType> &toLight, 
                              const TVector3<FloatType> &emission,
@@ -50,7 +76,7 @@ void _SampleDirectIESLight(const TAnimatedTransform<FloatType> &toLight,
                              TVector3<FloatType> &lightContrib,
                              FloatType &pdf) {
     
-    Matrix4x4 trao = Interpolate(toLight, 0.f);
+    Matrix4x4 trao = Interpolate(toLight, FloatType(0.f));
 
     Vector3 lightPos = XformPoint(trao, Vector3(0.f));
     dirToLight = lightPos - pos;
@@ -60,7 +86,7 @@ void _SampleDirectIESLight(const TAnimatedTransform<FloatType> &toLight,
     dirToLight = dirToLight / dist;
 
     
-    Vector3 local = XformVector(trao, -dirToLight);
+    const Vector3 local = XformVector(trao, FloatType(-1.f) * dirToLight);
     lightContrib = emission * inverse(distSq) * getIESVal(local, iesProfile);
 }
 
@@ -87,7 +113,7 @@ bool IESLight::SampleDirect(const BSphere & /*sceneSphere*/,
 void IESLight::Emit(const BSphere & /*sceneSphere*/,
                       const Vector2 /*rndParamPos*/,
                       const Vector2 rndParamDir,
-                      const Float /*time*/,
+                      const Float time,
                       LightPrimID & /*lPrimID*/,
                       Ray &ray,
                       Vector3 &emission,
@@ -95,13 +121,13 @@ void IESLight::Emit(const BSphere & /*sceneSphere*/,
                       Float &emissionPdf,
                       Float &directPdf) const {
     
-    Matrix4x4 trao = Interpolate(toLight, 0.f);
+    Matrix4x4 trao = Interpolate(toLight, time);
     Vector3 lightPos = XformPoint(trao, Vector3(0.f));
 
     ray.org = lightPos;
     ray.dir = SampleSphere(rndParamDir);
 
-    Vector3 local = ray.dir;
+    const Vector3 local = ray.dir;
 
     emission = this->emission * getIESVal(local, iesProfile);
     emissionPdf = c_INVFOURPI;
@@ -124,7 +150,11 @@ void SampleDirectIESLight(const ADFloat *buffer,
     ADAnimatedTransform toWorld, toLight;
     buffer = Deserialize(buffer, toWorld);
     buffer = Deserialize(buffer, toLight);
-    Deserialize(buffer, emission);
+    buffer = Deserialize(buffer, emission);
+    std::string fn;
+    Deserialize(buffer, fn);
+    const BitmapTextureRGB iesProfile(fn);
+
     ADFloat dist;
 
     ADMatrix4x4 traoL = Interpolate(toLight, time);
@@ -149,9 +179,11 @@ void EmitIESLight(const ADFloat *buffer,
     ADAnimatedTransform toWorld, toLight;
     buffer = Deserialize(buffer, toWorld);
     buffer = Deserialize(buffer, toLight);
-    Deserialize(buffer, emission_);
+    buffer = Deserialize(buffer, emission_);
+    std::string fn;
+    Deserialize(buffer, fn);
+    const BitmapTextureRGB iesProfile(fn);
 
-    ADFloat time = Const<ADFloat>(0.0);
     ADMatrix4x4 trao = Interpolate(toLight, time);
     lightPos = XformPoint(trao, ADVector3(0.f));
     ray.org = lightPos;

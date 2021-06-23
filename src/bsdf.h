@@ -5,9 +5,10 @@
 
 enum class BSDFType { Lambertian, Phong, RoughDielectric, 
                         RoughConductor,
-                        //  BlendBSDF 
+                         BlendBSDF 
                          };
 
+int GetMaxBSDFSerializedSize2();
 int GetMaxBSDFSerializedSize();
 
 struct BSDF {

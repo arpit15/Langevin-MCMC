@@ -14,7 +14,7 @@
 #include "envlight.h"
 #include "lambertian.h"
 #include "phong.h"
-// #include "blendbsdf.h"
+#include "blendbsdf.h"
 #include "roughconductor.h"
 #include "roughdielectric.h"
 #include "constanttexture.h"
@@ -377,6 +377,21 @@ std::shared_ptr<const BSDF> ParseBSDF(pugi::xml_node node,
             }
         }
         return std::make_shared<Phong>(twoSided, diffuseReflectance, specularReflectance, exponent);
+    } else if (type == "blendbsdf") {
+        std::shared_ptr<const TextureRGB> weight =
+            std::make_shared<const ConstantTextureRGB>(Vector3(0.5, 0.5, 0.5));
+        std::vector<std::shared_ptr<const BSDF>> bsdfs;
+        for (auto child : node.children()) {
+            std::string name = child.attribute("name").value();
+            std::string type = child.name();
+            if (name == "weight") {
+                weight = Parse3DMap(child, textureMap);
+            } else if (type == "bsdf") {
+                bsdfs.push_back(ParseBSDF(child, textureMap, twoSided));
+            }
+        }
+        return std::make_shared<BlendBSDF>(twoSided, weight, bsdfs.at(0), bsdfs.at(1));
+    
     } else if (type == "roughdielectric") {
         // default params
         std::shared_ptr<const TextureRGB> specularReflectance =
@@ -444,21 +459,6 @@ std::shared_ptr<const BSDF> ParseBSDF(pugi::xml_node node,
                 return ParseBSDF(child, textureMap, true);
             }
         }
-    // } else if (type == "blendbsdf") {
-    //     std::shared_ptr<const TextureRGB> weight =
-    //         std::make_shared<const ConstantTextureRGB>(Vector3(1.0, 1.0, 1.0));
-    //     std::shared_ptr<const BSDF> bsdfA, bsdfB;
-    //     for (auto child : node.children()) {
-    //         std::string name = child.attribute("name").value();
-    //         std::string type = child.attribute("type").value();
-    //         if ( name == "weight") {
-    //             std::string value = child.attribute("value").value();
-    //             weight = Parse3DMap(child, textureMap);
-    //         } else if ( type == "bsdf" ) {
-    //             bsdfA = ParseBSDF(child, textureMap, false);
-    //         }
-    //     }
-    //     return std::make_shared<BlendBSDF>(twoSided, weight, bsdfA, bsdfB);
     } else {
         printf("BSDF: %s not found.\n", type.c_str());
     }

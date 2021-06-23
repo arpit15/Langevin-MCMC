@@ -17,6 +17,8 @@ class BitmapTexture : public Texture<nChannels> {
                   const Vector2 stScaler = Vector2(Float(1.0), Float(1.0)));
     BitmapTexture(const OpenImageIO::ustring &filename,
                   const Vector2 stScaler = Vector2(Float(1.0), Float(1.0)));
+
+    // void Serialize(Float *buffer) const;
     TVector<Float, nChannels> Eval(const Vector2 st) const override;
     TVector<Float, nChannels> Avg() const override {
         return avg;
@@ -50,6 +52,11 @@ class BitmapTexture : public Texture<nChannels> {
     // weird non-constant declaration in oiio...
     mutable OpenImageIO::TextureOpt options;
 };
+
+// template <int nChannels>
+// BitmapTexture<nChannels>::Serialize(Float *buffer) const {
+//     ::Serialize((Float) filename, buffer);
+// }
 
 template <int nChannels>
 BitmapTexture<nChannels>::BitmapTexture(const std::string &filename, const Vector2 stScaler)

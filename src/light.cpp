@@ -3,6 +3,7 @@
 #include "arealight.h"
 #include "envlight.h"
 // #include "deltalight.h"
+// #include "ieslight.h"
 #include "collimatedlight.h"
 #include "utils.h"
 
@@ -11,6 +12,7 @@ int GetMaxLightSerializedSize() {
         {GetPointLightSerializedSize(), GetAreaLightSerializedSize(), 
             GetEnvLightSerializedSize()
             // GetDeltaLightSerializedSize()
+            // , GetIESLightSerializedSize()
             , GetCollimatedLightSerializedSize()
             });
 }

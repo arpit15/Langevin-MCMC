@@ -299,6 +299,68 @@ inline Float *Serialize(const Float v, Float *buffer) {
     return buffer;
 }
 
+inline Float *Serialize(const std::string &v, Float *buffer) {
+    // store size
+    *buffer++ = (Float)v.size();
+    // copy bytes
+    const char *bytes = v.c_str();
+    const size_t numFullFloats = std::floor(v.size()/sizeof(Float));
+    for(size_t i=0; i < numFullFloats; ++i) {
+        memcpy(buffer, (void*)&bytes[sizeof(Float)*i], sizeof(Float));
+        buffer++;
+    }
+
+    const size_t remainingBytes = fmod(v.size(), sizeof(Float));
+    union {
+        Float float_variable;
+        char temp_array[sizeof(Float)];
+    } u;
+
+    for(size_t i=0; i<sizeof(Float); ++i){
+        if (i<remainingBytes)
+            u.temp_array[i] = bytes[numFullFloats*sizeof(Float) + i];
+        else
+            u.temp_array[i] = 'A';  // arbitrarily chosen
+    }
+
+    *buffer++ = (Float)u.float_variable;
+    
+    return buffer;
+}
+
+// Problem with the following func
+// the size of ADFloat and Float will be different
+// how to parse buffer object -> Float -> bytes
+// template <typename FloatType>
+// inline const FloatType *Deserialize(const FloatType *buffer, std::string &v) {
+//     // get size
+//     size_t size = *buffer++;
+
+//     char bytes[size]; 
+//     // need to copy size bytes
+//     const size_t numFullFloats = std::floor(size/sizeof(FloatType));
+//     for(size_t i=0; i < numFullFloats; ++i) {
+//         memcpy((void*)&bytes[sizeof(FloatType)*i], buffer, sizeof(FloatType));
+//         buffer++;
+//     }
+
+//     const size_t remainingBytes = fmod(size, sizeof(FloatType));
+//     union {
+//         Float float_variable;
+//         char temp_array[sizeof(FloatType)];
+//     } u;
+
+//     u.float_variable = *buffer++;
+//     for(size_t i=0; i < remainingBytes; ++i){
+//         bytes[numFullFloats*sizeof(FloatType) + i] = u.temp_array[i];
+//     }
+
+//     // create string
+//     v(&bytes[0]);
+
+//     return buffer;
+// }
+
 template <typename FloatType>
 inline const FloatType *Deserialize(const FloatType *buffer, FloatType &v) {
     v = *buffer++;

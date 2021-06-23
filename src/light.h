@@ -6,6 +6,7 @@
 
 enum class LightType { PointLight, SpotLight, AreaLight, EnvLight, 
                 // DeltaLight 
+                // IESLight,
                 CollimatedLight
                 };
 

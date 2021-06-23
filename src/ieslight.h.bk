@@ -42,7 +42,7 @@ struct IESLight : public Light {
         return true;
     }
 
-    Vector3 getIESVal(const Vector3 local) const;
+    // Vector3 getIESVal(const Vector3 local) const;
 
     const AnimatedTransform toWorld;
     const AnimatedTransform toLight;
