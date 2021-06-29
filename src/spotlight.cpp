@@ -30,7 +30,7 @@ SpotLight::SpotLight(const Float &samplingWeight,
         invTransitionWidth = 1.0f / (cutoffAngle - beamWidth);
 }
 
-void SpotLight::Serialize(const LightPrimID &lPrimID, Float *buffer) const {
+void SpotLight::Serialize(const LightPrimID &lPrimID, const Vector2 &rndDir, Float *buffer) const {
     buffer = ::Serialize((Float)LightType::SpotLight, buffer);
     buffer = ::Serialize(toWorld, buffer);
     buffer = ::Serialize(toLight, buffer);

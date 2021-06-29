@@ -9,7 +9,7 @@
 #include "loadserialized.h"
 #include "pointlight.h"
 #include "arealight.h"
-// #include "deltalight.h"
+#include "ieslight.h"
 #include "collimatedlight.h"
 #include "envlight.h"
 #include "lambertian.h"
@@ -563,29 +563,30 @@ std::shared_ptr<const Light> ParseEmitter(pugi::xml_node node,
         }
         return std::make_shared<PointLight>(Float(1.0), pos, intensity);
     } 
-    // else if (type == "ies") {
-    //     AnimatedTransform toWorld =
-    //         MakeAnimatedTransform(Matrix4x4::Identity(), Matrix4x4::Identity());
-    //     Vector3 intensity(Float(1.0), Float(1.0), Float(1.0));
-    //     std::string ies_fname("");
-    //     for (auto child : node.children()) {
-    //         std::string name = child.attribute("name").value();
-    //         if (name == "toWorld") {
-    //             if (std::string(child.name()) == "transform") {
-    //                 Matrix4x4 m = ParseTransform(child);
-    //                 toWorld = MakeAnimatedTransform(m, m);
-    //             } else if (std::string(child.name()) == "animation") {
-    //                 toWorld = ParseAnimatedTransform(child);
-    //             }
-    //         } else if (name == "intensity") {
-    //             intensity = ParseVector3(child.attribute("value").value());
-    //         } else if (name == "filename") {
-    //             ies_fname = child.attribute("value").value();
-    //         }
-    //     }
+    else if (type == "ies") {
+        AnimatedTransform toWorld =
+            MakeAnimatedTransform(Matrix4x4::Identity(), Matrix4x4::Identity());
+        Vector3 intensity(Float(1.0), Float(1.0), Float(1.0));
+        std::string ies_fname("");
+        for (auto child : node.children()) {
+            std::string name = child.attribute("name").value();
+            if (name == "toWorld") {
+                if (std::string(child.name()) == "transform") {
+                    Matrix4x4 m = ParseTransform(child);
+                    toWorld = MakeAnimatedTransform(m, m);
+                } else if (std::string(child.name()) == "animation") {
+                    toWorld = ParseAnimatedTransform(child);
+                }
+            } else if (name == "intensity") {
+                intensity = ParseVector3(child.attribute("value").value());
+            } else if (name == "filename") {
+                ies_fname = child.attribute("value").value();
+            }
+        }
 
-    //     return std::make_shared<IESLight>(Float(1.0), toWorld, intensity, ies_fname);
-    // } 
+        std::cout << "Loaded a IES light" << std::endl;
+        return std::make_shared<IESLight>(Float(1.0), toWorld, intensity, ies_fname);
+    } 
     else if (type == "spot") {
         AnimatedTransform toWorld =
             MakeAnimatedTransform(Matrix4x4::Identity(), Matrix4x4::Identity());

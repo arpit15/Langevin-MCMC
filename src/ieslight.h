@@ -4,6 +4,7 @@
 #include "bitmaptexture.h"
 #include "animatedtransform.h"
 
+struct Image3;
 int GetIESLightSerializedSize();
 
 struct IESLight : public Light {
@@ -12,7 +13,7 @@ struct IESLight : public Light {
     LightType GetType() const override {
         return LightType::IESLight;
     }
-    void Serialize(const LightPrimID &lPrimID, Float *buffer) const override;
+    void Serialize(const LightPrimID &lPrimID, const Vector2 &rndDir, Float *buffer) const override;
     bool SampleDirect(const BSphere &sceneSphere,
                       const Vector3 &pos,
                       const Vector3 &normal,
@@ -42,12 +43,13 @@ struct IESLight : public Light {
         return true;
     }
 
-    // Vector3 getIESVal(const Vector3 local) const;
+    Float getIESVal(const Vector3 &local) const;
 
     const AnimatedTransform toWorld;
     const AnimatedTransform toLight;
     const Vector3 emission;
-    const BitmapTextureRGB iesProfile;
+    // const BitmapTextureRGB iesProfile;
+    const std::unique_ptr<const Image3> image;
 };
 
 void SampleDirectIESLight(const ADFloat *buffer,

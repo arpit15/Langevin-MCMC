@@ -2554,7 +2554,7 @@ void Serialize(const Scene *scene, const Path &path, SerializedSubpath &subPath)
         subPath.primary[primaryIdx++] = path.lgtVertex.rndParamDir[0];
         subPath.primary[primaryIdx++] = path.lgtVertex.rndParamDir[1];
         buffer = Serialize(PickLightProb(scene, light), buffer);
-        light->Serialize(path.lgtVertex.lightInst.lPrimID, buffer);
+        light->Serialize(path.lgtVertex.lightInst.lPrimID, path.lgtVertex.rndParamDir, buffer);
         buffer += GetMaxLightSerializedSize();
 
         for (int lgtDepth = 0; lgtDepth < (int)path.lgtSurfaceVertex.size(); lgtDepth++) {
@@ -2596,21 +2596,31 @@ void Serialize(const Scene *scene, const Path &path, SerializedSubpath &subPath)
         if (camDepth == (int)path.camSurfaceVertex.size() - 1) {
             if (path.lgtDepth == 0) {
                 if (path.envLightInst.light != nullptr) {
-                    path.envLightInst.light->Serialize(path.envLightInst.lPrimID, buffer);
+                    // hack
+                    Vector2 hackRnd;
+                    hackRnd << 0.f, 0.f;
+                    path.envLightInst.light->Serialize(path.envLightInst.lPrimID, hackRnd, buffer);
                     buffer += GetMaxLightSerializedSize();
                     buffer = Serialize(PickLightProb(scene, path.envLightInst.light), buffer);
                 } else {
                     assert(shapeInst.obj != nullptr);
                     assert(shapeInst.obj->areaLight != nullptr);
-                    shapeInst.obj->areaLight->Serialize(shapeInst.primID, buffer);
+                    // hack
+                    Vector2 hackRnd;
+                    hackRnd << 0.f, 0.f;
+                    shapeInst.obj->areaLight->Serialize(shapeInst.primID, hackRnd, buffer);
                     buffer += GetMaxLightSerializedSize();
                     buffer = Serialize(PickLightProb(scene, shapeInst.obj->areaLight), buffer);
                 }
             } else if (path.lgtDepth == 1) {
+                // for handling arealight and envlight
                 subPath.primary[primaryIdx++] = surfVertex.directLightRndParam[0];
                 subPath.primary[primaryIdx++] = surfVertex.directLightRndParam[1];
+                // hack
+                Vector2 hackRnd;
+                    hackRnd << 0.f, 0.f;
                 surfVertex.directLightInst.light->Serialize(surfVertex.directLightInst.lPrimID,
-                                                            buffer);
+                                                            hackRnd, buffer);
                 buffer += GetMaxLightSerializedSize();
                 shapeInst.obj->bsdf->Serialize(shapeInst.st, buffer);
                 buffer += GetMaxBSDFSerializedSize();

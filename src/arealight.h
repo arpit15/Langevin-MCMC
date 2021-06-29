@@ -12,7 +12,7 @@ struct AreaLight : public Light {
     LightType GetType() const override {
         return LightType::AreaLight;
     }
-    void Serialize(const LightPrimID &lPrimID, Float *buffer) const override;
+    void Serialize(const LightPrimID &lPrimID, const Vector2 &rndDir, Float *buffer) const override;
     LightPrimID SampleDiscrete(const Float uDiscrete) const override;
     bool SampleDirect(const BSphere &sceneSphere,
                       const Vector3 &pos,

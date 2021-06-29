@@ -21,7 +21,7 @@ CollimatedLight::CollimatedLight(const Float &samplingWeight,
       toLight(Invert(toWorld)), 
       m_radius(_radius), emission(emission) {}
 
-void CollimatedLight::Serialize(const LightPrimID &lPrimID, Float *buffer) const {
+void CollimatedLight::Serialize(const LightPrimID &lPrimID, const Vector2 &rndDir, Float *buffer) const {
     buffer = ::Serialize((Float)LightType::CollimatedLight, buffer);
     buffer = ::Serialize(toWorld, buffer);
     buffer = ::Serialize(toLight, buffer);

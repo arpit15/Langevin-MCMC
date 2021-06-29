@@ -15,7 +15,7 @@ struct SpotLight : public Light {
     LightType GetType() const override {
         return LightType::SpotLight;
     }
-    void Serialize(const LightPrimID &lPrimID, Float *buffer) const override;
+    void Serialize(const LightPrimID &lPrimID, const Vector2 &rndDir, Float *buffer) const override;
     bool SampleDirect(const BSphere &sceneSphere,
                       const Vector3 &pos,
                       const Vector3 &normal,

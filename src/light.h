@@ -6,7 +6,7 @@
 
 enum class LightType { PointLight, SpotLight, AreaLight, EnvLight, 
                 // DeltaLight 
-                // IESLight,
+                IESLight,
                 CollimatedLight
                 };
 
@@ -20,7 +20,7 @@ struct Light {
     }
 
     virtual LightType GetType() const = 0;
-    virtual void Serialize(const LightPrimID &lPrimID, Float *buffer) const = 0;
+    virtual void Serialize(const LightPrimID &lPrimID, const Vector2 &rndDir, Float *buffer) const = 0;
     virtual LightPrimID SampleDiscrete(const Float uDiscrete) const {
         return INVALID_LPRIM_ID;
     }

@@ -14,7 +14,7 @@ AreaLight::AreaLight(const Float &samplingWeight, Shape *_shape, const Vector3 &
     _shape->SetAreaLight(this);
 }
 
-void AreaLight::Serialize(const LightPrimID &lPrimID, Float *buffer) const {
+void AreaLight::Serialize(const LightPrimID &lPrimID, const Vector2 &rndDir, Float *buffer) const {
     buffer = ::Serialize((Float)LightType::AreaLight, buffer);
     shape->Serialize(lPrimID, buffer);
     buffer += GetMaxShapeSerializedSize();
