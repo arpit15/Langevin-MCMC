@@ -29,11 +29,8 @@ void IESLight::Serialize(const LightPrimID &lPrimID, const Vector2 &rndDir, Floa
     buffer = ::Serialize(toLight, buffer);
     buffer = ::Serialize(emission, buffer);
     // evaluate ies using rndParam
-    // size_t col = rndDir[0] * image->pixelWidth,
-    //     row = rndDir[1] * image->pixelHeight;
-    // Float iesVal = image->RepAt(col, row).mean();
-    Vector3 localDir = SampleSphere(rndDir);
-    Float iesVal = getIESVal(localDir);
+    const Vector3 localDir = SampleSphere(rndDir);
+    const Float iesVal = getIESVal(localDir);
     ::Serialize(iesVal, buffer);
 }
 
@@ -106,6 +103,7 @@ bool IESLight::SampleDirect(const BSphere & /*sceneSphere*/,
     cosAtLight = Float(1.0);
     lPrimID = 0;
     return true;
+    std::cout << "sample IES direct. AD version is wrong!" << std::endl;
 }
 
 void IESLight::Emit(const BSphere & /*sceneSphere*/,
@@ -163,9 +161,11 @@ void SampleDirectIESLight(const ADFloat *buffer,
     _SampleDirectIESLight(toWorld, emission, pos, time, dist, dirToLight, lightContrib, directPdf);
     // Hack : ideally iesVal is affected by changing rndParamDir
     // incorrect
+    // how the contribution of these paths should be negligible
     lightContrib *= iesVal;
     emissionPdf = Const<ADFloat>(c_INVFOURPI);
     cosAtLight = Const<ADFloat>(1.0);
+    
 }
 
 void EmitIESLight(const ADFloat *buffer,
@@ -191,7 +191,7 @@ void EmitIESLight(const ADFloat *buffer,
     ADMatrix4x4 traoW = Interpolate(toWorld, time);
     lightPos = XformPoint(traoW, origin);
     ray.org = lightPos;
-    ray.dir = SampleSphere(rndParamDir);
+    ray.dir = XformVector(traoW, SampleSphere(rndParamDir));
     // Hack : ideally iesVal is affected by changing rndParamDir
     emission = emission_ * iesVal;
     emissionPdf = Const<ADFloat>(c_INVFOURPI);
