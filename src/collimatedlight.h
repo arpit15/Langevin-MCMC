@@ -29,14 +29,14 @@ struct CollimatedLight : public Light {
                       Float &cosAtLight,
                       Float &directPdf,
                       Float &emissionPdf) const override;
-    void Emission(const BSphere &sceneSphere,
-                  const Vector3 &dirToLight,
-                  const Vector3 &normalAtLight,
-                  const Float time,
-                  LightPrimID &lPrimID,
-                  Vector3 &emission,
-                  Float &directPdf,
-                  Float &emissionPdf) const override;
+    // void Emission(const BSphere &sceneSphere,
+    //               const Vector3 &dirToLight,
+    //               const Vector3 &normalAtLight,
+    //               const Float time,
+    //               LightPrimID &lPrimID,
+    //               Vector3 &emission,
+    //               Float &directPdf,
+    //               Float &emissionPdf) const override;
     void Emit(const BSphere &sceneSphere,
               const Vector2 rndParamPos,
               const Vector2 rndParamDir,
@@ -73,14 +73,14 @@ void SampleDirectCollimatedLight(const ADFloat *buffer,
                            ADFloat &directPdf,
                            ADFloat &emissionPdf);
 
-void EmissionCollimatedLight(const ADFloat *buffer,
-                       const ADBSphere &sceneSphere,
-                       const ADVector3 &dirToLight,
-                       const ADVector3 &normalOnLight,
-                       const ADFloat time,
-                       ADVector3 &emission,
-                       ADFloat &directPdf,
-                       ADFloat &emissionPdf);
+// void EmissionCollimatedLight(const ADFloat *buffer,
+//                        const ADBSphere &sceneSphere,
+//                        const ADVector3 &dirToLight,
+//                        const ADVector3 &normalOnLight,
+//                        const ADFloat time,
+//                        ADVector3 &emission,
+//                        ADFloat &directPdf,
+//                        ADFloat &emissionPdf);
 
 void EmitCollimatedLight(const ADFloat *buffer,
                    const ADBSphere &sceneSphere,

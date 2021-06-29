@@ -78,6 +78,7 @@ Float H2MCSmallStep::Mutate(const MLTState &mltState,
                          &vGrad[0],
                          &vHess[0]);
                 if (!IsFinite(vGrad) || !IsFinite(vHess)) {
+                    std::cout << "H2MC finiteness check vgrad:" << IsFinite(vGrad) << ", hess:" << IsFinite(vHess) << std::endl;
                     // Usually caused by floating point round-off error
                     // (or, of course, bugs)
                     std::fill(vGrad.begin(), vGrad.end(), Float(0.0));

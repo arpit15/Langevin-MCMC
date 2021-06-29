@@ -90,29 +90,29 @@ bool CollimatedLight::SampleDirect(const BSphere & /*sceneSphere*/,
         
 }
 
-void CollimatedLight::Emission(const BSphere & /*sceneSphere*/,
-                         const Vector3 &dirToLight,
-                         const Vector3 &normalOnLight,
-                         const Float time,
-                         LightPrimID &lPrimID,
-                         Vector3 &emission,
-                         Float &directPdf,
-                         Float &emissionPdf) const {
-    lPrimID = 0;
-    Float surfaceArea = m_radius * m_radius * Float(M_PI);
-    Float cosAtLight = -Dot(normalOnLight, dirToLight);
-    if (cosAtLight > (1-c_CosEpsilon)) {
-        emission = this->emission;
-        directPdf = inverse(surfaceArea);
-        emissionPdf = directPdf;
-        // std::cout << "Emission contrib:" << emission.transpose() << std::endl;
+// void CollimatedLight::Emission(const BSphere & /*sceneSphere*/,
+//                          const Vector3 &dirToLight,
+//                          const Vector3 &normalOnLight,
+//                          const Float time,
+//                          LightPrimID &lPrimID,
+//                          Vector3 &emission,
+//                          Float &directPdf,
+//                          Float &emissionPdf) const {
+//     lPrimID = 0;
+//     Float surfaceArea = m_radius * m_radius * Float(M_PI);
+//     Float cosAtLight = -Dot(normalOnLight, dirToLight);
+//     if (cosAtLight > (1-c_CosEpsilon)) {
+//         emission = this->emission;
+//         directPdf = inverse(surfaceArea);
+//         emissionPdf = directPdf;
+//         // std::cout << "Emission contrib:" << emission.transpose() << std::endl;
         
-    } else {
-        emission = Vector3::Zero();
-        directPdf = Float(0.0);
-        emissionPdf = Float(0.0);
-    }
-}
+//     } else {
+//         emission = Vector3::Zero();
+//         directPdf = Float(0.0);
+//         emissionPdf = Float(0.0);
+//     }
+// }
 
 void CollimatedLight::Emit(const BSphere & /*sceneSphere*/,
                      const Vector2 rndParamPos,
@@ -225,41 +225,41 @@ void SampleDirectCollimatedLight(const ADFloat *buffer,
     emissionPdf = directPdf;
 }
 
-void EmissionCollimatedLight(const ADFloat *buffer,
-                       const ADBSphere &sceneSphere,
-                       const ADVector3 &dirToLight,
-                       const ADVector3 &normalOnLight,
-                       const ADFloat time,
-                       ADVector3 &emission,
-                       ADFloat &directPdf,
-                       ADFloat &emissionPdf) {
-    ADAnimatedTransform toWorld, toLight;
-    ADFloat radius;
-    ADVector3 emission_;
+// void EmissionCollimatedLight(const ADFloat *buffer,
+//                        const ADBSphere &sceneSphere,
+//                        const ADVector3 &dirToLight,
+//                        const ADVector3 &normalOnLight,
+//                        const ADFloat time,
+//                        ADVector3 &emission,
+//                        ADFloat &directPdf,
+//                        ADFloat &emissionPdf) {
+//     ADAnimatedTransform toWorld, toLight;
+//     ADFloat radius;
+//     ADVector3 emission_;
     
-    buffer = Deserialize(buffer, toWorld);
-    buffer = Deserialize(buffer, toLight);
-    buffer = Deserialize(buffer, radius);
-    Deserialize(buffer, emission_);
+//     buffer = Deserialize(buffer, toWorld);
+//     buffer = Deserialize(buffer, toLight);
+//     buffer = Deserialize(buffer, radius);
+//     Deserialize(buffer, emission_);
 
-    ADFloat cosAtLight = -Dot(normalOnLight, dirToLight);
-    ADFloat surfaceArea = radius * radius * Const<ADFloat>(M_PI);
+//     ADFloat cosAtLight = -Dot(normalOnLight, dirToLight);
+//     ADFloat surfaceArea = radius * radius * Const<ADFloat>(M_PI);
 
-    std::vector<CondExprCPtr> ret = CreateCondExprVec(4);
-    BeginIf(Gt(cosAtLight, Float(1.f - c_CosEpsilon)), ret);
-    {
-        SetCondOutput({emission_[0], emission_[1], emission_[2], inverse(surfaceArea)});
-    }
-    BeginElse();
-    {
-        SetCondOutput({Const<ADFloat>(0.f), Const<ADFloat>(0.f), Const<ADFloat>(0.f), Const<ADFloat>(0.f)});
-    }
-    EndIf();
+//     std::vector<CondExprCPtr> ret = CreateCondExprVec(4);
+//     BeginIf(Gt(cosAtLight, Float(1.f - c_CosEpsilon)), ret);
+//     {
+//         SetCondOutput({emission_[0], emission_[1], emission_[2], inverse(surfaceArea)});
+//     }
+//     BeginElse();
+//     {
+//         SetCondOutput({Const<ADFloat>(0.f), Const<ADFloat>(0.f), Const<ADFloat>(0.f), Const<ADFloat>(0.f)});
+//     }
+//     EndIf();
     
-    emission = ADVector3(ret[0], ret[1], ret[2]);
-    directPdf = ret[3];
-    emissionPdf = directPdf;
-}
+//     emission = ADVector3(ret[0], ret[1], ret[2]);
+//     directPdf = ret[3];
+//     emissionPdf = directPdf;
+// }
 
 void EmitCollimatedLight(const ADFloat *buffer,
                    const ADBSphere &sceneSphere,

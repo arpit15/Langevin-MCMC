@@ -194,15 +194,15 @@ const ADFloat *Emission(const ADFloat *buffer,
             buffer, sceneSphere, dirToLight, normalOnLight, time, emission, directPdf, emissionPdf);
         SetCondOutput({emission[0], emission[1], emission[2], directPdf, emissionPdf});
     }
-    BeginIf(Eq(type, (Float)LightType::CollimatedLight), ret);
-    {
-        ADVector3 emission;
-        ADFloat directPdf;
-        ADFloat emissionPdf;
-        EmissionCollimatedLight(
-            buffer, sceneSphere, dirToLight, normalOnLight, time, emission, directPdf, emissionPdf);
-        SetCondOutput({emission[0], emission[1], emission[2], directPdf, emissionPdf});
-    }
+    // BeginIf(Eq(type, (Float)LightType::CollimatedLight), ret);
+    // {
+    //     ADVector3 emission;
+    //     ADFloat directPdf;
+    //     ADFloat emissionPdf;
+    //     EmissionCollimatedLight(
+    //         buffer, sceneSphere, dirToLight, normalOnLight, time, emission, directPdf, emissionPdf);
+    //     SetCondOutput({emission[0], emission[1], emission[2], directPdf, emissionPdf});
+    // }
     BeginElseIf(Eq(type, (Float)LightType::EnvLight));
     {
         ADVector3 emission;
