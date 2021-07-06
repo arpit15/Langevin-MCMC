@@ -1,31 +1,10 @@
 #pragma once
 
+#include "mesh.h"
 #include "shape.h"
 #include "distribution.h"
 
 int GetTriangleMeshSerializedSize();
-
-struct TriIndex {
-    TriIndex() {
-    }
-    TriIndex(const TriIndexID id0, const TriIndexID id1, const TriIndexID id2) {
-        index[0] = id0;
-        index[1] = id1;
-        index[2] = id2;
-    }
-    TriIndexID index[3];
-};
-
-struct TriMeshData {
-    std::vector<Vector3> position0;
-    std::vector<Vector3> position1;
-    std::vector<Vector3> normal0;
-    std::vector<Vector3> normal1;
-    std::vector<Vector2> st;
-    std::vector<Vector3> colors;
-    std::vector<TriIndex> indices;
-    bool isMoving;
-};
 
 struct TriangleMesh : public Shape {
     TriangleMesh(const std::shared_ptr<const BSDF> bsdf, const std::shared_ptr<TriMeshData> data);
