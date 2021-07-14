@@ -130,12 +130,12 @@ std::shared_ptr<TriMeshData> ParsePly(const std::string &filename,
         } else if ( token == "property" ) {
             ss >> token;  // type
             ss >> token;
-            std::cout << "Parsing property : " << token << std::endl;
+            // std::cout << "Parsing property : " << token << std::endl;
             if ( token == "nx") {
                 contain_vert_normal = true;
                 data->normal0.resize(data->position0.size());
                 data->normal1.resize(data->position1.size());
-            } else if ( token == "u") {
+            } else if ( token == "u" || token == "s") {
                 contain_uv = true;
                 data->st.resize(data->position0.size());
             }
@@ -156,6 +156,7 @@ std::shared_ptr<TriMeshData> ParsePly(const std::string &filename,
     
     ifs.seekg(stream_pos);
 
+    std::cout << "Ascii format : " << ascii << std::endl;
     // std::cout << "machine endianness : " << getMachineEndianness() << ", file endianness : " << byte_order << std::endl;
 
     // std::cout << "contain vert normals : " << contain_vert_normal << ", contain uv : " << contain_uv << std::endl;
@@ -163,22 +164,24 @@ std::shared_ptr<TriMeshData> ParsePly(const std::string &filename,
     int numVertParsed = 0;
     while (ifs.good()) {
 
-        std::string line;
-        std::stringstream ss;
-        std::string token;
-        if (ascii) {
-            // parse per line
-            std::getline(ifs, line);
-            line = trim(line);
-            
-            if (line.size() == 0)
-                continue;            
-            ss << line;
-            ss >> token;
-        }
 
         // get vertex data
         if (numVertParsed < data->position0.size()) {
+            std::string line;
+            std::stringstream ss;
+            // std::string token;
+            if (ascii) {
+                // parse per line
+                std::getline(ifs, line);
+                line = trim(line);
+                
+                if (line.size() == 0)
+                    continue;            
+                // ss << line;
+                ss.str(line);
+                // ss >> token;
+            }
+
             Float x, y, z;
             if (ascii)
                 ss >> x >> y >> z;
@@ -208,10 +211,10 @@ std::shared_ptr<TriMeshData> ParsePly(const std::string &filename,
                 }
                     
 
-                Vector3 normal(x,y,z);
+                Vector3 normal(nx,ny,nz);
                 // std::cout << numVertParsed << " normal " << normal.transpose() << std::endl;
-                data->normal0[numVertParsed] = (XformNormal(toWorld0, normal));
-                data->normal1[numVertParsed] = (XformNormal(toWorld1, normal));
+                data->normal0[numVertParsed] = (XformNormal(Matrix4x4(toWorld0.inverse()), normal));
+                data->normal1[numVertParsed] = (XformNormal(Matrix4x4(toWorld1.inverse()), normal));
             }
 
             // parse uv
@@ -239,21 +242,23 @@ std::shared_ptr<TriMeshData> ParsePly(const std::string &filename,
     int numFacesParsed = 0;
     while (ifs.good()) {
 
-        std::string line;
-        std::stringstream ss;
-        std::string token;
-        if (ascii) {
-            
-            std::getline(ifs, line);
-            line = trim(line);
-            if (line.size() == 0)
-                continue;      
-            ss << line;      
-            ss >> token;
-        }
 
         // get face data
         if (numFacesParsed < data->indices.size()) {
+            std::string line;
+            std::stringstream ss;
+            // std::string token;
+            if (ascii) {
+                
+                std::getline(ifs, line);
+                line = trim(line);
+                if (line.size() == 0)
+                    continue;      
+                // ss << line; 
+                ss.str(line);     
+                // ss >> token;
+            }
+
             // int numVertPerFace = 3;
             unsigned char numVertPerFace_char;
             if (ascii)
@@ -262,7 +267,12 @@ std::shared_ptr<TriMeshData> ParsePly(const std::string &filename,
                 ifs.read(reinterpret_cast<char*>(&numVertPerFace_char), sizeof(numVertPerFace_char));
             }
 
-            int numVertPerFace = numVertPerFace_char;
+            // std::cout << "readVal : " << numVertPerFace_char << std::endl;
+            int numVertPerFace;
+            if (ascii)
+                numVertPerFace = numVertPerFace_char - '0';
+            else
+                numVertPerFace = numVertPerFace_char;
               
             if (numVertPerFace != 3)
                 throw std::runtime_error("Only support trimeshes!. Input mesh contains " + std::to_string(numVertPerFace) + " faces");
@@ -304,5 +314,34 @@ std::shared_ptr<TriMeshData> ParsePly(const std::string &filename,
 
     // std::cout << "Loaded Mesh contains " << data->position0.size() << " vertices "
     //     << data->indices.size() << " faces" << std::endl;
+
+    // std::cout << "Vert info" << std::endl;
+    // // print mesh info
+    // for (size_t i = 0; i < data->position0.size(); i++)
+    // {
+    //     std::cout << i << " " << data->position0.at(i).transpose() << std::endl;
+    // }
+
+    // std::cout << "=========" << std::endl;
+
+    // if(data->normal0.size() > 0) {
+    //     std::cout << "Normal info" << std::endl;
+    //     for (size_t i = 0; i < data->normal0.size(); i++)
+    //     {
+    //         std::cout << i << " " << data->normal0.at(i).transpose() << std::endl;
+    //     }
+        
+    //     std::cout << "================" << std::endl;
+    // }
+
+    // std::cout << "Face Info" << std::endl;
+
+    // for (size_t i = 0; i < data->indices.size(); i++)
+    // {
+    //     std::cout << i << " " << data->indices.at(i) << std::endl;
+    // }
+    
+    // std::cout << "===========" << std::endl;
+
     return data;
 }

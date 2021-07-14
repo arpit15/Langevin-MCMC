@@ -214,6 +214,8 @@ void MLT(const Scene *scene, const std::shared_ptr<const PathFuncLib> pathFuncLi
     reporter.Done();
     Float elapsed = Tick(timer);
     std::cout << "Elapsed time:" << elapsed << std::endl;
+
+    std::cout << "num Inf : " << numInf << std::endl;
    
     SampleBuffer buffer(pixelWidth, pixelHeight);
     Float directWeight = scene->options->directSpp > 0 ? inverse(Float(scene->options->directSpp)) : Float(0.0);

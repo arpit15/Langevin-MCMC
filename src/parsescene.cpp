@@ -6,6 +6,7 @@
 #include "camera.h"
 #include "trianglemesh.h"
 #include "parseobj.h"
+#include "parseply.h"
 #include "loadserialized.h"
 #include "pointlight.h"
 #include "arealight.h"
@@ -320,6 +321,43 @@ std::shared_ptr<const Shape> ParseShape(pugi::xml_node node,
         }
         shape = std::make_shared<TriangleMesh>(
             bsdf, ParseObj(filename, toWorld[0], toWorld[1], isMoving, flipNormals, faceNormals));
+    } else if (type == "ply") {
+        std::string filename;
+        Matrix4x4 toWorld[2];
+        toWorld[0] = toWorld[1] = Matrix4x4::Identity();
+        bool isMoving = false;
+        bool flipNormals = false;
+        bool faceNormals = false;
+        
+        for (auto child : node.children()) {
+            std::string name = child.attribute("name").value();
+            if (name == "filename") {
+                filename = child.attribute("value").value();
+            } else if (name == "flipNormals") {
+                flipNormals = child.attribute("value").value();
+            } else if (name == "faceNormals") {
+                faceNormals = child.attribute("value").value();
+            } else if (name == "toWorld") {
+                if (std::string(child.name()) == "transform") {
+                    toWorld[0] = toWorld[1] = ParseTransform(child);
+                } else if (std::string(child.name()) == "animation") {
+                    int transformCount = 0;
+                    for (auto grandChild : child.children()) {
+                        if (std::string(grandChild.name()) == "transform") {
+                            toWorld[transformCount++] = ParseTransform(grandChild);
+                            if (transformCount >= 2)
+                                break;
+                        }
+                    }
+                    if (transformCount != 2) {
+                        Error("Invalid animation");
+                    }
+                    isMoving = true;
+                }
+            }
+        }
+        shape = std::make_shared<TriangleMesh>(
+            bsdf, ParsePly(filename, toWorld[0], toWorld[1], isMoving, flipNormals, faceNormals));
     } else {
         printf("shape type: %s not found.\n", type.c_str());
     }
@@ -613,30 +651,31 @@ std::shared_ptr<const Light> ParseEmitter(pugi::xml_node node,
         return std::make_shared<SpotLight>(Float(1.0), toWorld, intensity, cutoffAngle, beamWidth);
     }
     else if (type == "collimatedbeam") {
-        AnimatedTransform toWorld =
-            MakeAnimatedTransform(Matrix4x4::Identity(), Matrix4x4::Identity());
+        // AnimatedTransform toWorld =
+        //     MakeAnimatedTransform(Matrix4x4::Identity(), Matrix4x4::Identity());
+        Matrix4x4 toWorld = Matrix4x4::Identity();
         Vector3 intensity(Float(1.0), Float(1.0), Float(1.0));
         Float radius(0.01f);
         for (auto child : node.children()) {
             std::string name = child.attribute("name").value();
             if (name == "toWorld") {
                 if (std::string(child.name()) == "transform") {
-                    Matrix4x4 m = ParseTransform(child);
-                    toWorld = MakeAnimatedTransform(m, m);
-                } else if (std::string(child.name()) == "animation") {
-                    toWorld = ParseAnimatedTransform(child);
-                }
+                    toWorld = ParseTransform(child);
+                    // toWorld = MakeAnimatedTransform(m, m);
+                } 
+                // else if (std::string(child.name()) == "animation") {
+                //     toWorld = ParseAnimatedTransform(child);
+                // }
             } else if (name == "intensity") {
                 intensity = ParseVector3(child.attribute("value").value());
             } else if (name == "radius") {
                 radius = std::stof(child.attribute("value").value());
             } 
         }
-        Matrix4x4 traof = Interpolate(toWorld, 0.f);
         std::cout << "CollimatedLight[" << std::endl
                 << "radius : " << radius << std::endl
                 << "intensity : " << intensity << std::endl
-                << "transform : " << traof << std::endl
+                << "transform : " << toWorld << std::endl
                 << "]" << std::endl;
         return std::make_shared<CollimatedLight>(Float(1.0), toWorld, radius, intensity);
     } 

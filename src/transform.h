@@ -66,3 +66,15 @@ inline TVector3<FloatType> XformNormal(const TMatrix4x4<FloatType> &invXform,
         invXform(0, 1) * vec[0] + invXform(1, 1) * vec[1] + invXform(2, 1) * vec[2],
         invXform(0, 2) * vec[0] + invXform(1, 2) * vec[1] + invXform(2, 2) * vec[2]);
 }
+
+// template <typename FloatType>
+// TMatrix4x4<FloatType> Invert(const TMatrix4x4<FloatType> &transform) {
+//     TMatrix4x4<FloatType> ret;
+//     ret.rotate = TVector4<FloatType>(-transform.rotate[0],
+//                                         -transform.rotate[1],
+//                                         -transform.rotate[2],
+//                                         transform.rotate[3]);
+//     TMatrix4x4<FloatType> rot0 = ToMatrix4x4<FloatType>(ret.rotate);
+//     ret.translate = -XformVector<FloatType>(rot0, transform.translate);
+//     return ret;
+// }

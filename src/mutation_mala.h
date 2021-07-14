@@ -6,6 +6,8 @@
 #include "mala.h"
 #include "fastmath.h"
 
+// static int numInf = 0;
+
 using DervFuncMap = std::unordered_map<std::pair<int, int>, PathFuncDerv>;
 struct MALASmallStep : public Mutation {
     MALASmallStep(const Scene *scene,
@@ -107,6 +109,8 @@ Float MALASmallStep::Mutate(const MLTState &mltState,
                          &vGrad[0],
                          NULL);
                 if (!IsFinite(vGrad)) {
+                    // std::cout << "MALA mut vgrads infinite!" << std::endl;
+                    ++numInf;
                     std::fill(vGrad.begin(), vGrad.end(), Float(0.0));
                 }
                 assert(IsFinite(vGrad));
@@ -202,7 +206,8 @@ Float MALASmallStep::Mutate(const MLTState &mltState,
                              &vGrad[0],
                              NULL);
                     if (!IsFinite(vGrad)) {
-                        std::cout << "MALA mut vgrads infinite!" << std::endl;
+                        // std::cout << "MALA mut vgrads infinite!" << std::endl;
+                        ++numInf;
                         std::fill(vGrad.begin(), vGrad.end(), Float(0.0));
                     }
                     assert(IsFinite(vGrad));

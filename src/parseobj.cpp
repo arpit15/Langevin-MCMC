@@ -225,6 +225,35 @@ std::shared_ptr<TriMeshData> ParseObj(const std::string &filename,
             data->normal1[i] = -data->normal1[i];
     }
 
+    // std::cout << "Vert info" << std::endl;
+    // // print mesh info
+    // for (size_t i = 0; i < data->position0.size(); i++)
+    // {
+    //     std::cout << i << " " << data->position0.at(i).transpose() << std::endl;
+    // }
+
+    // std::cout << "=========" << std::endl;
+
+    // if(data->normal0.size() > 0) {
+    //     std::cout << "Normal info" << std::endl;
+    //     for (size_t i = 0; i < data->normal0.size(); i++)
+    //     {
+    //         std::cout << i << " " << data->normal0.at(i).transpose() << std::endl;
+    //     }
+        
+    //     std::cout << "================" << std::endl;
+    // }
+
+    // std::cout << "Face Info" << std::endl;
+
+    // for (size_t i = 0; i < data->indices.size(); i++)
+    // {
+    //     std::cout << i << " " << data->indices.at(i) << std::endl;
+    // }
+    
+    // std::cout << "===========" << std::endl;
+    
+
 
     return data;
 }

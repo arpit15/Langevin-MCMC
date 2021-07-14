@@ -24,6 +24,7 @@ IESLight::IESLight(const Float &samplingWeight, const AnimatedTransform &toWorld
 }
 
 void IESLight::Serialize(const LightPrimID &lPrimID, const Vector2 &rndDir, Float *buffer) const {
+    // std::cout << "Serializing IES light!" << std::endl;
     buffer = ::Serialize((Float)LightType::IESLight, buffer);
     buffer = ::Serialize(toWorld, buffer);
     buffer = ::Serialize(toLight, buffer);
@@ -66,7 +67,8 @@ void _SampleDirectIESLight(const TAnimatedTransform<FloatType> &toWorld,
     
     TMatrix4x4<FloatType> traoW = Interpolate(toWorld, time);
     TVector3<FloatType> origin;
-    origin.setZero();
+    origin << Const<FloatType>(0.f), Const<FloatType>(0.f), Const<FloatType>(0.f);
+    // origin.setZero();
 
     TVector3<FloatType> lightPos = XformPoint(traoW, origin);
     dirToLight = lightPos - pos;

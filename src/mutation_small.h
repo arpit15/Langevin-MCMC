@@ -1,6 +1,8 @@
 #pragma once 
 #include "mutation.h"
 
+static int numInf = 0;
+
 struct SmallStep : public Mutation {
     Float Mutate(const MLTState &mltState,
                  const Float normalization,

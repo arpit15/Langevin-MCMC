@@ -2,7 +2,7 @@
 #include "shape.h"
 #include "utils.h"
 #include "sampling.h"
-#include "animatedtransform.h"
+#include "transform.h"
 
 int GetCollimatedLightSerializedSize() {
     return 1 +                            // type
@@ -13,15 +13,16 @@ int GetCollimatedLightSerializedSize() {
 }
 
 CollimatedLight::CollimatedLight(const Float &samplingWeight,
-            const AnimatedTransform &toWorld, 
+            const Matrix4x4 &toWorld, 
             const Float &_radius, 
             const Vector3 &emission)
     : Light(samplingWeight),
       toWorld(toWorld), 
-      toLight(Invert(toWorld)), 
+      toLight((toWorld.inverse())), 
       m_radius(_radius), emission(emission) {}
 
 void CollimatedLight::Serialize(const LightPrimID &lPrimID, const Vector2 &rndDir, Float *buffer) const {
+    // std::cout << "Serializing Collimated light!" << std::endl;
     buffer = ::Serialize((Float)LightType::CollimatedLight, buffer);
     buffer = ::Serialize(toWorld, buffer);
     buffer = ::Serialize(toLight, buffer);
@@ -31,8 +32,8 @@ void CollimatedLight::Serialize(const LightPrimID &lPrimID, const Vector2 &rndDi
 
 
 template <typename FloatType>
-void _SampleDirectCollimatedLight(const TAnimatedTransform<FloatType> &toWorld,
-                            const TAnimatedTransform<FloatType> &toLight,
+void _SampleDirectCollimatedLight(const TMatrix4x4<FloatType> &toWorld,
+                            const TMatrix4x4<FloatType> &toLight,
                             const FloatType radius, 
                              const TVector3<FloatType> &emission,
                              const TVector3<FloatType> &pos,
@@ -41,10 +42,10 @@ void _SampleDirectCollimatedLight(const TAnimatedTransform<FloatType> &toWorld,
                              TVector3<FloatType> &lightContrib,
                              FloatType &directPdf) {
     FloatType time = Const<FloatType>(0.f);
-    TMatrix4x4<FloatType> traoW = Interpolate(toWorld, time),
-        traoL = Interpolate(toLight, time);
+    // TMatrix4x4<FloatType> traoW = Interpolate(toWorld, time),
+    //     traoL = Interpolate(toLight, time);
 
-    TVector3<FloatType> refLocal = XformPoint(traoL, pos);
+    TVector3<FloatType> refLocal = XformPoint(toLight, pos);
 
     FloatType surfaceArea = radius * radius * FloatType(M_PI);
     TVector2<FloatType> planeProjection(refLocal[0], refLocal[1]);
@@ -55,7 +56,7 @@ void _SampleDirectCollimatedLight(const TAnimatedTransform<FloatType> &toWorld,
     } else {
         
         TVector3<FloatType> unitz(Const<FloatType>(0.f), Const<FloatType>(0.f), Const<FloatType>(1.f));
-        dirToLight = -XformVector(traoW, unitz);
+        dirToLight = -XformVector(toWorld, unitz);
         dist = refLocal[2];
         FloatType distSq = dist * dist;
         lightContrib = emission * inverse(distSq) * surfaceArea;  
@@ -127,12 +128,12 @@ void CollimatedLight::Emit(const BSphere & /*sceneSphere*/,
     
     lPrimID = 0;
     cosAtLight = directPdf = Float(1.f);
-    Matrix4x4 traoW = Interpolate(toWorld, time);
+    // Matrix4x4 traoW = Interpolate(toWorld, time);
 
     Vector2 samplePoint = SampleConcentricDisc(rndParamPos) * m_radius;
     Vector3 localPointOnLight(samplePoint[0], samplePoint[1], 0.f);
-    ray.org = XformPoint(traoW, localPointOnLight);
-    ray.dir = XformVector(traoW, Vector3(0.f, 0.f, 1.f));
+    ray.org = XformPoint(toWorld, localPointOnLight);
+    ray.dir = XformVector(toWorld, Vector3(0.f, 0.f, 1.f));
 
     Float surfaceArea = m_radius * m_radius * Float(M_PI);
     emission = this->emission * surfaceArea;
@@ -160,7 +161,7 @@ void SampleDirectCollimatedLight(const ADFloat *buffer,
                            ADFloat &directPdf,
                            ADFloat &emissionPdf) {
     
-    ADAnimatedTransform toWorld, toLight;
+    ADMatrix4x4 toWorld, toLight;
     ADFloat radius;
     ADVector3 emission;
     
@@ -173,10 +174,10 @@ void SampleDirectCollimatedLight(const ADFloat *buffer,
     // _SampleDirectCollimatedLight(toWorld, toLight, radius, emission, pos, 
     //                 dist, dirToLight, lightContrib, directPdf);
 
-    ADMatrix4x4 traoW = Interpolate(toWorld, time),
-        traoL = Interpolate(toLight, time);
+    // ADMatrix4x4 traoW = Interpolate(toWorld, time),
+    //     traoL = Interpolate(toLight, time);
 
-    ADVector3 refLocal = XformPoint(traoL, pos);
+    ADVector3 refLocal = XformPoint(toLight, pos);
 
     ADVector2 planeProjection(refLocal[0], refLocal[1]);
     BooleanCPtr valid = And( 
@@ -192,7 +193,7 @@ void SampleDirectCollimatedLight(const ADFloat *buffer,
     {
         
         ADVector3 unitz(zeroVec, zeroVec, Const<ADFloat>(1.f));
-        ADVector3 dirToLight_ = -XformVector(traoW, unitz);
+        ADVector3 dirToLight_ = -XformVector(toWorld, unitz);
         ADFloat dist_ = refLocal[2];
         ADVector3 lightContrib_ = emission * inverse(dist * dist) * surfaceArea;
 
@@ -273,7 +274,7 @@ void EmitCollimatedLight(const ADFloat *buffer,
                    ADFloat &emissionPdf,
                    ADFloat &directPdf) {
 
-    ADAnimatedTransform toWorld, toLight;
+    ADMatrix4x4 toWorld, toLight;
     ADFloat radius;
     ADVector3 _emission;
     
@@ -284,13 +285,13 @@ void EmitCollimatedLight(const ADFloat *buffer,
 
     cosAtLight = Const<ADFloat>(1.0);
     
-    ADMatrix4x4 traoW = Interpolate(toWorld, time);
+    // ADMatrix4x4 traoW = Interpolate(toWorld, time);
     
     ADVector2 samplePoint = SampleConcentricDisc(rndParamPos) * radius;
     ADVector3 localPointOnLight(samplePoint[0], samplePoint[1], Const<ADFloat>(0.f));
-    ray.org = XformPoint(traoW, localPointOnLight);
+    ray.org = XformPoint(toWorld, localPointOnLight);
 
-    ray.dir = XformVector(traoW, 
+    ray.dir = XformVector(toWorld, 
             ADVector3(Const<ADFloat>(0.f), Const<ADFloat>(0.f), Const<ADFloat>(1.f)));
 
     ADFloat surfaceArea = radius * radius * Const<ADFloat>(M_PI);

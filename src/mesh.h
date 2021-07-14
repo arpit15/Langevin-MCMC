@@ -16,6 +16,8 @@ struct TriIndex {
     TriIndexID index[3];
 };
 
+std::ostream& operator<<(std::ostream& os, const TriIndex& triindex);
+
 struct TriMeshData {
     std::vector<Vector3> position0;
     std::vector<Vector3> position1;

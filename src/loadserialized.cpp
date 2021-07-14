@@ -102,15 +102,6 @@ ZStream::~ZStream() {
     inflateEnd(&m_inflateStream);
 }
 
-template <typename VectorType>
-inline Float UnitAngle(const VectorType &u, const VectorType &v) {
-    if (Dot(u, v) < 0) {
-        return (c_PI - Float(2.0)) * asin(Float(0.5) * Length(Vector3(v + u)));
-    } else {
-        return Float(2.0) * asin(Float(0.5) * Length(Vector3(v - u)));
-    }
-}
-
 inline void ComputeNormal(const std::vector<Vector3> &vertices,
                           const std::vector<TriIndex> &triangles,
                           std::vector<Vector3> &normals,

@@ -1,0 +1,77 @@
+<scene version="0.6.0">
+
+
+
+	<default name="spp" value="1024" />
+
+	<integrator type="path">
+		<integer name="maxDepth" value="8" />
+	</integrator>
+	<sensor id="Camera" type="perspective">
+		<string name="fovAxis" value="x" />
+		<float name="fov" value="39.597755" />
+		<float name="nearClip" value="0.100000" />
+		<float name="farClip" value="1000.000000" />
+		<transform name="toWorld">
+			<matrix value="0.000002 -0.348572 -0.937282 7.867906 -0.000001 0.937282 -0.348572 2.926054 1.000000 0.000001 0.000001 -0.000003 0.000000 0.000000 0.000000 1.000000" />
+		</transform>
+		<sampler type="independent">
+			<integer name="sampleCount" value="$spp" />
+		</sampler>
+		<film type="hdrfilm">
+			<integer name="width" value="500" />
+			<integer name="height" value="500" />
+			<boolean name="banner" value="false" />
+		</film>
+	</sensor>
+
+
+
+	<bsdf id="mat-Material.002" type="blendbsdf">
+		<texture type="bitmap" name="weight">
+			<string name="filename" value="textures/checker_scaled.png"/> 
+		</texture>
+		<!-- <float name="weight" value="0.500000" /> -->
+		<bsdf type="twosided">
+			<bsdf type="diffuse">
+				<rgb name="reflectance" value="0.800000 0.090275 0.090275" />
+			</bsdf>
+		</bsdf>
+		<bsdf type="twosided">
+			<bsdf type="diffuse">
+				<rgb name="reflectance" value="0.036577 0.055643 0.800000" />
+			</bsdf>
+		</bsdf>
+	</bsdf>
+	<bsdf id="mat-Material.001" type="twosided">
+		<bsdf type="diffuse">
+			<rgb name="reflectance" value="0.048981 0.800000 0.052432" />
+		</bsdf>
+	</bsdf>
+
+
+
+	<!-- <shape id="emit-Area" type="rectangle"> -->
+	<shape type="obj">
+		<string name="filename" value="meshes/unit_plane.obj"/>
+		<boolean name="flipNormals" value="true" />
+		<transform name="toWorld">
+			<matrix value="1.646747 0.000000 0.000000 0.000000 0.000000 0.000000 1.646747 5.000000 0.000000 -1.646747 0.000000 0.000000 0.000000 0.000000 0.000000 1.000000" />
+		</transform>
+		<emitter type="area">
+			<rgb name="radiance" value="10" />
+		</emitter>
+		<bsdf type="diffuse" />
+	</shape>
+
+
+
+	<shape id="mesh-Cube" type="ply">
+		<string name="filename" value="meshes/Cube.ply" />
+		<ref id="mat-Material.002" name="bsdf" />
+	</shape>
+	<shape id="mesh-Plane" type="ply">
+		<string name="filename" value="meshes/Plane.ply" />
+		<ref id="mat-Material.001" name="bsdf" />
+	</shape>
+</scene>

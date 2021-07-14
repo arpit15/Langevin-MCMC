@@ -2,7 +2,7 @@
 
 using namespace std;
 int main() {
-    string meshFn = "../data/Plane.ply";
+    string meshFn = "../data/unit_plane.ply";
 
     bool isMoving = false, 
         flipNormals = false, 

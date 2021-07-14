@@ -1,7 +1,7 @@
 #pragma once
 
 #include "light.h"
-#include "animatedtransform.h"
+// #include "animatedtransform.h"
 
 struct Shape;
 
@@ -9,7 +9,7 @@ int GetCollimatedLightSerializedSize();
 
 struct CollimatedLight : public Light {
     CollimatedLight(const Float &samplingWeight, 
-            const AnimatedTransform &toWorld,
+            const Matrix4x4 &toWorld,
             const Float &_radius, const Vector3 &emission);
 
     LightType GetType() const override {
@@ -54,8 +54,8 @@ struct CollimatedLight : public Light {
         return true;
     }
 
-    const AnimatedTransform toWorld;
-    const AnimatedTransform toLight;
+    const Matrix4x4 toWorld;
+    const Matrix4x4 toLight;
     const Float m_radius;
     const Vector3 emission;
 };
