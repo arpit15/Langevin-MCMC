@@ -41,10 +41,7 @@ void _SampleDirectCollimatedLight(const TMatrix4x4<FloatType> &toWorld,
                              TVector3<FloatType> &dirToLight,
                              TVector3<FloatType> &lightContrib,
                              FloatType &directPdf) {
-    FloatType time = Const<FloatType>(0.f);
-    // TMatrix4x4<FloatType> traoW = Interpolate(toWorld, time),
-    //     traoL = Interpolate(toLight, time);
-
+    
     TVector3<FloatType> refLocal = XformPoint(toLight, pos);
 
     FloatType surfaceArea = radius * radius * FloatType(M_PI);
@@ -59,8 +56,13 @@ void _SampleDirectCollimatedLight(const TMatrix4x4<FloatType> &toWorld,
         dirToLight = -XformVector(toWorld, unitz);
         dist = refLocal[2];
         FloatType distSq = dist * dist;
-        lightContrib = emission * inverse(distSq) * surfaceArea;  
-        directPdf =  distSq * inverse(surfaceArea);
+        
+        // f / p
+        directPdf =  distSq; // * inverse(surfaceArea);
+        lightContrib = emission * inverse(distSq); // * surfaceArea;  
+
+        // directPdf =  inverse(surfaceArea);
+        // lightContrib = emission * surfaceArea;
     }
 }
 
@@ -77,14 +79,17 @@ bool CollimatedLight::SampleDirect(const BSphere & /*sceneSphere*/,
                              Float &directPdf,
                              Float &emissionPdf) const {
     
+    // std::cout << "SampleDirect !" << std::endl;
     // no prim associated in this light
     lPrimID = 0;
     _SampleDirectCollimatedLight(toWorld, toLight, m_radius, emission, pos, 
                     dist, dirToLight, contrib, directPdf);
     if( directPdf > Float(0.0)) {
+        Float surfaceArea = m_radius * m_radius * Float(M_PI);
         cosAtLight = Float(1.f);
-        emissionPdf = directPdf;
+        emissionPdf = inverse(surfaceArea);
         // std::cout << "SampleDirect contrib:" << contrib.transpose() << std::endl;
+        // std::cout << "Direct sample dir " << dirToLight.transpose() << std::endl;
         return true;
     } else 
     return false;
@@ -126,25 +131,25 @@ void CollimatedLight::Emit(const BSphere & /*sceneSphere*/,
                      Float &emissionPdf,
                      Float &directPdf) const {
     
+    // std::cout << "EMIT method !" << std::endl;
     lPrimID = 0;
     cosAtLight = directPdf = Float(1.f);
-    // Matrix4x4 traoW = Interpolate(toWorld, time);
-
+    
     Vector2 samplePoint = SampleConcentricDisc(rndParamPos) * m_radius;
     Vector3 localPointOnLight(samplePoint[0], samplePoint[1], 0.f);
     ray.org = XformPoint(toWorld, localPointOnLight);
     ray.dir = XformVector(toWorld, Vector3(0.f, 0.f, 1.f));
 
     Float surfaceArea = m_radius * m_radius * Float(M_PI);
-    emission = this->emission * surfaceArea;
     emissionPdf = inverse(surfaceArea);
-    directPdf = inverse(surfaceArea);
+    emission = this->emission / emissionPdf;
+    directPdf = Float(1.0);
 
     // std::cout << "Emit : " 
-    //         << "o:" << ray.org 
-    //         << ", d:" << ray.dir 
-    //         << ", c:" << emission
-    //         << ", pdf:" << emissionPdf
+    //         << "o:" << ray.org.transpose() 
+    //         << ", d:" << ray.dir.transpose() 
+    //         << ", c:" << emission.transpose()
+    //         << ", emitpdf:" << emissionPdf
     //         << ", directPdf:" << directPdf << std::endl;
 }
 
@@ -187,7 +192,7 @@ void SampleDirectCollimatedLight(const ADFloat *buffer,
 
     ADFloat surfaceArea = radius * radius * Const<ADFloat>(M_PI);
     ADFloat zeroVec = Const<ADFloat>(0.f);
-    std::vector<CondExprCPtr> ret = CreateCondExprVec(8);
+    std::vector<CondExprCPtr> ret = CreateCondExprVec(10);
     // following if is flipped
     BeginIf ( valid, ret);
     {
@@ -195,15 +200,16 @@ void SampleDirectCollimatedLight(const ADFloat *buffer,
         ADVector3 unitz(zeroVec, zeroVec, Const<ADFloat>(1.f));
         ADVector3 dirToLight_ = -XformVector(toWorld, unitz);
         ADFloat dist_ = refLocal[2];
-        ADVector3 lightContrib_ = emission * inverse(dist * dist) * surfaceArea;
+        ADVector3 lightContrib_ = emission * inverse(dist * dist); // * surfaceArea;
 
-        ADFloat pdf_ = dist * dist * inverse(surfaceArea);
-
+        ADFloat pdf_ = dist * dist; // * inverse(surfaceArea);
+        ADFloat cosAtLight_ = Const<ADFloat>(1.f);
+        ADFloat emissionPdf_ = inverse(surfaceArea);
         SetCondOutput({
             pdf_,
             lightContrib_[0], lightContrib_[1], lightContrib_[2],
             dirToLight_[0], dirToLight_[1], dirToLight_[2],
-            dist_
+            dist_, cosAtLight_, emissionPdf_
         });
     } 
     BeginElse(); 
@@ -212,7 +218,7 @@ void SampleDirectCollimatedLight(const ADFloat *buffer,
             zeroVec, 
             zeroVec, zeroVec, zeroVec,
             zeroVec, zeroVec, zeroVec,
-            zeroVec
+            zeroVec, zeroVec, zeroVec
             });
     }
     EndIf();
@@ -221,9 +227,10 @@ void SampleDirectCollimatedLight(const ADFloat *buffer,
     lightContrib = ADVector3(ret[1], ret[2], ret[3]);
     dirToLight = ADVector3(ret[4], ret[5], ret[6]);
     dist = ret[7];
+
     
-    cosAtLight = directPdf;
-    emissionPdf = directPdf;
+    cosAtLight = ret[8];
+    emissionPdf = ret[9];
 }
 
 // void EmissionCollimatedLight(const ADFloat *buffer,
@@ -295,7 +302,8 @@ void EmitCollimatedLight(const ADFloat *buffer,
             ADVector3(Const<ADFloat>(0.f), Const<ADFloat>(0.f), Const<ADFloat>(1.f)));
 
     ADFloat surfaceArea = radius * radius * Const<ADFloat>(M_PI);
-    emission = _emission * inverse(surfaceArea);
     emissionPdf = inverse(surfaceArea);
-    directPdf = inverse(surfaceArea);
+    emission = _emission / emissionPdf;
+    // directPdf = inverse(surfaceArea);
+    directPdf =  Const<ADFloat>(1.0);
 }

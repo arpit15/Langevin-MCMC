@@ -88,7 +88,8 @@ int main(int argc, char *argv[]) {
             std::string integrator = scene->options->integrator;
                 
             scene->options->seedOffset = seedoffset;
-
+            
+            std::cout << "Scene parsing done !" << std::endl;
             if (integrator == "mc") {
                 std::shared_ptr<const PathFuncLib> library =
                     BuildPathFuncLibrary(scene->options->bidirectional, maxDervDepth);

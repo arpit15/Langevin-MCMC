@@ -32,28 +32,42 @@ void Evaluate(
     contrib.setZero();
     pdf = revPdf = Float(0.0);
 
-    Float cosWi = Dot(wi, normal);
+    Vector3 wi_ = wi, wo_ = wo;
     
+    Float cosWi = Dot(wi, normal);
 
     Vector3 normal_ = normal;
-    if (twoSided && cosWi < Float(0.0)) {
-        cosWi = -cosWi;
-        normal_ = -normal_;
+    
+    if (cosWi < Float(0.0)) {
+        if (twoSided) {
+            cosWi = -cosWi;
+            normal_ = -normal_;
+            // wi_[2] = -wi_[2];  // just flip the z component
+            // flipped = true;
+        } 
+        else {
+            // std::cout << "coswi < 0 for some reason" << std::endl;
+            return;
+        }
     }
 
-    cosWo = Dot(wo, normal_);
+    // std::cout << "Eval coswi : " << cosWi << ", coswo : " << cosWo << std::endl;
+    cosWo = Dot(wo_, normal_);
     
     if ( (fabs(cosWi) < c_CosEpsilon) || (fabs(cosWo) < c_CosEpsilon) ||
-        ( cosWi < c_CosEpsilon ) || (cosWo < c_CosEpsilon)) {
+             (cosWo < 0.f)) {
         return;
     }
 
+    // if ( cosWo * cosWi < 0.f)
+    //     std::cout << "Something fishy is going on coswi : " << cosWi << ", coswo : " << cosWo << std::endl;
+    
     Float eta_ = bsdf->eta;
     // reflection half-vector
-    Vector3 H = Normalize(Vector3(wi + wo));
+    Vector3 H = Normalize(Vector3(wi_ + wo_));
 
-    Float cosHWi = Dot(wi, H);
-    Float cosHWo = Dot(wo, H);
+    Float cosHWi = Dot(wi_, H);
+    Float cosHWo = Dot(wo_, H);
 
     if (fabs(cosHWi) < c_CosEpsilon || fabs(cosHWo) < c_CosEpsilon || 
         cosHWi < c_CosEpsilon || cosHWo < c_CosEpsilon ) {
@@ -94,7 +108,6 @@ void Evaluate(
     Float prob = localH[2] * scaledD;
 
     if (prob < Float(1e-20)) {
-        contrib = Vector3::Zero();
         return;
     }
 
@@ -104,8 +117,8 @@ void Evaluate(
 
     Float scalar = fabs(F * D * G / (Float(4.0) * cosWi));
     contrib = bsdf->Ks->Eval(st) * scalar;
-    pdf = fabs(prob * F / (Float(4.0) * cosHWo));
-    revPdf = fabs(revProb * F / (Float(4.0) * revCosHWo));
+    pdf = fabs(prob * F/ (Float(4.0) * cosHWo));
+    revPdf = fabs(revProb / (Float(4.0) * revCosHWo));
     
     // taken from phong.cpp
     // Just for numerical stability
@@ -150,14 +163,16 @@ bool Sample(
             const Vector3 &normal,
             const Vector2 st,
             const Vector2 rndParam,
-            // const Float /*uDiscrete*/,
-            const Float uDiscrete,
+            const Float /*uDiscrete*/,
+            // const Float uDiscrete,
             Vector3 &wo,
             Vector3 &contrib,
             Float &cosWo,
             Float &pdf,
             Float &revPdf) {
 
+
+    Vector3 wi_ = wi;
     Float cosWi = Dot(wi, normal);
 
     Vector3 normal_ = normal;
@@ -165,6 +180,8 @@ bool Sample(
         if (twoSided) {
             cosWi = -cosWi;
             normal_ = -normal_;
+            // wi_[2] = -wi_[2];  // just flip the z component
+            // flipped = true;
         } else {
             return false;
         }
@@ -177,33 +194,34 @@ bool Sample(
     Float scaledAlp = alp * (Float(1.2) - Float(0.2) * sqrt(fabs(cosWi)));
     Float mPdf;
     Vector3 localH = SampleMicronormal(rndParam, scaledAlp, mPdf);
-    pdf = mPdf;
+    // pdf = mPdf;
     Vector3 b0;
     Vector3 b1;
     CoordinateSystem(normal_, b0, b1);
     Vector3 H = localH[0] * b0 + localH[1] * b1 + localH[2] * normal_;
-    Float cosHWi = Dot(wi, H);
+    Float cosHWi = Dot(wi_, H);
     if (fabs(cosHWi) < c_CosEpsilon) {
         return false;
     }
-    Float cosThetaT = 0.0;
-    Float F = FresnelConductorExact(cosThetaT, bsdf->eta);
+    
+    Float F = FresnelConductorExact(cosHWi, bsdf->eta);
     
     Vector3 refl;
     Float cosHWo;
 
-    wo = Reflect(wi, H);
+    wo = Reflect(wi_, H);
+    cosWo = Dot(wo, normal_);
     // side check
-    if (F <= Float(0.0) || Dot(normal_, wo) * Dot(normal_, wi) <= Float(0.0)) {
+    if (F <= Float(0.0) || ((cosWo * cosWi) <= Float(0.0))) {
         return false;
     }
-    refl = bsdf->Ks->Eval(st);
+    refl = F * bsdf->Ks->Eval(st);
     cosHWo = Dot(wo, H);
-    pdf = fabs(pdf * F / (Float(4.0) * cosHWo));
+    pdf = fabs(mPdf * F/ (Float(4.0) * cosHWo));
     
     Float revCosHWo = cosHWi;
     Float rev_dwh_dwo = inverse(Float(4.0) * revCosHWo);
-    cosWo = Dot(wo, normal_);
+    
     
     if (fabs(cosWo) < c_CosEpsilon) {
         return false;
@@ -234,10 +252,19 @@ bool Sample(
 
     Float D = BeckmennDistributionTerm(localH, alp, alp);
     Float G = BeckmennGeometryTerm(alp, aCosWi, aCosWo);
+
+    // std::cout << "F : " << F << ", D : " << D << ", G : " << G << ", cosWi : " << cosWi << ", localH : " << localH.transpose() << std::endl;
     Float numerator = D * G * cosHWi;
-    Float denominator = mPdf * aCosWi;
+    Float denominator = mPdf * cosWi;
     contrib = refl * fabs(numerator / denominator);
 
+    // std::cout << "refl : " << refl << ", num : " << numerator << ", den : " << denominator << std::endl;
+
+    if ( cosWo * cosWi < 0.f)
+        std::cout << " Stupid sampling!" << std::endl;
+    // if ( flipped ) {
+    //     wo[2] = -wo[2];
+    // }
     return true;
 }
 
@@ -293,20 +320,22 @@ void EvaluateRoughConductor(const bool adjoint,
     buffer = Deserialize(buffer, alpha);
 
     ADFloat cosWi = Dot(normal, wi);
-    std::vector<CondExprCPtr> ret = CreateCondExprVec(4);
+    std::vector<CondExprCPtr> ret = CreateCondExprVec(7);
+    // assuming the following case was sampled because the bsdf is two-sided
     BeginIf(Gt(cosWi, Float(0.0)), ret);
-    { SetCondOutput({normal[0], normal[1], normal[2], cosWi}); }
+    { SetCondOutput({normal[0], normal[1], normal[2], cosWi, wi[0], wi[1], wi[2]}); }
     BeginElse();
-    { SetCondOutput({-normal[0], -normal[1], -normal[2], -cosWi}); }
+    { SetCondOutput({-normal[0], -normal[1], -normal[2], -cosWi, wi[0], wi[1], wi[2]}); }
     EndIf();
     ADVector3 normal_(ret[0], ret[1], ret[2]);
     cosWi = ret[3];
+    ADVector3 wi_(ret[4], ret[5], ret[6]);
 
     cosWo = Dot(wo, normal_);
     
-    ADVector3 H = Normalize(ADVector3(wi + wo));
+    ADVector3 H = Normalize(ADVector3(wi_ + wo));
 
-    ADFloat cosHWi = Dot(wi, H);
+    ADFloat cosHWi = Dot(wi_, H);
     ADFloat cosHWo = Dot(wo, H);
    
     ADVector3 b0;
@@ -335,9 +364,6 @@ void EvaluateRoughConductor(const bool adjoint,
     contrib = Ks * scalar;
     pdf = fabs(prob * F / (Float(4.f) * cosHWo));
     revPdf = fabs(revProb * F / (Float(4.0) * revCosHWo));
-
-    // std::cout << "Eval AD contrib:" << contrib.transpose() << std::endl;
-
 }
 
 void SampleRoughConductor(const bool adjoint,
@@ -361,14 +387,15 @@ void SampleRoughConductor(const bool adjoint,
     buffer = Deserialize(buffer, alpha);
 
     ADFloat cosWi = Dot(normal, wi);
-    std::vector<CondExprCPtr> ret = CreateCondExprVec(4);
+    std::vector<CondExprCPtr> ret = CreateCondExprVec(7);
     BeginIf(Gt(cosWi, Float(0.0)), ret);
-    { SetCondOutput({normal[0], normal[1], normal[2], cosWi}); }
+    { SetCondOutput({normal[0], normal[1], normal[2], cosWi, wi[0], wi[1], wi[2]}); }
     BeginElse();
-    { SetCondOutput({-normal[0], -normal[1], -normal[2], -cosWi}); }
+    { SetCondOutput({-normal[0], -normal[1], -normal[2], -cosWi, wi[0], wi[1], wi[2]}); }
     EndIf();
     ADVector3 normal_(ret[0], ret[1], ret[2]);
     cosWi = ret[3];
+    ADVector3 wi_(ret[4], ret[5], ret[6]);
 
     ADFloat scaledAlpha = alpha * (Float(1.2) - Float(0.2) * sqrt(fabs(cosWi)));
     ADFloat mPdf;
@@ -377,15 +404,13 @@ void SampleRoughConductor(const bool adjoint,
     ADVector3 b1;
     CoordinateSystem(normal_, b0, b1);
     ADVector3 H = localH[0] * b0 + localH[1] * b1 + localH[2] * normal_;
-    ADFloat cosHWi = Dot(wi, H);
+    ADFloat cosHWi = Dot(wi_, H);
 
     ADFloat F = FresnelConductorExact(cosHWi, eta);
     
-    wo = Reflect(wi, H);
+    wo = Reflect(wi_, H);
     ADVector3 refl = Ks;
-    if (fixDiscrete) {
-        refl *= F;
-    }
+    refl *= F;
     ADFloat cosHWo = Dot(wo, H);
     pdf = fabs(mPdf * F / (Float(4.0) * cosHWo));
     ADFloat revCosHWo = cosHWi;
@@ -400,9 +425,7 @@ void SampleRoughConductor(const bool adjoint,
     ADFloat D = BeckmennDistributionTerm(localH, alpha, alpha);
     ADFloat G = BeckmennGeometryTerm(alpha, aCosWi, aCosWo);
     ADFloat numerator = D * G * cosHWi;
-    ADFloat denominator = mPdf * aCosWi;
+    ADFloat denominator = mPdf * cosWi;
     contrib = refl * fabs(numerator / denominator);
-
-    // std::cout << "Sample AD contrib:" << contrib.transpose() << std::endl;
 
 }

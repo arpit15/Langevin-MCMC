@@ -1,0 +1,155 @@
+<scene version="0.6.0">
+
+
+
+	<default name="spp" value="128" />
+	<default name="resx" value="324" />
+	<default name="resy" value="243" />
+
+	<dpt>
+        <string  name="integrator"     value="mcmc"/>
+        <integer name="mindepth"       value="-1"/>
+        <integer name="maxdepth"       value="32"/>
+        <boolean name="bidirectional"  value="true"/>
+        <integer name="spp"            value="1024"/>    <!-- 45 s -->
+        <float   name="largestepprob"  value="0.05"/>
+        <float   name="largestepscale" value="4"/>
+        <!-- <float   name="numchains" value="2"/> -->
+        <!-- <float   name="numinitsamples" value="10000"/> -->
+        <boolean name="mala"           value="true"/>
+        <!-- <integer name="reportintervalspp"           value="4"/> -->
+        <boolean name="uselightcoordinatesampling"           value="true"/>
+        <integer name="directspp" value="1024"/>
+    </dpt>
+
+	<integrator type="pssmlt">
+		<integer name="maxDepth" value="12" />
+	</integrator>
+	<sensor id="Camera" type="perspective">
+		<string name="fovAxis" value="x" />
+		<float name="fov" value="108.999997" />
+		<float name="nearClip" value="0.100000" />
+		<float name="farClip" value="1000.000000" />
+		<transform name="toWorld">
+			<matrix value="-1.000000 0.000000 0.000000 0.000000 0.000000 1.000000 0.000000 23.000000 -0.000000 0.000000 -1.000000 0.000000 0.000000 0.000000 0.000000 1.000000" />
+		</transform>
+		<sampler type="independent">
+			<integer name="sampleCount" value="128" />
+		</sampler>
+		<film type="hdrfilm">
+			<integer name="width" value="324" />
+			<integer name="height" value="243" />
+			<boolean name="banner" value="false" />
+		</film>
+	</sensor>
+
+
+
+	<bsdf id="mat-coated" type="blendbsdf">
+		<float name="weight" value="0.91" />
+
+		<!-- diffuse -->
+		<bsdf type="twosided" id="mat-coateddiff2">
+			<bsdf type="diffuse" id="mat-coateddiff">
+				<rgb name="reflectance" value="1.0" />
+			</bsdf>
+		</bsdf>
+
+
+
+		<bsdf type="twosided" id="mat-coatedcond">
+			<bsdf type="roughconductor">
+				<!-- <string name="material" value="Cu"/> -->
+				<rgb name="eta" value="0.5"/>
+				<rgb name="k" value="0.41 1.0 0.45"/>
+				<rgb name="k" value="0.8 1.2 0.5"/>
+				<!-- <float name="extEta" value="1.0"/> -->
+
+				<string name="distribution" value="beckmann"/>
+				<float name="alpha" value="0.18" />
+				<rgb name="specularReflectance" value="1.0" />
+			</bsdf>
+		</bsdf>
+	</bsdf>
+
+	<!-- <shape type="disk" id="emit-blue5">
+		<transform name="toWorld">
+			<matrix value="1.000000 0.000000 0.000000 -11.500000 0.000000 -1.000000 -0.000000 20.500000 0.000000 0.000000 -1.000000 1.000000 0.000000 0.000000 0.000000 1.000000" />
+			<scale value="1"/>
+		</transform>
+		
+	</shape>
+
+	<shape type="disk" id="emit-red5">
+		<transform name="toWorld">
+			<matrix value="1.000000 0.000000 0.000000 11.500000 0.000000 -1.000000 -0.000000 20.500000 0.000000 0.000000 -1.000000 1.000000 0.000000 0.000000 0.000000 1.000000" />
+
+			<scale value="0.01"/>
+		</transform>
+		
+	</shape> -->
+
+	<emitter type="collimatedbeam" id="emit-blue5">
+		<rgb name="intensity" value="130 250 950" />
+		<transform name="toWorld">
+			<matrix value="1.000000 0.000000 0.000000 -11.500000 0.000000 -1.000000 -0.000000 20.500000 0.000000 0.000000 -1.000000 1.000000 0.000000 0.000000 0.000000 1.000000" />
+		</transform>
+		<float name="radius" value="1"/>
+	</emitter>
+
+	<emitter type="collimatedbeam" id="emit-red5">
+		<rgb name="intensity" value="500 70 10" />
+		<transform name="toWorld">
+			<matrix value="1.000000 0.000000 0.000000 11.500000 0.000000 -1.000000 -0.000000 20.500000 0.000000 0.000000 -1.000000 1.000000 0.000000 0.000000 0.000000 1.000000" />
+		</transform>
+		<float name="radius" value="1"/>
+	</emitter>
+
+	<!-- <emitter id="emit-blue5" type="ies">
+		<string name="filename" value="textures/ies_aniso_v4.exr" />
+		<rgb name="intensity" value="130 250 950" />
+		<transform name="toWorld">
+			<matrix value="1.000000 0.000000 0.000000 -11.500000 0.000000 -1.000000 -0.000000 20.500000 0.000000 0.000000 -1.000000 1.000000 0.000000 0.000000 0.000000 1.000000" />
+		</transform>
+	</emitter> -->
+
+	<!-- <emitter id="emit-red5" type="ies">
+		<string name="filename" value="textures/ies_aniso_v5.exr" />
+		<rgb name="intensity" value="500 70 10" />
+		<transform name="toWorld">
+			<matrix value="1.000000 0.000000 0.000000 11.500000 0.000000 -1.000000 -0.000000 20.500000 0.000000 0.000000 -1.000000 1.000000 0.000000 0.000000 0.000000 1.000000" />
+		</transform>
+	</emitter> -->
+
+
+
+
+	<shape id="mesh-diffuseLayer" type="obj">
+		<string name="filename" value="meshes/diffuse_layer.obj" />
+		<ref id="mat-coated" name="bsdf" />
+	</shape>
+
+
+	<bsdf id="mat-pdms" type="roughdielectric">
+		<float name="alpha" value="0.000400" />
+		<string name="distribution" value="beckmann" />
+		<float name="intIOR" value="1.5031" />
+		<rgb name="specularTransmittance" value="1.000000 1.000000 1.000000" />
+	</bsdf>
+	<bsdf id="mat-Epoxy" type="roughdielectric">
+		<float name="alpha" value="0.108900" />
+		<string name="distribution" value="beckmann" />
+		<float name="intIOR" value="1.500000" />
+		<rgb name="specularTransmittance" value="1.000000 1.000000 1.000000" />
+	</bsdf>
+
+	<shape id="mesh-PDMS onshape" type="obj">
+		<string name="filename" value="meshes/PDMS onshape.obj" />
+		<ref id="mat-pdms" name="bsdf" />
+	</shape>
+	<shape id="mesh-Epoxy onshape" type="obj">
+		<string name="filename" value="meshes/Epoxy onshape.obj" />
+		<ref id="mat-Epoxy" name="bsdf" />
+	</shape>
+
+</scene>

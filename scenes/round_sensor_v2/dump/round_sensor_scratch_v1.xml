@@ -1,0 +1,67 @@
+<scene version="0.6.0">
+
+
+
+	<default name="spp" value="128" />
+	<default name="resx" value="324" />
+	<default name="resy" value="243" />
+
+
+
+	<integrator type="path">
+		<integer name="maxDepth" value="12" />
+	</integrator>
+	<sensor id="Camera" type="perspective">
+		<string name="fovAxis" value="x" />
+		<float name="fov" value="108.999997" />
+		<float name="nearClip" value="0.100000" />
+		<float name="farClip" value="1000.000000" />
+		<transform name="toWorld">
+			<matrix value="-1.000000 0.000000 0.000000 0.000000 0.000000 1.000000 0.000000 23.000000 -0.000000 0.000000 -1.000000 0.000000 0.000000 0.000000 0.000000 1.000000" />
+		</transform>
+		<sampler type="independent">
+			<integer name="sampleCount" value="$spp" />
+		</sampler>
+		<film type="hdrfilm">
+			<integer name="width" value="$resx" />
+			<integer name="height" value="$resy" />
+			<boolean name="banner" value="false" />
+		</film>
+	</sensor>
+
+
+
+	<bsdf id="mat-pdms" type="roughdielectric">
+		<float name="alpha" value="0.000400" />
+		<string name="distribution" value="beckmann" />
+		<float name="intIOR" value="1.490000" />
+		<rgb name="specularTransmittance" value="1.000000 1.000000 1.000000" />
+	</bsdf>
+	<bsdf id="mat-Epoxy" type="roughdielectric">
+		<float name="alpha" value="0.108900" />
+		<string name="distribution" value="beckmann" />
+		<float name="intIOR" value="1.500000" />
+		<rgb name="specularTransmittance" value="1.000000 1.000000 1.000000" />
+	</bsdf>
+	<bsdf id="default-bsdf" type="twosided">
+		<bsdf type="diffuse" />
+	</bsdf>
+
+
+
+
+
+
+	<shape id="mesh-PDMS onshape" type="ply">
+		<string name="filename" value="meshes/PDMS onshape.ply" />
+		<ref id="mat-pdms" name="bsdf" />
+	</shape>
+	<shape id="mesh-Epoxy onshape" type="ply">
+		<string name="filename" value="meshes/Epoxy onshape.ply" />
+		<ref id="mat-Epoxy" name="bsdf" />
+	</shape>
+	<shape id="mesh-diffuseLayer" type="ply">
+		<string name="filename" value="meshes/diffuse_layer.ply" />
+		<ref id="default-bsdf" name="bsdf" />
+	</shape>
+</scene>
