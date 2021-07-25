@@ -164,9 +164,11 @@ AnimatedTransform ParseAnimatedTransform(pugi::xml_node node) {
     return MakeAnimatedTransform(m[0], m[1]);
 }
 
-std::shared_ptr<Image3> ParseFilm(pugi::xml_node node, std::string &filename) {
+std::shared_ptr<Image3> ParseFilm(pugi::xml_node node, std::string &filename, 
+            int &cropOffsetX, int &cropOffsetY, int &cropWidth, int &cropHeight ) {
     int width = 512;
     int height = 512;
+
     for (auto child : node.children()) {
         std::string name = child.attribute("name").value();
         if (name == "width") {
@@ -175,8 +177,27 @@ std::shared_ptr<Image3> ParseFilm(pugi::xml_node node, std::string &filename) {
             height = atoi(child.attribute("value").value());
         } else if (name == "filename") {
             filename = std::string(child.attribute("value").value());
+        } 
+    }
+
+    cropOffsetX = 0;
+    cropOffsetY = 0;
+    cropWidth = width;
+    cropHeight = height;
+
+    for (auto child : node.children()) {
+        std::string name = child.attribute("name").value(); 
+        if (name == "cropOffsetX") {
+            cropOffsetX = atoi(child.attribute("value").value());
+        } else if (name == "cropOffsetY") {
+            cropOffsetY = atoi(child.attribute("value").value());
+        } else if (name == "cropWidth") {
+            cropWidth = atoi(child.attribute("value").value());
+        } else if (name == "cropHeight") {
+            cropHeight = atoi(child.attribute("value").value());
         }
     }
+    
     return std::make_shared<Image3>(width, height);
 }
 
@@ -186,6 +207,8 @@ std::shared_ptr<const Camera> ParseSensor(pugi::xml_node node, std::string &file
     Float farClip = 1000.0;
     Float fov = 45.0;
     std::shared_ptr<Image3> film;
+    int cropOffsetX = 0, cropOffsetY = 0,
+         cropWidth, cropHeight;
 
     for (auto child : node.children()) {
         std::string name = child.attribute("name").value();
@@ -203,7 +226,7 @@ std::shared_ptr<const Camera> ParseSensor(pugi::xml_node node, std::string &file
                 toWorld = ParseAnimatedTransform(child);
             }
         } else if (std::string(child.name()) == "film") {
-            film = ParseFilm(child, filename);
+            film = ParseFilm(child, filename, cropOffsetX, cropOffsetY, cropWidth, cropHeight);
         }
     }
     if (film.get() == nullptr) {
@@ -212,7 +235,7 @@ std::shared_ptr<const Camera> ParseSensor(pugi::xml_node node, std::string &file
 
     // Eigen alignment issue
     return std::allocate_shared<Camera>(
-        Eigen::aligned_allocator<Camera>(), toWorld, fov, film, nearClip, farClip);
+        Eigen::aligned_allocator<Camera>(), toWorld, fov, film, nearClip, farClip, cropOffsetX, cropOffsetY, cropWidth, cropHeight );
 }
 
 std::shared_ptr<const Shape> ParseShape(pugi::xml_node node,

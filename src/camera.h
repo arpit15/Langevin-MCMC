@@ -12,7 +12,11 @@ struct Camera {
            const Float fov,
            const std::shared_ptr<Image3> film,
            const Float nearClip,
-           const Float farClip);
+           const Float farClip, 
+           const int cropOffsetX, 
+           const int cropOffsetY, 
+           const int cropWidth, 
+           const int cropHeight );
 
     Matrix4x4 sampleToCam, camToSample;
     AnimatedTransform camToWorld, worldToCamera;

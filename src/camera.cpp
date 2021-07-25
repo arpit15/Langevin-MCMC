@@ -12,14 +12,26 @@ Camera::Camera(const AnimatedTransform &camToWorld,
                const Float fov,
                const std::shared_ptr<Image3> film,
                const Float nearClip,
-               const Float farClip)
+               const Float farClip,
+               const int cropOffsetX, 
+                const int cropOffsetY, 
+                const int cropWidth, 
+                const int cropHeight)
+
     : camToWorld(camToWorld),
       worldToCamera(Invert(camToWorld)),
       film(film),
       nearClip(nearClip),
       farClip(farClip) {
+
+    Vector2 film_size_f((Float)film->pixelWidth, (Float)film->pixelHeight);
+    Vector2 rel_size( Float(cropWidth)/film_size_f[0], Float(cropHeight)/film_size_f[1] );
+    Vector2 rel_offset( Float(cropOffsetX)/film_size_f[0], Float(cropOffsetY)/film_size_f[1] );
+
     Float aspect = (Float)film->pixelWidth / (Float)film->pixelHeight;
-    camToSample = Scale(Vector3(-Float(0.5), -Float(0.5) * aspect, Float(1.0))) *
+    camToSample = Scale(Vector3( Float(1.0)/rel_size[0], Float(1.0)/rel_size[1], Float(1.0))) *
+                  Translate(Vector3(-rel_offset[0], -rel_offset[1], Float(0.0))) *
+                  Scale(Vector3(-Float(0.5), -Float(0.5) * aspect, Float(1.0))) *
                   Translate(Vector3(-Float(1.0), -Float(1.0) / aspect, Float(0.0))) *
                   Perspective(fov, nearClip, farClip);
 
