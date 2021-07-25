@@ -8,7 +8,7 @@ struct Image3;
 int GetIESLightSerializedSize();
 
 struct IESLight : public Light {
-    IESLight(const Float &samplingWeight, const AnimatedTransform &toWorld, const Vector3 &emission, const std::string fname);
+    IESLight(const Float &samplingWeight, const Matrix4x4 &toWorld, const Vector3 &emission, const std::string fname);
 
     LightType GetType() const override {
         return LightType::IESLight;
@@ -45,8 +45,8 @@ struct IESLight : public Light {
 
     Float getIESVal(const Vector3 &local) const;
 
-    const AnimatedTransform toWorld;
-    const AnimatedTransform toLight;
+    const Matrix4x4 toWorld;
+    const Matrix4x4 toLight;
     const Vector3 emission;
     // const BitmapTextureRGB iesProfile;
     const std::unique_ptr<const Image3> image;

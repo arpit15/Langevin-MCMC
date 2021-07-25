@@ -15,10 +15,10 @@ int GetIESLightSerializedSize() {
 
 }
 
-IESLight::IESLight(const Float &samplingWeight, const AnimatedTransform &toWorld, const Vector3 &emission, const std::string fname)
+IESLight::IESLight(const Float &samplingWeight, const Matrix4x4 &toWorld, const Vector3 &emission, const std::string fname)
     : Light(samplingWeight), 
     toWorld(toWorld), 
-    toLight(Invert(toWorld)), 
+    toLight((toWorld.inverse())), 
     emission(emission), 
     image(new Image3(fname)) {
 }
@@ -55,7 +55,7 @@ Float IESLight::getIESVal(const Vector3 &local) const {
 }
 
 template <typename FloatType>
-void _SampleDirectIESLight(const TAnimatedTransform<FloatType> &toWorld, 
+void _SampleDirectIESLight(const TMatrix4x4<FloatType> &toWorld, 
                              const TVector3<FloatType> &emission,
                              const TVector3<FloatType> &pos,
                              const FloatType time, 
@@ -64,13 +64,12 @@ void _SampleDirectIESLight(const TAnimatedTransform<FloatType> &toWorld,
                              TVector3<FloatType> &lightContrib,
                              FloatType &pdf) {
     
-    
-    TMatrix4x4<FloatType> traoW = Interpolate(toWorld, time);
+
     TVector3<FloatType> origin;
     origin << Const<FloatType>(0.f), Const<FloatType>(0.f), Const<FloatType>(0.f);
     // origin.setZero();
 
-    TVector3<FloatType> lightPos = XformPoint(traoW, origin);
+    TVector3<FloatType> lightPos = XformPoint(toWorld, origin);
     dirToLight = lightPos - pos;
     const FloatType distSq = LengthSquared(dirToLight);
     pdf = distSq;
@@ -96,15 +95,15 @@ bool IESLight::SampleDirect(const BSphere & /*sceneSphere*/,
                               Float &emissionPdf) const {
     _SampleDirectIESLight(toWorld, emission, pos, time, dist, dirToLight, contrib, directPdf);
 
-    Matrix4x4 traoL = Interpolate(toLight, time);
     const Vector3 dirFromLight = -dirToLight;
-    const Vector3 local = XformVector(traoL, dirFromLight);
+    const Vector3 local = XformVector(toLight, dirFromLight);
     contrib *= getIESVal(local);
     assert(dist > Float(0.0));
     emissionPdf = c_INVFOURPI;
     cosAtLight = Float(1.0);
     lPrimID = 0;
     return true;
+    // AD version is wrong because the IES value will depend upon the pos instead of rndParams
     std::cout << "sample IES direct. AD version is wrong!" << std::endl;
 }
 
@@ -118,16 +117,15 @@ void IESLight::Emit(const BSphere & /*sceneSphere*/,
                       Float &cosAtLight,
                       Float &emissionPdf,
                       Float &directPdf) const {
-    
-    Matrix4x4 traoW = Interpolate(toWorld, time);
+
     Vector3 origin;
     origin.setZero();
-    Vector3 lightPos = XformPoint(traoW, origin);
+    Vector3 lightPos = XformPoint(toWorld, origin);
 
     const Vector3 local = SampleSphere(rndParamDir);
 
     ray.org = lightPos;
-    ray.dir = XformVector(traoW, local);
+    ray.dir = XformVector(toWorld, local);
 
     emission = this->emission * getIESVal(local);
     emissionPdf = c_INVFOURPI;
@@ -147,7 +145,7 @@ void SampleDirectIESLight(const ADFloat *buffer,
                             ADFloat &directPdf,
                             ADFloat &emissionPdf) {
     ADVector3 lightPos, emission;
-    ADAnimatedTransform toWorld, toLight;
+    ADMatrix4x4 toWorld, toLight;
     ADFloat iesVal;
 
     buffer = Deserialize(buffer, toWorld);
@@ -158,12 +156,10 @@ void SampleDirectIESLight(const ADFloat *buffer,
 
     ADFloat dist;
 
-    // ADMatrix4x4 traoW = Interpolate(toWorld, time);
-    // lightPos = XformPoint(traoW, ADVector3(0.f));
     _SampleDirectIESLight(toWorld, emission, pos, time, dist, dirToLight, lightContrib, directPdf);
     // Hack : ideally iesVal is affected by changing rndParamDir
     // incorrect
-    // how the contribution of these paths should be negligible
+    // however the contribution of these paths should be negligible
     lightContrib *= iesVal;
     emissionPdf = Const<ADFloat>(c_INVFOURPI);
     cosAtLight = Const<ADFloat>(1.0);
@@ -182,7 +178,7 @@ void EmitIESLight(const ADFloat *buffer,
                     ADFloat &emissionPdf,
                     ADFloat &directPdf) {
     ADVector3 lightPos, emission_;
-    ADAnimatedTransform toWorld, toLight;
+    ADMatrix4x4 toWorld, toLight;
     ADFloat iesVal;
     buffer = Deserialize(buffer, toWorld);
     buffer = Deserialize(buffer, toLight);
@@ -190,10 +186,10 @@ void EmitIESLight(const ADFloat *buffer,
     Deserialize(buffer, iesVal);
 
     ADVector3 origin; origin.setZero();
-    ADMatrix4x4 traoW = Interpolate(toWorld, time);
-    lightPos = XformPoint(traoW, origin);
+    
+    lightPos = XformPoint(toWorld, origin);
     ray.org = lightPos;
-    ray.dir = XformVector(traoW, SampleSphere(rndParamDir));
+    ray.dir = XformVector(toWorld, SampleSphere(rndParamDir));
     // Hack : ideally iesVal is affected by changing rndParamDir
     emission = emission_ * iesVal;
     emissionPdf = Const<ADFloat>(c_INVFOURPI);

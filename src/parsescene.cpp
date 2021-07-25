@@ -625,8 +625,9 @@ std::shared_ptr<const Light> ParseEmitter(pugi::xml_node node,
         return std::make_shared<PointLight>(Float(1.0), pos, intensity);
     } 
     else if (type == "ies") {
-        AnimatedTransform toWorld =
-            MakeAnimatedTransform(Matrix4x4::Identity(), Matrix4x4::Identity());
+        // AnimatedTransform toWorld =
+        //     MakeAnimatedTransform(Matrix4x4::Identity(), Matrix4x4::Identity());
+        Matrix4x4 toWorld = Matrix4x4::Identity();
         Vector3 intensity(Float(1.0), Float(1.0), Float(1.0));
         std::string ies_fname("");
         for (auto child : node.children()) {
@@ -634,10 +635,11 @@ std::shared_ptr<const Light> ParseEmitter(pugi::xml_node node,
             if (name == "toWorld") {
                 if (std::string(child.name()) == "transform") {
                     Matrix4x4 m = ParseTransform(child);
-                    toWorld = MakeAnimatedTransform(m, m);
-                } else if (std::string(child.name()) == "animation") {
-                    toWorld = ParseAnimatedTransform(child);
-                }
+                    toWorld = ParseTransform(child);
+                } 
+                // else if (std::string(child.name()) == "animation") {
+                //     toWorld = ParseAnimatedTransform(child);
+                // }
             } else if (name == "intensity") {
                 intensity = ParseVector3(child.attribute("value").value());
             } else if (name == "filename") {
