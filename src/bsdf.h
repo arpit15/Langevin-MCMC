@@ -3,10 +3,13 @@
 #include "commondef.h"
 #include <string>
 
-enum class BSDFType { Lambertian, Phong, RoughDielectric, 
-                        RoughConductor,
-                         BlendBSDF 
-                         };
+enum class BSDFType { 
+    Lambertian, 
+    Phong, 
+    RoughDielectric,                     
+    RoughConductor,
+    BlendBSDF 
+};
 
 int GetMaxBSDFSerializedSize2();
 int GetMaxBSDFSerializedSize();
@@ -84,7 +87,32 @@ const ADFloat *EvaluateBSDF(const bool adjoint,
                             ADFloat &pdf,
                             ADFloat &revPdf);
 
+const ADFloat *EvaluateBSDF2(const bool adjoint,
+                            const ADFloat *buffer,
+                            const ADVector3 &wi,
+                            const ADVector3 &normal,
+                            const ADVector3 &wo,
+                            const ADVector2 st,
+                            ADVector3 &contrib,
+                            ADFloat &cosWo,
+                            ADFloat &pdf,
+                            ADFloat &revPdf);
+
 const ADFloat *SampleBSDF(const bool adjoint,
+                          const ADFloat *buffer,
+                          const ADVector3 &wi,
+                          const ADVector3 &normal,
+                          const ADVector2 st,
+                          const ADVector2 rndParam,
+                          const ADFloat uDiscrete,
+                          const bool fixDiscrete,
+                          ADVector3 &wo,
+                          ADVector3 &contrib,
+                          ADFloat &cosWo,
+                          ADFloat &pdf,
+                          ADFloat &revPdf);
+
+const ADFloat *SampleBSDF2(const bool adjoint,
                           const ADFloat *buffer,
                           const ADVector3 &wi,
                           const ADVector3 &normal,

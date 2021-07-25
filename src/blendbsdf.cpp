@@ -10,8 +10,11 @@ int GetBlendBSDFSerializedSize() {
 void BlendBSDF::Serialize(const Vector2 st, Float *buffer) const {
     buffer = ::Serialize((Float)BSDFType::BlendBSDF, buffer);
     buffer = ::Serialize((Float)weight->Eval(st).mean(), buffer);
+    std::cout << "BlendBSDF Serialization" << std::endl;
     bsdfA->Serialize(st, buffer);
+    std::cout << "type A : " << (Float)bsdfA->GetType() << std::endl;
     bsdfB->Serialize(st, buffer);
+    std::cout << "type B : " << (Float)bsdfB->GetType() << std::endl;
 }
 
 template <bool adjoint>
@@ -195,8 +198,8 @@ void EvaluateBlendBSDF(const bool adjoint,
         pdfA, pdfB,
         revPdfA, revPdfB;
 
-    EvaluateBSDF(adjoint, buffer, wi, normal, wo, st, contribA, cosWoA, pdfA, revPdfA);
-    EvaluateBSDF(adjoint, buffer + GetMaxBSDFSerializedSize2(), wi, normal, wo, st, contribB, cosWoB, pdfB, revPdfB);
+    EvaluateBSDF2(adjoint, buffer, wi, normal, wo, st, contribA, cosWoA, pdfA, revPdfA);
+    EvaluateBSDF2(adjoint, buffer + GetMaxBSDFSerializedSize2(), wi, normal, wo, st, contribB, cosWoB, pdfB, revPdfB);
 
     pdf = (Float(1.f) - weightB) * pdfA + weightB * pdfB;
     revPdf = (Float(1.f) - weightB) * revPdfA + weightB * revPdfB;
@@ -231,27 +234,39 @@ void SampleBlendBSDF(const bool adjoint,
 
     BooleanCPtr sampleA = Lte(sample[0], weightA);
     std::vector<CondExprCPtr> ret = CreateCondExprVec(9);
+
+    // Need to Deserialize both bsdf
+    ADVector3 wo_A, contrib_A;
+        ADFloat cosWo_A, pdf_A, revPdf_A;
+        sample[0] /= weightA;
+    SampleBSDF2(adjoint, buffer, wi, normal, st, sample, uDiscrete, fixDiscrete, wo_A, contrib_A, cosWo_A, pdf_A, revPdf_A);
+    ADVector3 wo_B, contrib_B;
+        ADFloat cosWo_B, pdf_B, revPdf_B;
+        sample[0] = ( sample[0] - weightA) * inverse(weightB);
+    SampleBSDF2(adjoint, buffer + GetMaxBSDFSerializedSize2(), wi, normal, st, sample, uDiscrete, fixDiscrete, wo_B, contrib_B, cosWo_B, pdf_B, revPdf_B);
+
     BeginIf(sampleA, ret);
     {
-        ADVector3 wo_, contrib_;
-        ADFloat cosWo_, pdf_, revPdf_;
-        sample[0] /= weightA;
-        SampleBSDF(adjoint, buffer, wi, normal, st, sample, uDiscrete, fixDiscrete, wo_, contrib_, cosWo_, pdf_, revPdf_);
-        contrib_ *= weightA * pdf;
-        pdf *= weightA;
-        revPdf *= weightA;
-        SetCondOutput({wo_[0], wo_[1], wo_[2], contrib_[0], contrib_[1], contrib_[2], cosWo_, pdf_, revPdf_});
+        // ADVector3 wo_, contrib_;
+        // ADFloat cosWo_, pdf_, revPdf_;
+        // sample[0] /= weightA;
+        // SampleBSDF2(adjoint, buffer, wi, normal, st, sample, uDiscrete, fixDiscrete, wo_, contrib_, cosWo_, pdf_, revPdf_);
+        
+        contrib_A *= weightA * pdf_A;
+        pdf_A *= weightA;
+        revPdf_A *= weightA;
+        SetCondOutput({wo_A[0], wo_A[1], wo_A[2], contrib_A[0], contrib_A[1], contrib_A[2], cosWo_A, pdf_A, revPdf_A});
     }
     BeginElse();
     {
-        ADVector3 wo_, contrib_;
-        ADFloat cosWo_, pdf_, revPdf_;
-        sample[0] = ( sample[0] - weightA) * inverse(weightB);
-        SampleBSDF(adjoint, buffer + GetMaxBSDFSerializedSize2(), wi, normal, st, sample, uDiscrete, fixDiscrete, wo_, contrib_, cosWo_, pdf_, revPdf_);
-        contrib_ *= weightB * pdf;
-        pdf *= weightB;
-        revPdf *= weightB;
-        SetCondOutput({wo_[0], wo_[1], wo_[2], contrib_[0], contrib_[1], contrib_[2], cosWo_, pdf_, revPdf_});
+        // ADVector3 wo_, contrib_;
+        // ADFloat cosWo_, pdf_, revPdf_;
+        // sample[0] = ( sample[0] - weightA) * inverse(weightB);
+        // SampleBSDF2(adjoint, buffer + GetMaxBSDFSerializedSize2(), wi, normal, st, sample, uDiscrete, fixDiscrete, wo_, contrib_, cosWo_, pdf_, revPdf_);
+        contrib_B *= weightB * pdf_B;
+        pdf_B *= weightB;
+        revPdf_B *= weightB;
+        SetCondOutput({wo_B[0], wo_B[1], wo_B[2], contrib_B[0], contrib_B[1], contrib_B[2], cosWo_B, pdf_B, revPdf_B});
     }
     EndIf();
     

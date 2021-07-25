@@ -185,7 +185,9 @@ void EmitIESLight(const ADFloat *buffer,
     buffer = Deserialize(buffer, emission_);
     Deserialize(buffer, iesVal);
 
-    ADVector3 origin; origin.setZero();
+    ADVector3 origin; 
+    // origin.setZero();
+    origin << Const<ADFloat>(0.f), Const<ADFloat>(0.f), Const<ADFloat>(0.f);
     
     lightPos = XformPoint(toWorld, origin);
     ray.org = lightPos;
