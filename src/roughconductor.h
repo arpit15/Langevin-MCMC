@@ -11,9 +11,10 @@ struct RoughConductor : public BSDF {
     RoughConductor(const bool twoSided,
                     const std::shared_ptr<const TextureRGB> &Ks,
                     const Float &intIOR,
+                    const Float &k,
                     const Float &extIOR,
                     const std::shared_ptr<const Texture1D> &alpha)
-        : twoSided(twoSided), Ks(Ks), eta(intIOR / extIOR), alpha(alpha) {
+        : twoSided(twoSided), Ks(Ks), eta(intIOR / extIOR), k(k/extIOR), alpha(alpha) {
     }
 
     BSDFType GetType() const override {
@@ -65,7 +66,7 @@ struct RoughConductor : public BSDF {
 
     const bool twoSided;
     std::shared_ptr<const TextureRGB> Ks;
-    Float eta;
+    Float eta, k;
     std::shared_ptr<const Texture1D> alpha;
 };
 

@@ -164,13 +164,13 @@ inline ADFloat FresnelDielectricExt(const ADFloat cosThetaI_,
 }
 
 
-inline Float FresnelConductorExact(const Float cosThetaI_, const Float eta) {
+inline Float FresnelConductorExact(const Float cosThetaI_, const Float eta, const Float k) {
     Float cosThetaI2 = square(cosThetaI_),
         sinThetaI2 = 1.f - cosThetaI2,
         sinThetaI4 = sinThetaI2 * sinThetaI2;
 
-    Float temp1 = eta*eta - sinThetaI2,
-          a2pb2 = sqrt(temp1*temp1 + 4*eta*eta),
+    Float temp1 = eta*eta - k*k - sinThetaI2,
+          a2pb2 = sqrt(temp1*temp1 + 4*k*k*eta*eta),
           a     = sqrt(0.5f * (a2pb2 + temp1));
 
     Float term1 = a2pb2 + cosThetaI2,
@@ -186,13 +186,13 @@ inline Float FresnelConductorExact(const Float cosThetaI_, const Float eta) {
     return 0.5f * (Rp2 + Rs2);
 }
 
-inline ADFloat FresnelConductorExact(const ADFloat cosThetaI_, const ADFloat eta) {
+inline ADFloat FresnelConductorExact(const ADFloat cosThetaI_, const ADFloat eta, const ADFloat k) {
     ADFloat cosThetaI2 = Float(1.f) * square(cosThetaI_),
         sinThetaI2 = Float(1.f) - cosThetaI2,
         sinThetaI4 = sinThetaI2 * sinThetaI2;
 
-    ADFloat temp1 = eta*eta - sinThetaI2,
-          a2pb2 = sqrt(temp1*temp1 + Float(4.f)*eta*eta),
+    ADFloat temp1 = eta*eta - k*k - sinThetaI2,
+          a2pb2 = sqrt(temp1*temp1 + Float(4.f)*k*k*eta*eta),
           a     = sqrt( Float(0.5f) * (a2pb2 + temp1));
 
     ADFloat term1 = a2pb2 + cosThetaI2,

@@ -5,6 +5,7 @@ int GetRoughConductorSerializedSize() {
     return 1 +  // type
            3 +  // Ks
            1 +  // eta
+           1 +  // k
            1;   // alpha
 }
 
@@ -12,6 +13,7 @@ void RoughConductor::Serialize(const Vector2 st, Float *buffer) const {
     buffer = ::Serialize((Float)BSDFType::RoughConductor, buffer);
     buffer = ::Serialize(Ks->Eval(st), buffer);
     buffer = ::Serialize(eta, buffer);
+    buffer = ::Serialize(k, buffer);
     ::Serialize(alpha->Eval(st)[0], buffer);
 }
 
@@ -62,7 +64,7 @@ void Evaluate(
     // if ( cosWo * cosWi < 0.f)
     //     std::cout << "Something fishy is going on coswi : " << cosWi << ", coswo : " << cosWo << std::endl;
     
-    Float eta_ = bsdf->eta;
+    Float eta_ = bsdf->eta, k_ = bsdf->k;
     // reflection half-vector
     Vector3 H = Normalize(Vector3(wi_ + wo_));
 
@@ -96,7 +98,8 @@ void Evaluate(
     Float revCosHWi = cosHWo;
     Float revCosHWo = cosHWi;
 
-    Float F = FresnelConductorExact(cosHWi, eta_);
+    // Float F = FresnelConductorExact(cosHWi, eta_);
+    Float F = FresnelConductorExact(cosHWi, eta_, k_);
 
     Float aCosWi = fabs(cosWi);
     Float aCosWo = fabs(cosWo);
@@ -204,7 +207,8 @@ bool Sample(
         return false;
     }
     
-    Float F = FresnelConductorExact(cosHWi, bsdf->eta);
+    // Float F = FresnelConductorExact(cosHWi, bsdf->eta);
+    Float F = FresnelConductorExact(cosHWi, bsdf->eta, bsdf->k);
     
     Vector3 refl;
     Float cosHWo;
@@ -313,10 +317,11 @@ void EvaluateRoughConductor(const bool adjoint,
                              ADFloat &pdf,
                              ADFloat &revPdf) {
     ADVector3 Ks;
-    ADFloat eta;
+    ADFloat eta, k;
     ADFloat alpha;
     buffer = Deserialize(buffer, Ks);
     buffer = Deserialize(buffer, eta);
+    buffer = Deserialize(buffer, k);
     buffer = Deserialize(buffer, alpha);
 
     ADFloat cosWi = Dot(normal, wi);
@@ -348,7 +353,7 @@ void EvaluateRoughConductor(const bool adjoint,
     // wo and wi are reversed
     ADFloat revCosHWi = cosHWo;
     ADFloat revCosHWo = cosHWi;
-    ADFloat F = FresnelConductorExact(cosHWi, eta);
+    ADFloat F = FresnelConductorExact(cosHWi, eta, k);
     ADFloat aCosWi = fabs(cosWi);
     ADFloat aCosWo = fabs(cosWo);
 
@@ -380,10 +385,11 @@ void SampleRoughConductor(const bool adjoint,
                            ADFloat &pdf,
                            ADFloat &revPdf) {
     ADVector3 Ks;
-    ADFloat eta;
+    ADFloat eta, k;
     ADFloat alpha;
     buffer = Deserialize(buffer, Ks);
     buffer = Deserialize(buffer, eta);
+    buffer = Deserialize(buffer, k);
     buffer = Deserialize(buffer, alpha);
 
     ADFloat cosWi = Dot(normal, wi);
@@ -406,7 +412,7 @@ void SampleRoughConductor(const bool adjoint,
     ADVector3 H = localH[0] * b0 + localH[1] * b1 + localH[2] * normal_;
     ADFloat cosHWi = Dot(wi_, H);
 
-    ADFloat F = FresnelConductorExact(cosHWi, eta);
+    ADFloat F = FresnelConductorExact(cosHWi, eta, k);
     
     wo = Reflect(wi_, H);
     ADVector3 refl = Ks;

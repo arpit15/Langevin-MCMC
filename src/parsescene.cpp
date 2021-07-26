@@ -487,7 +487,7 @@ std::shared_ptr<const BSDF> ParseBSDF(pugi::xml_node node,
         std::shared_ptr<const TextureRGB> specularReflectance =
             std::make_shared<const ConstantTextureRGB>(Vector3(1.0, 1.0, 1.0));
         
-        Float intIOR = 1.5046;
+        Float intIOR = 1.5046, k = 1.0;
         Float extIOR = 1.000277;
         Vector1 v(0.1);
         std::shared_ptr<const Texture1D> alpha = std::make_shared<const ConstantTexture1D>(v);
@@ -498,6 +498,8 @@ std::shared_ptr<const BSDF> ParseBSDF(pugi::xml_node node,
             // std::cout << "name : " << name << std::endl;
             if (name == "eta") {
                 intIOR = std::stof(child.attribute("value").value());
+            } else if (name == "k") {
+                k = std::stof(child.attribute("value").value());
             } else if (name == "extEta") {
                 extIOR = std::stof(child.attribute("value").value());
             } else if (name == "alpha") {
@@ -513,7 +515,7 @@ std::shared_ptr<const BSDF> ParseBSDF(pugi::xml_node node,
         //             << "extIOR : " << extIOR << std::endl
         //             << "alpha : " << alpha->Avg() << std::endl;
         return std::make_shared<RoughConductor>(
-            twoSided, specularReflectance, intIOR, extIOR, alpha);
+            twoSided, specularReflectance, intIOR, k, extIOR, alpha);
     } else if (type == "twosided") {
         for (auto child : node.children()) {
             if (std::string(child.name()) == "bsdf") {
