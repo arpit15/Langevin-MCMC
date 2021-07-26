@@ -200,9 +200,9 @@ void SampleDirectCollimatedLight(const ADFloat *buffer,
         ADVector3 unitz(zeroVec, zeroVec, Const<ADFloat>(1.f));
         ADVector3 dirToLight_ = -XformVector(toWorld, unitz);
         ADFloat dist_ = refLocal[2];
-        ADVector3 lightContrib_ = emission * inverse(dist * dist); // * surfaceArea;
+        ADVector3 lightContrib_ = emission * inverse(dist_ * dist_); // * surfaceArea;
 
-        ADFloat pdf_ = dist * dist; // * inverse(surfaceArea);
+        ADFloat pdf_ = dist_ * dist_; // * inverse(surfaceArea);
         ADFloat cosAtLight_ = Const<ADFloat>(1.f);
         ADFloat emissionPdf_ = inverse(surfaceArea);
         SetCondOutput({
