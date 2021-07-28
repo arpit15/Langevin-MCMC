@@ -6,7 +6,19 @@
 	<default name="resx" value="324" />
 	<default name="resy" value="243" />
 
-
+	<!-- <dpt>
+        <string  name="integrator"     value="mcmc"/>
+        <integer name="mindepth"       value="-1"/>
+        <integer name="maxdepth"       value="32"/>
+        <integer name="numinitsamples"       value="1000000"/>
+        <boolean name="bidirectional"  value="true"/>
+        <integer name="spp"            value="64"/>    
+        <float   name="largestepprob"  value="0.05"/>
+        <float   name="largestepscale" value="4"/>
+        <boolean name="mala"           value="true"/>
+        <boolean name="uselightcoordinatesampling"           value="true"/>
+        <integer name="directspp" value="64"/>
+    </dpt> -->
 
 	<integrator type="pssmlt">
 		<integer name="maxDepth" value="-1" />
@@ -32,7 +44,7 @@
 
 
 	<bsdf id="mat-coated" type="blendbsdf">
-		<float name="weight" value="0.91" />
+		<float name="weight" value="0.85" />
 
 		<!-- diffuse -->
 		<bsdf type="twosided" id="mat-coateddiff2">
@@ -46,13 +58,14 @@
 		<bsdf type="twosided" id="mat-coatedcond">
 			<bsdf type="roughconductor">
 				<!-- <string name="material" value="Cu"/> -->
-				<rgb name="eta" value="1.5"/>
-				<rgb name="k" value="0.41 1.0 0.45"/>
-				<rgb name="k" value="0.8 1.2 0.5"/>
+				<rgb name="eta" value="0.12"/>
+				<rgb name="k" value="0.5"/>
+				<!-- <rgb name="k" value="0.41 1.0 0.45"/> -->
+				<!-- <rgb name="k" value="0.8 1.2 0.5"/> -->
 				<!-- <float name="extEta" value="1.0"/> -->
 
 				<string name="distribution" value="beckmann"/>
-				<float name="alpha" value="0.18" />
+				<float name="alpha" value="0.25" />
 				<rgb name="specularReflectance" value="1.0" />
 			</bsdf>
 		</bsdf>
@@ -81,7 +94,7 @@
 		<rgb name="intensity" value="130 250 950" />
 		<transform name="toWorld">
 			<matrix value="1.000000 0.000000 0.000000 -11.500000 0.000000 -1.000000 -0.000000 20.500000 0.000000 0.000000 -1.000000 1.000000 0.000000 0.000000 0.000000 1.000000" />
-			<translate x="-1.5"/>
+			<!-- <translate x="-1.5"/> -->
 		</transform>
 		<float name="radius" value="1"/>
 		
@@ -91,7 +104,7 @@
 		<rgb name="intensity" value="500 70 10" />
 		<transform name="toWorld">
 			<matrix value="1.000000 0.000000 0.000000 11.500000 0.000000 -1.000000 -0.000000 20.500000 0.000000 0.000000 -1.000000 1.000000 0.000000 0.000000 0.000000 1.000000" />
-			<translate x="1.5"/>
+			<!-- <translate x="1.5"/> -->
 
 		</transform>
 		<float name="radius" value="1"/>
@@ -125,15 +138,24 @@
 	<bsdf id="mat-pdms" type="roughdielectric">
 		<float name="alpha" value="0.000400" />
 		<string name="distribution" value="beckmann" />
-		<float name="intIOR" value="1.5031" />
-		<float name="extIOR" value="1.7" />
+		<float name="intIOR" value="1.421" />
+		<float name="extIOR" value="1.49" />
 		<rgb name="specularTransmittance" value="1.000000 1.000000 1.000000" />
 	</bsdf>
+
+	<bsdf id="mat-pdmslightregion" type="roughdielectric">
+		<float name="alpha" value="0.000400" />
+		<string name="distribution" value="beckmann" />
+		<float name="intIOR" value="1.421" />
+		<float name="extIOR" value="1.0" />
+		<rgb name="specularTransmittance" value="1.000000 1.000000 1.000000" />
+	</bsdf>
+
 	<bsdf id="mat-Epoxy" type="roughdielectric">
 		<float name="alpha" value="0.108900" />
 		<string name="distribution" value="beckmann" />
-		<float name="intIOR" value="1.7" />
-		<float name="extIOR" value="1.5031" />
+		<float name="intIOR" value="1.49" />
+		<float name="extIOR" value="1" />
 		<rgb name="specularTransmittance" value="1.000000 1.000000 1.000000" />
 	</bsdf>
 
@@ -141,9 +163,26 @@
 		<string name="filename" value="meshes/PDMS onshape.ply" />
 		<ref id="mat-pdms" name="bsdf" />
 	</shape>
+
+	<shape id="mesh-PDMS_lightregion" type="ply">
+		<string name="filename" value="meshes/PDMS_lightregion.ply" />
+		<ref id="mat-pdmslightregion" name="bsdf" />
+	</shape>
+
 	<shape id="mesh-Epoxy onshape" type="ply">
 		<string name="filename" value="meshes/Epoxy onshape.ply" />
 		<ref id="mat-Epoxy" name="bsdf" />
+	</shape>
+
+	<shape id="mesh-Epoxy onshape-volume" type="ply">
+		<string name="filename" value="meshes/Epoxy shell v2-volume.ply" />
+		<medium name="interior" id="myMedium" type="homogeneous">
+			<spectrum name="sigmaS" value="1"/>
+			<spectrum name="sigmaA" value="0.05"/>
+			<phase type="hg">
+			<float name="g" value="0.7"/>
+			</phase>
+		</medium>
 	</shape>
 
 </scene>

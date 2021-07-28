@@ -1,26 +1,27 @@
 <scene version="0.6.0">
 
-	<default name="spp" value="4096" />
+	<default name="spp" value="1024" />
 
 	<integrator type="bdpt">
-		<integer name="maxDepth" value="8" />
+		<integer name="maxDepth" value="32" />
 	</integrator>
 
-	<dpt>
+	<!-- <dpt>
         <string  name="integrator"     value="mc"/>
         <integer name="mindepth"       value="-1"/>
         <integer name="maxdepth"       value="32"/>
         <boolean name="bidirectional"  value="true"/>
-        <integer name="spp"            value="4096"/>    
+        <integer name="spp"            value="1024"/>    
         <float   name="largestepprob"  value="0.05"/>
         <float   name="largestepscale" value="4"/>
         <boolean name="mala"           value="true"/>
-        <integer name="directspp" value="4096"/>
-    </dpt>
+        <integer name="directspp" value="1024"/>
+    </dpt> -->
     
 	<sensor id="Camera" type="perspective">
 		<string name="fovAxis" value="x" />
 		<float name="fov" value="39.597755" />
+		<!-- <float name="fov" value="5" /> -->
 		<float name="nearClip" value="0.100000" />
 		<float name="farClip" value="1000.000000" />
 		<transform name="toWorld">
@@ -39,9 +40,12 @@
 
 	<bsdf type="twosided" id="mat-Material.002">
 			<bsdf type="roughconductor">
+				<string name="material" value="none"/>
 				<float name="alpha" value="0.1"/>
 				<rgb name="eta" value="1.5"/>
-				<rgb name="reflectance" value="0.036577 0.055643 0.800000" />
+				<rgb name="specularReflectance" value="1.0" />
+				<float name="extEta" value="1.000277"/>
+				<boolean name="sampleVisible" value="false"/>
 			</bsdf>
 		</bsdf>
 

@@ -1,0 +1,71 @@
+<scene version="0.6.0">
+
+	<default name="spp" value="1024" />
+
+	<integrator type="bdpt">
+		<integer name="maxDepth" value="32" />
+	</integrator>
+
+	<dpt>
+        <string  name="integrator"     value="mc"/>
+        <integer name="mindepth"       value="-1"/>
+        <integer name="maxdepth"       value="32"/>
+        <boolean name="bidirectional"  value="true"/>
+        <integer name="spp"            value="256"/>    
+        <float   name="largestepprob"  value="0.05"/>
+        <float   name="largestepscale" value="4"/>
+        <boolean name="mala"           value="true"/>
+        <integer name="directspp" value="256"/>
+    </dpt>
+
+	<sensor id="Camera" type="perspective">
+		<string name="fovAxis" value="x" />
+		<float name="fov" value="39.597755" />
+		<float name="nearClip" value="0.100000" />
+		<float name="farClip" value="1000.000000" />
+		<transform name="toWorld">
+			<matrix value="0.000002 -0.348572 -0.937282 7.867906 -0.000001 0.937282 -0.348572 2.926054 1.000000 0.000001 0.000001 -0.000003 0.000000 0.000000 0.000000 1.000000" />
+		</transform>
+		<sampler type="independent">
+			<integer name="sampleCount" value="$spp" />
+		</sampler>
+		<film type="hdrfilm">
+			<integer name="width" value="500" />
+			<integer name="height" value="500" />
+			<boolean name="banner" value="false" />
+		</film>
+	</sensor>
+
+
+	<bsdf type="twosided" id="mat-Material.002">
+			<bsdf type="phong">
+			</bsdf>
+		</bsdf>
+
+	<bsdf id="mat-Material.001" type="twosided">
+		<bsdf type="diffuse">
+			<rgb name="reflectance" value="0.048981 0.800000 0.052432" />
+		</bsdf>
+	</bsdf>
+
+	<emitter type="collimatedbeam">
+		<transform name="toWorld">
+			<!-- <rotate x="1" angle="180"/> -->
+			<matrix value="1 0.000000 0.000000 0.000000 0.000000 0.000000 -1 5.000000 0.000000 1 0.000000 0.000000 0.000000 0.000000 0.000000 1.000000" />
+			<scale value="2"/>
+		</transform>
+		<rgb name="intensity" value="10" />
+		<float name="radius" value="1"/>
+	</emitter>
+
+
+
+	<shape id="mesh-Cube" type="ply">
+		<string name="filename" value="meshes/Cube.ply" />
+		<ref id="mat-Material.002" name="bsdf" />
+	</shape>
+	<shape id="mesh-Plane" type="ply">
+		<string name="filename" value="meshes/Plane.ply" />
+		<ref id="mat-Material.001" name="bsdf" />
+	</shape>
+</scene>

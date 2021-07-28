@@ -1,10 +1,22 @@
 <scene version="0.6.0">
 
-	<default name="spp" value="64" />
+	<default name="spp" value="32" />
 
 	<integrator type="bdpt">
-		<integer name="maxDepth" value="8" />
+		<integer name="maxDepth" value="32" />
 	</integrator>
+
+	<!-- <dpt>
+        <string  name="integrator"     value="mc"/>
+        <integer name="mindepth"       value="-1"/>
+        <integer name="maxdepth"       value="32"/>
+        <boolean name="bidirectional"  value="true"/>
+        <integer name="spp"            value="64"/>    
+        <float   name="largestepprob"  value="0.05"/>
+        <float   name="largestepscale" value="4"/>
+        <boolean name="mala"           value="true"/>
+        <integer name="directspp" value="64"/>
+    </dpt> -->
 
 	<sensor id="Camera" type="perspective">
 		<string name="fovAxis" value="x" />
@@ -43,7 +55,7 @@
 			<matrix value="1 0.000000 0.000000 0.000000 0.000000 0.000000 -1 5.000000 0.000000 1 0.000000 0.000000 0.000000 0.000000 0.000000 1.000000" />
 			<scale value="2"/>
 		</transform>
-		<rgb name="radiance" value="10" />
+		<rgb name="intensity" value="10" />
 		<float name="radius" value="1"/>
 	</emitter>
 
