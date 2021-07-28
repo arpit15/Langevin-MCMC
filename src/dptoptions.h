@@ -1,8 +1,11 @@
 #pragma once
 
 #include "commondef.h"
+#include <filesystem>
 
 #include <string>
+
+namespace fs = std::filesystem;
 
 struct DptOptions {
     std::string integrator = "mcmc";                 // MC or MCMC
@@ -42,5 +45,6 @@ struct DptOptions {
 // }
 
 inline std::string GetLibPath() {
-    return std::string(getenv("DPT_LIBPATH"));
+    // return std::string(getenv("DPT_LIBPATH"));
+    return fs::current_path();
 }

@@ -57,6 +57,8 @@ std::shared_ptr<TriMeshData> ParsePly(const std::string &filename,
 
     if (!ifs.is_open())
         throw std::runtime_error("Unable to open the obj file");
+    else
+        std::cout << "Parsing " << filename << std::endl;
 
     bool ply_tag_seen = false,
      ascii = false,
@@ -157,7 +159,8 @@ std::shared_ptr<TriMeshData> ParsePly(const std::string &filename,
     ifs.seekg(stream_pos);
 
     std::cout << "Ascii format : " << ascii << std::endl;
-    // std::cout << "machine endianness : " << getMachineEndianness() << ", file endianness : " << byte_order << std::endl;
+    if ( getMachineEndianness() != byte_order)
+        std::cout << "Problem detected! machine endianness : " << getMachineEndianness() << ", file endianness : " << byte_order << std::endl;
 
     // std::cout << "contain vert normals : " << contain_vert_normal << ", contain uv : " << contain_uv << std::endl;
     // parse the vert data

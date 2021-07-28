@@ -1571,6 +1571,7 @@ class Library {
     std::string m_Path;
     std::string m_Name;
     std::vector<std::string> m_Funcs;
+    std::vector<std::string> m_MakeLines;
     lib_t m_Handle;
     bool m_Linked;
 };

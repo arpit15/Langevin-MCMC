@@ -207,7 +207,7 @@ void ParallelFor(std::function<void(Vector2i)> func, const Vector2i count) {
 int NumSystemCores() {
     
     // DEBUG
-    return 1;
+    // return 1;
 
     int ret = std::thread::hardware_concurrency();
     if (ret == 0) {

@@ -16,13 +16,13 @@ void DptInit() {
     TextureSystem::Init();
     std::cout << "Langevin MCMC dpt version 1.0" << std::endl;
     std::cout << "Running with " << NumSystemCores() << " threads." << std::endl;
-    if (getenv("DPT_LIBPATH") == nullptr) {
-        std::cout
-            << "Environment variable DPT_LIBPATH not set."
-               "Please set it to a directory (e.g. export DPT_LIBPATH=/dir/to/dpt/src/bin) so "
-               "that I can write/find the dynamic libraries." << std::endl;
-        exit(0);
-    }
+    // if (getenv("DPT_LIBPATH") == nullptr) {
+    //     std::cout
+    //         << "Environment variable DPT_LIBPATH not set."
+    //            "Please set it to a directory (e.g. export DPT_LIBPATH=/dir/to/dpt/src/bin) so "
+    //            "that I can write/find the dynamic libraries." << std::endl;
+    //     exit(0);
+    // }
 }
 
 void DptCleanup() {

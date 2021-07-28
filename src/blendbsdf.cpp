@@ -10,11 +10,11 @@ int GetBlendBSDFSerializedSize() {
 void BlendBSDF::Serialize(const Vector2 st, Float *buffer) const {
     buffer = ::Serialize((Float)BSDFType::BlendBSDF, buffer);
     buffer = ::Serialize((Float)weight->Eval(st).mean(), buffer);
-    std::cout << "BlendBSDF Serialization" << std::endl;
+    // std::cout << "BlendBSDF Serialization" << std::endl;
     bsdfA->Serialize(st, buffer);
-    std::cout << "type A : " << (Float)bsdfA->GetType() << std::endl;
+    // std::cout << "type A : " << (Float)bsdfA->GetType() << std::endl;
     bsdfB->Serialize(st, buffer);
-    std::cout << "type B : " << (Float)bsdfB->GetType() << std::endl;
+    // std::cout << "type B : " << (Float)bsdfB->GetType() << std::endl;
 }
 
 template <bool adjoint>

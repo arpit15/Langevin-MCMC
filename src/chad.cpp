@@ -1,8 +1,34 @@
 #include "chad.h"
+#include <thread>
 
 namespace chad {
 
 std::shared_ptr<Function> g_Function;
+
+std::string exec(const char *cmd) {
+    std::array<char, 128> buffer;
+    std::string result;
+    std::shared_ptr<FILE> pipe(popen(cmd, "r"), pclose);
+    if (!pipe)
+        throw std::runtime_error("popen() failed!");
+    while (!feof(pipe.get())) {
+        if (fgets(buffer.data(), 128, pipe.get()) != nullptr)
+            result += buffer.data();
+    }
+    return result;
+}
+
+int NumSystemCores() {
+    
+    // DEBUG
+    // return 1;
+
+    int ret = std::thread::hardware_concurrency();
+    if (ret == 0) {
+        return 16;
+    }
+    return ret;
+}
 
 ExpressionCPtr Forward(const ExpressionCPtr &expr,
                        const std::unordered_map<ExpressionCPtr, int> &wrtMap,
@@ -923,11 +949,15 @@ void Library::RegisterFunc2(const std::shared_ptr<Function> func) {
     Emit(func, fs);
 
     std::string cObjFilename = m_Path + func->name + ".o";
-    std::string gccCmd = 
-        std::string("gcc ") + "-O3 -c -fPIC -o " + cObjFilename + " " + cSourceFilename;
-    if (std::system(gccCmd.c_str()) != 0) {
-        std::cerr << "[Warning] compile failed (MALA) " << std::endl;
-    }
+    // std::string gccCmd = 
+    //     std::string("gcc ") + "-O3 -c -fPIC -o " + cObjFilename + " " + cSourceFilename;
+    // if (std::system(gccCmd.c_str()) != 0) {
+    //     std::cerr << "[Warning] compile failed (MALA) " << std::endl;
+    // }
+    std::string makeLines = cObjFilename + ": " + cSourceFilename + "\n\t" +
+                            std::string("/usr/bin/gcc ") + "-O3 -c -fPIC -o " + cObjFilename + " " +
+                            cSourceFilename + "\n";
+    m_MakeLines.emplace_back(makeLines);
 }
 
 void Library::RegisterFuncDerv(const std::shared_ptr<Function> func,
@@ -981,29 +1011,65 @@ void Library::RegisterFuncDerv2(const std::shared_ptr<Function> func,
               " " + sourceFilepath;
     }
 
-    if (std::system(cmd.c_str()) != 0) {
-        std::cerr << "[Warning] compile failed (MALA) " << std::endl;
-    }
+    // if (std::system(cmd.c_str()) != 0) {
+    //     std::cerr << "[Warning] compile failed (MALA) " << std::endl;
+    // }
+    std::string makeLine = objFilepath + ": " + sourceFilepath + "\n\t" + cmd + "\n";
+    m_MakeLines.emplace_back(makeLine);
 }
 
 
 void Library::Link() {
-    std::string libFilepath = m_Path + m_Name + ".so";
-    std::string gccCmd =
-        std::string("gcc ") + "-march=native -Ofast -shared -fPIC -o " + libFilepath;
-    for (auto &funcName : m_Funcs) {
-        gccCmd += " " + (m_Path + funcName) + ".o";
-    }
-    if (std::system(gccCmd.c_str()) != 0) {
-        std::cerr << "[Warning] link failed" << std::endl;
-    }
-    m_Handle = dlopen(libFilepath.c_str(), RTLD_LAZY);
-    m_Linked = true;
+    // std::string libFilepath = m_Path + m_Name + ".so";
+    // std::string gccCmd =
+    //     std::string("gcc ") + "-march=native -Ofast -shared -fPIC -o " + libFilepath;
+    // for (auto &funcName : m_Funcs) {
+    //     gccCmd += " " + (m_Path + funcName) + ".o";
+    // }
+    // if (std::system(gccCmd.c_str()) != 0) {
+    //     std::cerr << "[Warning] link failed" << std::endl;
+    // }
+    // m_Handle = dlopen(libFilepath.c_str(), RTLD_LAZY);
+    // m_Linked = true;
     // for (auto &funcName : m_Funcs) {
     //     std::remove((m_Path + funcName + ".o").c_str());
     //     std::remove((m_Path + funcName + ".c").c_str());
     //     std::remove((m_Path + funcName + ".ispc").c_str());
     // }
+
+    std::string libFilepath = m_Path + m_Name + ".so";
+    std::string files = "";
+    std::string gccCmd =
+        std::string("gcc ") + "-march=native -Ofast -shared -fPIC -o " + libFilepath;
+    for (auto &funcName : m_Funcs) {
+        files += " " + (m_Path + funcName) + ".o";
+        gccCmd += " " + (m_Path + funcName) + ".o";
+    }
+
+    // Generate the make file
+    std::fstream fs("Makefile.lib", std::fstream::out);
+    fs << "all: " << libFilepath << "\n";  // Make the global rules for the makefile
+    for (auto l : m_MakeLines) {
+        fs << l;
+        fs << "\n";
+    }
+    fs << libFilepath << ":" << files << "\n";
+    fs << "\t" << gccCmd << "\n";
+    fs.close();
+
+    std::cout << "Launch make to generate " << libFilepath << "\n";
+    std::string cmd = std::string("make -j" + std::to_string(NumSystemCores()) + " -f Makefile.lib ") + libFilepath;
+    std::string result = exec(cmd.c_str());
+    if (!result.empty()) {
+        std::cerr << "[Warning] link failed" << std::endl;
+    }
+    m_Handle = dlopen(libFilepath.c_str(), RTLD_LAZY);
+    m_Linked = true;
+    for (auto &funcName : m_Funcs) {
+        std::remove((m_Path + funcName + ".o").c_str());
+        std::remove((m_Path + funcName + ".c").c_str());
+        std::remove((m_Path + funcName + ".ispc").c_str());
+    }
 }
 
 void *Library::GetFunc(const std::string &name) const {
