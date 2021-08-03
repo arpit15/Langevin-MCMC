@@ -52,8 +52,8 @@
 
 
 	<!-- <shape id="emit-Area" type="rectangle"> -->
-	<shape type="obj">
-		<string name="filename" value="meshes/unit_plane.obj"/>
+	<shape type="ply">
+		<string name="filename" value="meshes/unit_plane.ply"/>
 		<boolean name="flipNormals" value="true" />
 		<transform name="toWorld">
 			<matrix value="1.646747 0.000000 0.000000 0.000000 0.000000 0.000000 1.646747 5.000000 0.000000 -1.646747 0.000000 0.000000 0.000000 0.000000 0.000000 1.000000" />

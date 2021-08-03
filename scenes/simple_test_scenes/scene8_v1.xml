@@ -31,7 +31,7 @@
 			<matrix value="-0.000000 -0.275635 -0.961262 7.439821 -0.000000 0.961262 -0.275635 2.803710 1.000000 0.000000 -0.000000 0.000000 0.000000 0.000000 0.000000 1.000000" />
 		</transform>
 		<sampler type="independent">
-			<integer name="sampleCount" value="64" />
+			<integer name="sampleCount" value="1024" />
 		</sampler>
 		<film type="hdrfilm">
 			<integer name="width" value="200" />
@@ -59,9 +59,7 @@
 		<rgb name="radiance" value="1 0 0" />
 	</emitter>
 
-	<bsdf id="default-bsdf" type="twosided">
 		<bsdf type="diffuse" />
-	</bsdf>
 
 </shape>
 
