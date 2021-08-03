@@ -975,7 +975,7 @@ void Library::RegisterFuncDerv(const std::shared_ptr<Function> func,
     std::string objFilepath = m_Path + dervName + ".o";
     std::string cmd;
     if (emitIspc) {
-        cmd = std::string("ispc ") + "-O3 --math-lib=default --opt=fast-math --woff --pic " +
+        cmd = std::string("./ispc ") + "-O3 --math-lib=default --opt=fast-math --woff --pic " +
               sourceFilepath + " -o " + objFilepath;
     } else {
         cmd = std::string("gcc ") + "-Ofast -std=c11 -march=native -c -fPIC -o" + objFilepath +
@@ -1004,7 +1004,7 @@ void Library::RegisterFuncDerv2(const std::shared_ptr<Function> func,
     std::string objFilepath = m_Path + dervName + ".o";
     std::string cmd;
     if (emitIspc) {
-        cmd = std::string("ispc ") + "-O3 --math-lib=default --opt=fast-math --woff --pic " +
+        cmd = std::string("./ispc ") + "-O3 --math-lib=default --opt=fast-math --woff --pic " +
               sourceFilepath + " -o " + objFilepath;
     } else {
         cmd = std::string("gcc ") + "-Ofast -std=c11 -march=native -c -fPIC -o" + objFilepath +
@@ -1060,9 +1060,10 @@ void Library::Link() {
     std::cout << "Launch make to generate " << libFilepath << "\n";
     std::string cmd = std::string("make -j" + std::to_string(NumSystemCores()) + " -f Makefile.lib ") + libFilepath;
     std::string result = exec(cmd.c_str());
-    if (!result.empty()) {
-        std::cerr << "[Warning] link failed" << std::endl;
-    }
+    // if (!result.empty()) {
+    //     std::cout << result << std::endl;
+    //     std::cerr << "[Warning] link failed" << std::endl;
+    // }
     m_Handle = dlopen(libFilepath.c_str(), RTLD_LAZY);
     m_Linked = true;
     for (auto &funcName : m_Funcs) {

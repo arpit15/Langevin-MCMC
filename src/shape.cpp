@@ -6,7 +6,11 @@ int GetMaxShapeSerializedSize() {
     return GetTriangleMeshSerializedSize();
 }
 
-void Shape::SetAreaLight(const AreaLight *areaLight) {
+// void Shape::SetAreaLight(const AreaLight *areaLight) {
+//     this->areaLight = areaLight;
+// }
+
+void Shape::SetAreaLight(const Light *areaLight) {
     this->areaLight = areaLight;
 }
 

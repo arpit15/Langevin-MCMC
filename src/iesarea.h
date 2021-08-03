@@ -1,16 +1,17 @@
 #pragma once
 
 #include "light.h"
+#include "image.h"
 
 struct Shape;
 
-int GetAreaLightSerializedSize();
+int GetIESAreaSerializedSize();
 
-struct AreaLight : public Light {
-    AreaLight(const Float &samplingWeight, Shape *shape, const Vector3 &emission);
+struct IESArea : public Light {
+    IESArea(const Float &samplingWeight, Shape *shape, const Vector3 &emission, const std::string fname, const Matrix4x4 _toWorld);
 
     LightType GetType() const override {
-        return LightType::AreaLight;
+        return LightType::IESArea;
     }
     void Serialize(const LightPrimID &lPrimID, const Vector2 &rndDir, const Vector3 &dirToLight, Float *buffer) const override;
     LightPrimID SampleDiscrete(const Float uDiscrete) const override;
@@ -47,15 +48,20 @@ struct AreaLight : public Light {
     bool IsFinite() const override {
         return true;
     }
+
+    Float getIESVal(const Vector3 &local) const;
+    
     bool IsDelta() const override {
         return false;
     }
 
     const Shape *shape;
     const Vector3 emission;
+    const std::unique_ptr<const Image3> image;
+    const Matrix4x4 toWorld, toLight;
 };
 
-void SampleDirectAreaLight(const ADFloat *buffer,
+void SampleDirectIESArea(const ADFloat *buffer,
                            const ADBSphere &sceneSphere,
                            const ADVector3 &pos,
                            const ADVector3 &normal,
@@ -68,7 +74,7 @@ void SampleDirectAreaLight(const ADFloat *buffer,
                            ADFloat &directPdf,
                            ADFloat &emissionPdf);
 
-void EmissionAreaLight(const ADFloat *buffer,
+void EmissionIESArea(const ADFloat *buffer,
                        const ADBSphere &sceneSphere,
                        const ADVector3 &dirToLight,
                        const ADVector3 &normalOnLight,
@@ -77,7 +83,7 @@ void EmissionAreaLight(const ADFloat *buffer,
                        ADFloat &directPdf,
                        ADFloat &emissionPdf);
 
-void EmitAreaLight(const ADFloat *buffer,
+void EmitIESArea(const ADFloat *buffer,
                    const ADBSphere &sceneSphere,
                    const ADVector2 rndParamPos,
                    const ADVector2 rndParamDir,

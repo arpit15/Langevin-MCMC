@@ -11,6 +11,7 @@
 #include "pointlight.h"
 #include "arealight.h"
 #include "ieslight.h"
+#include "iesarea.h"
 #include "collimatedlight.h"
 #include "envlight.h"
 #include "lambertian.h"
@@ -265,6 +266,8 @@ std::shared_ptr<const Shape> ParseShape(pugi::xml_node node,
         }
     }
     std::shared_ptr<Shape> shape;
+    // hack for emitter
+    Matrix4x4 toWorldForEmitter;
     std::string type = node.attribute("type").value();
     if (type == "serialized") {
         std::string filename;
@@ -344,6 +347,8 @@ std::shared_ptr<const Shape> ParseShape(pugi::xml_node node,
         }
         shape = std::make_shared<TriangleMesh>(
             bsdf, ParseObj(filename, toWorld[0], toWorld[1], isMoving, flipNormals, faceNormals));
+
+        toWorldForEmitter = toWorld[0];
     } else if (type == "ply") {
         std::string filename;
         Matrix4x4 toWorld[2];
@@ -381,6 +386,8 @@ std::shared_ptr<const Shape> ParseShape(pugi::xml_node node,
         }
         shape = std::make_shared<TriangleMesh>(
             bsdf, ParsePly(filename, toWorld[0], toWorld[1], isMoving, flipNormals, faceNormals));
+
+        toWorldForEmitter = toWorld[0];
     } else {
         printf("shape type: %s not found.\n", type.c_str());
     }
@@ -391,14 +398,23 @@ std::shared_ptr<const Shape> ParseShape(pugi::xml_node node,
 
     for (auto child : node.children()) {
         std::string name = child.name();
+        std::string ies_fname("");
         if (name == "emitter") {
             Vector3 radiance(Float(1.0), Float(1.0), Float(1.0));
             for (auto grandChild : child.children()) {
                 std::string name = grandChild.attribute("name").value();
                 if (name == "radiance")
                     radiance = ParseVector3(grandChild.attribute("value").value());
+                else if (name == "filename") {
+                    ies_fname = child.attribute("value").value();
             }
-            areaLight = std::make_shared<const AreaLight>(Float(1.0), shape.get(), radiance);
+            }
+
+            std::string emitterType = child.attribute("type").value();
+            if (emitterType == "area")
+                areaLight = std::make_shared<const AreaLight>(Float(1.0), shape.get(), radiance);
+            else
+                areaLight = std::make_shared<const IESArea>(Float(1.0), shape.get(), radiance, ies_fname, toWorldForEmitter);
         }
     }
 
@@ -735,6 +751,7 @@ std::shared_ptr<DptOptions> ParseDptOptions(pugi::xml_node node) {
     std::shared_ptr<DptOptions> dptOptions = std::make_shared<DptOptions>();
     for (auto child : node.children()) {
         std::string name = child.attribute("name").value();
+        std::cout << "Parsing " << name << std::endl;
         if (name == "integrator") {
             dptOptions->integrator = child.attribute("value").value();
         } else if (name == "spp") {

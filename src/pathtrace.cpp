@@ -79,6 +79,6 @@ void PathTrace(const Scene *scene, const std::shared_ptr<const PathFuncLib> path
     std::string outputNameLDR = scene->outputName + "_timeuse_" + std::to_string(elapsed) + "s_BDPT.png";
     WriteImage(outputNameHDR, GetFilm(scene->camera.get()).get());
     std::string hdr2ldr = std::string("hdrmanip --tonemap filmic -o ") + outputNameLDR + " " + outputNameHDR;
-    system(hdr2ldr.c_str());
+    int returnVal = system(hdr2ldr.c_str());
     std::cout << "Done!" << std::endl;
 }

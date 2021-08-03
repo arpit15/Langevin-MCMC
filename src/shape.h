@@ -9,7 +9,8 @@
 #include <embree3/rtcore.h>
 #include <embree3/rtcore_ray.h>
 
-struct AreaLight;
+// struct AreaLight;
+struct Light;
 struct BSDF;
 
 enum class ShapeType { TriangleMesh };
@@ -41,7 +42,8 @@ struct Shape {
     virtual Vector2 GetSampleParam(const PrimID &primID,
                                    const Vector3 &position,
                                    const Float time) const = 0;
-    virtual void SetAreaLight(const AreaLight *areaLight);
+    // virtual void SetAreaLight(const AreaLight *areaLight);
+    virtual void SetAreaLight(const Light *areaLight);
     virtual PrimID Sample(const Float u) const = 0;
     virtual void Sample(const Vector2 rndParam,
                         const Float time,
@@ -54,7 +56,8 @@ struct Shape {
     virtual bool IsMoving() const = 0;
 
     const std::shared_ptr<const BSDF> bsdf;
-    const AreaLight *areaLight;
+    // const AreaLight *areaLight;
+    const Light *areaLight;
 };
 
 struct ShapeInst {

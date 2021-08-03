@@ -21,7 +21,7 @@ CollimatedLight::CollimatedLight(const Float &samplingWeight,
       toLight((toWorld.inverse())), 
       m_radius(_radius), emission(emission) {}
 
-void CollimatedLight::Serialize(const LightPrimID &lPrimID, const Vector2 &rndDir, Float *buffer) const {
+void CollimatedLight::Serialize(const LightPrimID &lPrimID, const Vector2 &rndDir, const Vector3 &dirToLight, Float *buffer) const {
     // std::cout << "Serializing Collimated light!" << std::endl;
     buffer = ::Serialize((Float)LightType::CollimatedLight, buffer);
     buffer = ::Serialize(toWorld, buffer);

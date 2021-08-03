@@ -13,9 +13,10 @@ file(GLOB SRC_FILES
      "src/*.cpp"
 )
 
+# message(INFO "${SRC_FILES}")
 # list(REMOVE_ITEM SRC_FILES
-# blendbsdf.cpp    
-# blendbsdf.h
+# "${PROJECT_SOURCE_DIR}/src/iesarea.cpp"    
+# "${PROJECT_SOURCE_DIR}/src/iesarea.h"
 # )
 
 add_subdirectory(nanoflann)

@@ -288,7 +288,7 @@ Vector2 TriangleMesh::GetSampleParam(const PrimID &primID,
     return sampleParam;
 }
 
-void TriangleMesh::SetAreaLight(const AreaLight *areaLight) {
+void TriangleMesh::SetAreaLight(const Light *areaLight) {
     Shape::SetAreaLight(areaLight);
     std::vector<Float> area(data->indices.size());
     totalArea = Float(0.0);

@@ -11,7 +11,8 @@ int GetIESLightSerializedSize() {
            16 +     // toWorld
            16 +     // toLight
            3 +   // emission
-           1;  // ies intensity evaluated along rndDir
+           1 +  // ies intensity evaluated along rndDir
+           1;  // ies intensity evaluated along dirFromLight for AD sampleDirect
 
 }
 
@@ -23,7 +24,7 @@ IESLight::IESLight(const Float &samplingWeight, const Matrix4x4 &toWorld, const 
     image(new Image3(fname)) {
 }
 
-void IESLight::Serialize(const LightPrimID &lPrimID, const Vector2 &rndDir, Float *buffer) const {
+void IESLight::Serialize(const LightPrimID &lPrimID, const Vector2 &rndDir, const Vector3 &dirToLight, Float *buffer) const {
     // std::cout << "Serializing IES light!" << std::endl;
     buffer = ::Serialize((Float)LightType::IESLight, buffer);
     buffer = ::Serialize(toWorld, buffer);
@@ -32,7 +33,13 @@ void IESLight::Serialize(const LightPrimID &lPrimID, const Vector2 &rndDir, Floa
     // evaluate ies using rndParam
     const Vector3 localDir = SampleSphere(rndDir);
     const Float iesVal = getIESVal(localDir);
-    ::Serialize(iesVal, buffer);
+    buffer = ::Serialize(iesVal, buffer);
+
+    // for AD sampledirect
+    const Vector3 dirFromLight = -dirToLight;
+    const Vector3 localDirSampleDirect = XformVector(toLight, dirFromLight);
+    const Float iesVal2 = getIESVal(localDirSampleDirect);
+    ::Serialize(iesVal2, buffer);
 }
 
 Float IESLight::getIESVal(const Vector3 &local) const {
@@ -146,12 +153,13 @@ void SampleDirectIESLight(const ADFloat *buffer,
                             ADFloat &emissionPdf) {
     ADVector3 lightPos, emission;
     ADMatrix4x4 toWorld, toLight;
-    ADFloat iesVal;
+    ADFloat iesVal1, iesVal2;
 
     buffer = Deserialize(buffer, toWorld);
     buffer = Deserialize(buffer, toLight);
     buffer = Deserialize(buffer, emission);
-    Deserialize(buffer, iesVal);
+    buffer = Deserialize(buffer, iesVal1);
+    Deserialize(buffer, iesVal2);
     
 
     ADFloat dist;
@@ -160,7 +168,7 @@ void SampleDirectIESLight(const ADFloat *buffer,
     // Hack : ideally iesVal is affected by changing rndParamDir
     // incorrect
     // however the contribution of these paths should be negligible
-    lightContrib *= iesVal;
+    lightContrib *= iesVal2;
     emissionPdf = Const<ADFloat>(c_INVFOURPI);
     cosAtLight = Const<ADFloat>(1.0);
     
@@ -179,11 +187,12 @@ void EmitIESLight(const ADFloat *buffer,
                     ADFloat &directPdf) {
     ADVector3 lightPos, emission_;
     ADMatrix4x4 toWorld, toLight;
-    ADFloat iesVal;
+    ADFloat iesVal1, iesVal2;
     buffer = Deserialize(buffer, toWorld);
     buffer = Deserialize(buffer, toLight);
     buffer = Deserialize(buffer, emission_);
-    Deserialize(buffer, iesVal);
+    buffer = Deserialize(buffer, iesVal1);
+    Deserialize(buffer, iesVal2);
 
     ADVector3 origin; 
     // origin.setZero();
@@ -193,7 +202,7 @@ void EmitIESLight(const ADFloat *buffer,
     ray.org = lightPos;
     ray.dir = XformVector(toWorld, SampleSphere(rndParamDir));
     // Hack : ideally iesVal is affected by changing rndParamDir
-    emission = emission_ * iesVal;
+    emission = emission_ * iesVal1;
     emissionPdf = Const<ADFloat>(c_INVFOURPI);
     cosAtLight = Const<ADFloat>(1.0);
     directPdf = Const<ADFloat>(1.0);

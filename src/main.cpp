@@ -11,18 +11,25 @@
 #include <string>
 #include <unistd.h>
 #include <sys/resource.h>
+#include <linux/limits.h>   // PATH_MAX
+#include <libgen.h>
+#include <filesystem>
 
+namespace fs = std::filesystem;
+
+std::string getCurrExeDir() {
+    char result[PATH_MAX];
+    ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
+    const char *path;
+    if (count != -1) {
+        path = dirname(result);
+    }
+    return path;
+}
 void DptInit() {
     TextureSystem::Init();
     std::cout << "Langevin MCMC dpt version 1.0" << std::endl;
     std::cout << "Running with " << NumSystemCores() << " threads." << std::endl;
-    // if (getenv("DPT_LIBPATH") == nullptr) {
-    //     std::cout
-    //         << "Environment variable DPT_LIBPATH not set."
-    //            "Please set it to a directory (e.g. export DPT_LIBPATH=/dir/to/dpt/src/bin) so "
-    //            "that I can write/find the dynamic libraries." << std::endl;
-    //     exit(0);
-    // }
 }
 
 void DptCleanup() {
@@ -67,23 +74,41 @@ int main(int argc, char *argv[]) {
             CompilePathFuncLibrary(false, maxDervDepth);
         }
         if (compileBidirPathLib) {
+            // hessians
             CompilePathFuncLibrary(true, maxDervDepth);
         }
         if (compileBidirPathLib2) {
+            // mala
             CompilePathFuncLibrary2(maxDervDepth);
         }
 
+        // call invoking dir
         std::string cwd = getcwd(NULL, 0);
+        std::string exeDir = getCurrExeDir();
+
+        std::cout << "current dir : " << cwd << std::endl;
+        std::cout << "Exe dir : " << exeDir << std::endl;
+
         for (std::string filename : filenames) {
             if (filename.rfind('/') != std::string::npos &&
                 chdir(filename.substr(0, filename.rfind('/')).c_str()) != 0) {
                 Error("chdir failed");
             }
+            std::string basename = filename;
             if (filename.rfind('/') != std::string::npos) {
-                filename = filename.substr(filename.rfind('/') + 1);
+                basename = filename.substr(filename.rfind('/') + 1);
             }
 
-            std::unique_ptr<Scene> scene = ParseScene(filename);
+            std::unique_ptr<Scene> scene = ParseScene(basename);
+            // use the xml dirname
+            fs::path xmlPath(filename);
+            scene->outputName =  xmlPath.parent_path() / (scene->outputName); 
+            
+            std::cout << "Output filename : " << scene->outputName << std::endl;
+            // return to the original executable dir after parsing scene
+            if (chdir(exeDir.c_str()) != 0) {
+                Error("chdir failed");
+            }
 
             std::string integrator = scene->options->integrator;
                 
@@ -93,24 +118,35 @@ int main(int argc, char *argv[]) {
             if (integrator == "mc") {
                 std::shared_ptr<const PathFuncLib> library =
                     BuildPathFuncLibrary(scene->options->bidirectional, maxDervDepth);
+                
+                // return to the original executable dir after parsing scene
+                if (chdir(cwd.c_str()) != 0) {
+                    Error("chdir failed");
+                }
                 PathTrace(scene.get(), library);
             } else if (integrator == "mcmc") {
                 if (scene->options->mala) { // MALA builds only first-order derivatives
                     std::shared_ptr<const PathFuncLib> library = 
                         BuildPathFuncLibrary2(maxDervDepth);
+                    
+                    // return to the original executable dir after parsing scene
+                    if (chdir(cwd.c_str()) != 0) {
+                        Error("chdir failed");
+                    }
                     MLT(scene.get(), library);
                 } else {    // Hessian otherwise 
                     std::shared_ptr<const PathFuncLib> library =
                         BuildPathFuncLibrary(scene->options->bidirectional, maxDervDepth);
+                    // return to the original executable dir after parsing scene
+                    if (chdir(cwd.c_str()) != 0) {
+                        Error("chdir failed");
+                    }
                     MLT(scene.get(), library);
                 }
             } else {
                 Error("Unknown integrator");
             }
             
-            if (chdir(cwd.c_str()) != 0) {
-                Error("chdir failed");
-            }
         }
         DptCleanup();
     } catch (std::exception &ex) {

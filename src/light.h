@@ -7,7 +7,8 @@
 enum class LightType { PointLight, SpotLight, AreaLight, EnvLight, 
                 // DeltaLight 
                 IESLight,
-                CollimatedLight
+                CollimatedLight,
+                IESArea
                 };
 
 int GetMaxLightSerializedSize();
@@ -20,7 +21,7 @@ struct Light {
     }
 
     virtual LightType GetType() const = 0;
-    virtual void Serialize(const LightPrimID &lPrimID, const Vector2 &rndDir, Float *buffer) const = 0;
+    virtual void Serialize(const LightPrimID &lPrimID, const Vector2 &rndDir, const Vector3 &dirToLight, Float *buffer) const = 0;
     virtual LightPrimID SampleDiscrete(const Float uDiscrete) const {
         return INVALID_LPRIM_ID;
     }
@@ -70,6 +71,7 @@ struct Light {
 struct LightInst {
     const Light *light;
     LightPrimID lPrimID;
+    Vector3 dirToLight;
 };
 
 const ADFloat *SampleDirect(const ADFloat *buffer,

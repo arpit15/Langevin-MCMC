@@ -36,6 +36,7 @@ struct SurfaceVertex {
     LightInst directLightInst;
     Vector2 directLightRndParam;
     Float rrWeight;
+    Vector3 dirToHitLight;
 };
 
 struct LightVertex {

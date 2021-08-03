@@ -12,7 +12,7 @@ PointLight::PointLight(const Float &samplingWeight, const Vector3 &pos, const Ve
     : Light(samplingWeight), lightPos(pos), emission(emission) {
 }
 
-void PointLight::Serialize(const LightPrimID &lPrimID, const Vector2 &rndDir, Float *buffer) const {
+void PointLight::Serialize(const LightPrimID &lPrimID, const Vector2 &rndDir, const Vector3 &/*dirToLight*/, Float *buffer) const {
     buffer = ::Serialize((Float)LightType::PointLight, buffer);
     buffer = ::Serialize(lightPos, buffer);
     ::Serialize(emission, buffer);

@@ -1,31 +1,64 @@
-#include "arealight.h"
+#include "iesarea.h"
 #include "shape.h"
 #include "utils.h"
 #include "sampling.h"
+#include "transform.h"
 
-int GetAreaLightSerializedSize() {
+int GetIESAreaSerializedSize() {
     return 1 +                            // type
            GetMaxShapeSerializedSize() +  // shape
-           3;                             // emission
+           3 +                             // emission
+           1+ // ies intensity for Emit
+           1; // ies intensity for AD SampleDirect and Emission
 }
 
-AreaLight::AreaLight(const Float &samplingWeight, Shape *_shape, const Vector3 &emission)
-    : Light(samplingWeight), shape(_shape), emission(emission) {
+IESArea::IESArea(const Float &samplingWeight, Shape *_shape, const Vector3 &emission, const std::string fname, const Matrix4x4 _toWorld)
+    : Light(samplingWeight), shape(_shape), emission(emission),
+    image(new Image3(fname)),
+    toWorld(_toWorld), toLight(toWorld.inverse()) {
     _shape->SetAreaLight(this);
 }
 
-void AreaLight::Serialize(const LightPrimID &lPrimID, const Vector2 &rndDir, const Vector3 &dirToLight, Float *buffer) const {
-    buffer = ::Serialize((Float)LightType::AreaLight, buffer);
-    shape->Serialize(lPrimID, buffer);
-    buffer += GetMaxShapeSerializedSize();
-    ::Serialize(emission, buffer);
+Float IESArea::getIESVal(const Vector3 &local) const {
+  Vector2 uv(
+            std::atan2(local[1], local[0]) * c_INVTWOPI,
+            std::acos(local[2]) * c_INVPI
+        );
+
+    Float phi = uv[0] * c_TWOPI,
+        theta = uv[1] * c_PI;
+        if(uv[0]<0.f) uv[0] = 1.f+uv[0];
+
+    size_t col = std::floor(uv[0] * image->pixelWidth), 
+        row = std::floor(uv[1] * image->pixelHeight);
+    Float iesVal = image->RepAt(col, row).mean();
+//   std::cout << "phi:" <<  phi*180.f/c_PI 
+//             << ", theta:" << theta*180.f/c_PI 
+//             << ", (" << row << "," << col << ")val : " << iesVal << std::endl;
+  return iesVal;
 }
 
-LightPrimID AreaLight::SampleDiscrete(const Float uDiscrete) const {
+void IESArea::Serialize(const LightPrimID &lPrimID, const Vector2 &rndDir, const Vector3 &dirToLight, Float *buffer) const {
+    buffer = ::Serialize((Float)LightType::IESArea, buffer);
+    shape->Serialize(lPrimID, buffer);
+    buffer += GetMaxShapeSerializedSize();
+    buffer = ::Serialize(emission, buffer);
+    // evaluate ies using rndParam
+    const Vector3 localDir = SampleSphere(rndDir);
+    const Float iesVal1 = getIESVal(localDir);
+    buffer = ::Serialize(iesVal1, buffer);
+    // for AD sampledirect and Emit
+    const Vector3 dirFromLight = -dirToLight;
+    const Vector3 localDirSampleDirect = XformVector(toLight, dirFromLight);
+    const Float iesVal2 = getIESVal(localDirSampleDirect);
+    ::Serialize(iesVal2, buffer);
+}
+
+LightPrimID IESArea::SampleDiscrete(const Float uDiscrete) const {
     return shape->Sample(uDiscrete);
 }
 
-bool AreaLight::SampleDirect(const BSphere & /*sceneSphere*/,
+bool IESArea::SampleDirect(const BSphere & /*sceneSphere*/,
                              const Vector3 &pos,
                              const Vector3 &normal,
                              const Vector2 rndParam,
@@ -51,13 +84,17 @@ bool AreaLight::SampleDirect(const BSphere & /*sceneSphere*/,
         contrib = (cosAtLight / (distSq * shapePdf)) * emission;
         directPdf = shapePdf * distSq / cosAtLight;
         emissionPdf = shapePdf * cosAtLight * c_INVPI;
+        // multiple ies val
+        const Vector3 dirFromLight = -dirToLight;
+        const Vector3 local = XformVector(toLight, dirFromLight);
+        contrib *= getIESVal(local);
         return true;
     } else {
         return false;
     }
 }
 
-void AreaLight::Emission(const BSphere & /*sceneSphere*/,
+void IESArea::Emission(const BSphere & /*sceneSphere*/,
                          const Vector3 &dirToLight,
                          const Vector3 &normalOnLight,
                          const Float time,
@@ -67,7 +104,9 @@ void AreaLight::Emission(const BSphere & /*sceneSphere*/,
                          Float &emissionPdf) const {
     Float cosAtLight = -Dot(normalOnLight, dirToLight);
     if (cosAtLight > Float(0.0)) {
-        emission = this->emission;
+        const Vector3 dirFromLight = -dirToLight;
+        const Vector3 local = XformVector(toLight, dirFromLight);
+        emission = this->emission * getIESVal(local);
         directPdf = shape->SamplePdf();
         emissionPdf = cosAtLight * directPdf * c_INVPI;
     } else {
@@ -77,7 +116,7 @@ void AreaLight::Emission(const BSphere & /*sceneSphere*/,
     }
 }
 
-void AreaLight::Emit(const BSphere & /*sceneSphere*/,
+void IESArea::Emit(const BSphere & /*sceneSphere*/,
                      const Vector2 rndParamPos,
                      const Vector2 rndParamDir,
                      const Float time,
@@ -97,14 +136,16 @@ void AreaLight::Emit(const BSphere & /*sceneSphere*/,
     Vector3 b1;
     CoordinateSystem(normal, b0, b1);
     ray.dir = d[0] * b0 + d[1] * b1 + d[2] * normal;
-    emission = this->emission * (Float(M_PI) / shapePdf);
+    const Vector3 dirFromLight = ray.dir ;
+    const Vector3 local = XformVector(toLight, dirFromLight);
+    emission = this->emission * (Float(M_PI) / shapePdf) * getIESVal(local);
     cosAtLight = d[2];
     emissionPdf = d[2] * c_INVPI * shapePdf;
     directPdf = shapePdf;
 }
 
 template <typename FloatType>
-void _SampleDirectAreaLight(const FloatType *buffer,
+void _SampleDirectIESArea(const FloatType *buffer,
                             const TVector3<FloatType> &pos,
                             const TVector3<FloatType> &normal,
                             const TVector2<FloatType> rndParam,
@@ -121,7 +162,10 @@ void _SampleDirectAreaLight(const FloatType *buffer,
     SampleShape(buffer, rndParam, time, isStatic, posOnLight, normalOnLight, shapePdf);
     buffer += GetMaxShapeSerializedSize();
     TVector3<FloatType> emission;
-    Deserialize(buffer, emission);
+    buffer = Deserialize(buffer, emission);
+    FloatType iesVal1, iesVal2;
+    buffer = Deserialize(buffer, iesVal1);
+    Deserialize(buffer, iesVal2);
 
     dirToLight = posOnLight - pos;
     FloatType distSq = LengthSquared(dirToLight);
@@ -130,10 +174,11 @@ void _SampleDirectAreaLight(const FloatType *buffer,
     cosAtLight = -Dot(dirToLight, normalOnLight);
     directPdf = shapePdf * distSq / cosAtLight;
     lightContrib = emission / directPdf;
+    lightContrib *= iesVal2;
     emissionPdf = shapePdf * cosAtLight * c_INVPI;
 }
 
-void SampleDirectAreaLight(const ADFloat *buffer,
+void SampleDirectIESArea(const ADFloat *buffer,
                            const ADBSphere & /*sceneSphere*/,
                            const ADVector3 &pos,
                            const ADVector3 &normal,
@@ -145,7 +190,7 @@ void SampleDirectAreaLight(const ADFloat *buffer,
                            ADFloat &cosAtLight,
                            ADFloat &directPdf,
                            ADFloat &emissionPdf) {
-    _SampleDirectAreaLight(buffer,
+    _SampleDirectIESArea(buffer,
                            pos,
                            normal,
                            rndParam,
@@ -158,7 +203,7 @@ void SampleDirectAreaLight(const ADFloat *buffer,
                            emissionPdf);
 }
 
-void EmissionAreaLight(const ADFloat *buffer,
+void EmissionIESArea(const ADFloat *buffer,
                        const ADBSphere &sceneSphere,
                        const ADVector3 &dirToLight,
                        const ADVector3 &normalOnLight,
@@ -169,15 +214,19 @@ void EmissionAreaLight(const ADFloat *buffer,
     ADFloat shapePdf;
     buffer = SampleShapePdf(buffer, shapePdf);
     ADVector3 emission_;
-    Deserialize(buffer, emission_);
+    buffer = Deserialize(buffer, emission_);
+    ADFloat iesVal1, iesVal2;
+    buffer = Deserialize(buffer, iesVal1);
+    Deserialize(buffer, iesVal2);
+
     ADFloat cosAtLight = -Dot(normalOnLight, dirToLight);
     // Assume cosAtLight > 0
-    emission = emission_;
+    emission = emission_ * iesVal2;
     directPdf = shapePdf;
     emissionPdf = cosAtLight * directPdf * c_INVPI;
 }
 
-void EmitAreaLight(const ADFloat *buffer,
+void EmitIESArea(const ADFloat *buffer,
                    const ADBSphere &sceneSphere,
                    const ADVector2 rndParamPos,
                    const ADVector2 rndParamDir,
@@ -193,7 +242,10 @@ void EmitAreaLight(const ADFloat *buffer,
     SampleShape(buffer, rndParamPos, time, isStatic, ray.org, normalOnLight, shapePdf);
     buffer += GetMaxShapeSerializedSize();
     ADVector3 emission_;
-    Deserialize(buffer, emission_);
+    buffer = Deserialize(buffer, emission_);
+    ADFloat iesVal1, iesVal2;
+    buffer = Deserialize(buffer, iesVal1);
+    Deserialize(buffer, iesVal2);
 
     ADVector3 d = SampleCosHemisphere(rndParamDir);
     ADVector3 b0;
@@ -201,7 +253,7 @@ void EmitAreaLight(const ADFloat *buffer,
     CoordinateSystem(normalOnLight, b0, b1);
 
     ray.dir = d[0] * b0 + d[1] * b1 + d[2] * normalOnLight;
-    emission = emission_ * (Float(M_PI) / shapePdf);
+    emission = emission_ * (Float(M_PI) / shapePdf) * iesVal1;
     cosAtLight = d[2];
     emissionPdf = d[2] * c_INVPI * shapePdf;
     directPdf = shapePdf;

@@ -21,7 +21,8 @@ struct TriangleMesh : public Shape {
     Vector2 GetSampleParam(const PrimID &primID,
                            const Vector3 &position,
                            const Float time) const override;
-    void SetAreaLight(const AreaLight *areaLight) override;
+    // void SetAreaLight(const AreaLight *areaLight) override;
+    void SetAreaLight(const Light *areaLight) override;
     PrimID Sample(const Float u) const override;
     void Sample(const Vector2 rndParam,
                 const Float time,

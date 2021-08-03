@@ -24,7 +24,7 @@ struct EnvLight : public Light {
     LightType GetType() const override {
         return LightType::EnvLight;
     }
-    void Serialize(const LightPrimID &lPrimID, const Vector2 &rndDir, Float *buffer) const override;
+    void Serialize(const LightPrimID &lPrimID, const Vector2 &rndDir, const Vector3 &dirToLight, Float *buffer) const override;
     bool SampleDirect(const BSphere &sceneSphere,
                       const Vector3 &pos,
                       const Vector3 &normal,

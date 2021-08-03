@@ -201,6 +201,8 @@ static inline void DirectLightingInit(const Scene *scene,
     surfaceVertex.directLightRndParam = Vector2(uniDist(rng), uniDist(rng));
     surfaceVertex.directLightInst.light = dirLight;
     surfaceVertex.directLightInst.lPrimID = dirLight->SampleDiscrete(uniDist(rng));
+    // default init 
+    surfaceVertex.directLightInst.dirToLight = Vector3(0.f, 0.f, 0.f);
 }
 
 static void DirectLighting(const int camDepth,
@@ -242,6 +244,9 @@ static void DirectLighting(const int camDepth,
                              emissionPdf)) {
         return;
     }
+
+    // assign for serialization
+    lightInst.dirToLight = dirToLight;
 
     if (doOcclusion && Occluded(scene, time, Ray{isect.position, dirToLight}, distToLight)) {
         return;
@@ -1046,6 +1051,9 @@ static void DirectLighting(const int camDepth,
         return;
     }
 
+    // required for serialization
+    camVertex.directLightInst.dirToLight = dirToLight;
+
     if (doOcclusion && Occluded(scene, time, Ray{pathState.isect.position, dirToLight}, dist)) {
         return;
     }
@@ -1297,6 +1305,8 @@ void GeneratePathBidir(const Scene *scene,
     RaySegment raySeg;
     EmitFromLight(
         scene->bSphere, lightPickProb, path.time, path.lgtVertex, raySeg.ray, lightPathStates[0]);
+    // for serialization : store dirToLight
+    path.lgtVertex.lightInst.dirToLight = -raySeg.ray.dir;
     raySeg.minT = c_IsectEpsilon;
     raySeg.maxT = std::numeric_limits<Float>::infinity();
     Vector3 prevLensContrib = Vector3::Zero();
@@ -1316,6 +1326,7 @@ void GeneratePathBidir(const Scene *scene,
 
         surfVertex.bsdfDiscrete = uniDist(rng);
         lightPathStates[lgtDepth].wi = -raySeg.ray.dir;
+        
 
         ConvertMIS(lgtDepth, path.lgtVertex.lightInst.light, raySeg.ray, lightPathStates[lgtDepth]);
 
@@ -1384,7 +1395,8 @@ void GeneratePathBidir(const Scene *scene,
             const Light *light = GetHitLight(scene, hitSurface, surfVertex.shapeInst.obj);
             if (light != nullptr) {
                 if (scene->options->useLightCoordinateSampling && camDepth > 1 &&
-                    light->GetType() == LightType::AreaLight) {
+                    light->GetType() == LightType::AreaLight &&
+                    light->GetType() == LightType::IESArea) {
                     assert(hitSurface);
                     SurfaceVertex &prevSurfVertex =
                         path.camSurfaceVertex[path.camSurfaceVertex.size() - 2];
@@ -1416,6 +1428,7 @@ void GeneratePathBidir(const Scene *scene,
                                true,
                                path.envLightInst,
                                contribs);
+                surfVertex.dirToHitLight = raySeg.ray.dir;
                 // Assume lights have zero reflectance
                 return;
             }
@@ -2554,7 +2567,7 @@ void Serialize(const Scene *scene, const Path &path, SerializedSubpath &subPath)
         subPath.primary[primaryIdx++] = path.lgtVertex.rndParamDir[0];
         subPath.primary[primaryIdx++] = path.lgtVertex.rndParamDir[1];
         buffer = Serialize(PickLightProb(scene, light), buffer);
-        light->Serialize(path.lgtVertex.lightInst.lPrimID, path.lgtVertex.rndParamDir, buffer);
+        light->Serialize(path.lgtVertex.lightInst.lPrimID, path.lgtVertex.rndParamDir, path.lgtVertex.lightInst.dirToLight, buffer);
         buffer += GetMaxLightSerializedSize();
 
         for (int lgtDepth = 0; lgtDepth < (int)path.lgtSurfaceVertex.size(); lgtDepth++) {
@@ -2595,11 +2608,12 @@ void Serialize(const Scene *scene, const Path &path, SerializedSubpath &subPath)
         buffer += GetMaxShapeSerializedSize();
         if (camDepth == (int)path.camSurfaceVertex.size() - 1) {
             if (path.lgtDepth == 0) {
+                // Hitlight case
                 if (path.envLightInst.light != nullptr) {
                     // hack
                     Vector2 hackRnd;
                     hackRnd << 0.f, 0.f;
-                    path.envLightInst.light->Serialize(path.envLightInst.lPrimID, hackRnd, buffer);
+                    path.envLightInst.light->Serialize(path.envLightInst.lPrimID, hackRnd, surfVertex.dirToHitLight, buffer);
                     buffer += GetMaxLightSerializedSize();
                     buffer = Serialize(PickLightProb(scene, path.envLightInst.light), buffer);
                 } else {
@@ -2608,7 +2622,7 @@ void Serialize(const Scene *scene, const Path &path, SerializedSubpath &subPath)
                     // hack
                     Vector2 hackRnd;
                     hackRnd << 0.f, 0.f;
-                    shapeInst.obj->areaLight->Serialize(shapeInst.primID, hackRnd, buffer);
+                    shapeInst.obj->areaLight->Serialize(shapeInst.primID, hackRnd, surfVertex.dirToHitLight, buffer);
                     buffer += GetMaxLightSerializedSize();
                     buffer = Serialize(PickLightProb(scene, shapeInst.obj->areaLight), buffer);
                 }
@@ -2620,7 +2634,7 @@ void Serialize(const Scene *scene, const Path &path, SerializedSubpath &subPath)
                 Vector2 hackRnd;
                     hackRnd << 0.f, 0.f;
                 surfVertex.directLightInst.light->Serialize(surfVertex.directLightInst.lPrimID,
-                                                            hackRnd, buffer);
+                                                            hackRnd, surfVertex.directLightInst.dirToLight, buffer);
                 buffer += GetMaxLightSerializedSize();
                 shapeInst.obj->bsdf->Serialize(shapeInst.st, buffer);
                 buffer += GetMaxBSDFSerializedSize();

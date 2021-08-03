@@ -21,7 +21,7 @@ struct DptOptions {
     Float roughnessThreshold = Float(0.05);          // roughness
     Float largeStepProbability = Float(0.05);        // Large step probability
     Float largeStepProbScale = Float(1.0);           // Scale up large step probability in MALA second phase
-    bool mala = false;                               // MALA-based kernel 
+    bool mala = true;                               // MALA-based kernel 
     Float malaGN = Float(100.0);                     // MALA truncated gradient magnitude
     Float malaStepsize = Float(0.005);               // MALA stepsize
     Float malaStdDev = Float(0.005);                 // MALA shrink prior to prevent noisy gradient issue

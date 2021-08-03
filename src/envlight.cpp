@@ -80,7 +80,7 @@ EnvLight::EnvLight(const Float &samplingWeight,
       sampleInfo(CreateEnvmapSampleInfo(image.get())) {
 }
 
-void EnvLight::Serialize(const LightPrimID &lPrimID, const Vector2 &rndDir, Float *buffer) const {
+void EnvLight::Serialize(const LightPrimID &lPrimID, const Vector2 &rndDir, const Vector3 &dirToLight, Float *buffer) const {
     buffer = ::Serialize((Float)LightType::EnvLight, buffer);
     buffer = ::Serialize(toWorld, buffer);
     buffer = ::Serialize(toLight, buffer);
