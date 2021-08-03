@@ -1,3 +1,12 @@
+# New updates
+- Parallel kernel build
+- Support for 
+  - Shapes : `ply`
+  - BSDFs : `roughconductor`, `blendbsdf`
+  - Light sources : `spotlight`, `collimatedbeam`, `ieslight`, `iesarea`
+- No requirement for setting path
+- Used C++17 `filesystem` for current directory assessment
+
 # Langevin-MCMC
 This is the code repository for paper "[Langevin Monte Carlo Rendering with Gradient-based Adaptation](https://research.cs.cornell.edu/langevin-mcmc/data/paper.pdf)" by Fujun Luan, Shuang Zhao, Kavita Bala, and Ioannis Gkioulekas. Check out the [project page](https://research.cs.cornell.edu/langevin-mcmc/) for more information. 
  
