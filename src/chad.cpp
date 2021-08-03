@@ -934,11 +934,15 @@ void Library::RegisterFunc(const std::shared_ptr<Function> func) {
     Emit(func, fs);
 
     std::string cObjFilename = m_Path + func->name + ".o";
-    std::string gccCmd =
-        std::string("gcc ") + "-O3 -c -fPIC -o " + cObjFilename + " " + cSourceFilename;
-    if (std::system(gccCmd.c_str()) != 0) {
-        std::cerr << "[Warning] compile failed" << std::endl;
-    }
+    // std::string gccCmd =
+    //     std::string("gcc ") + "-O3 -c -fPIC -o " + cObjFilename + " " + cSourceFilename;
+    // if (std::system(gccCmd.c_str()) != 0) {
+    //     std::cerr << "[Warning] compile failed" << std::endl;
+    // }
+    std::string makeLines = cObjFilename + ": " + cSourceFilename + "\n\t" +
+                            std::string("/usr/bin/gcc ") + "-O3 -c -fPIC -o " + cObjFilename + " " +
+                            cSourceFilename + "\n";
+    m_MakeLines.emplace_back(makeLines);
 }
 
 void Library::RegisterFunc2(const std::shared_ptr<Function> func) {
@@ -982,9 +986,11 @@ void Library::RegisterFuncDerv(const std::shared_ptr<Function> func,
               " " + sourceFilepath;
     }
 
-    if (std::system(cmd.c_str()) != 0) {
-        std::cerr << "[Warning] compile failed" << std::endl;
-    }
+    // if (std::system(cmd.c_str()) != 0) {
+    //     std::cerr << "[Warning] compile failed" << std::endl;
+    // }
+    std::string makeLine = objFilepath + ": " + sourceFilepath + "\n\t" + cmd + "\n";
+    m_MakeLines.emplace_back(makeLine);
 }
 
 void Library::RegisterFuncDerv2(const std::shared_ptr<Function> func,

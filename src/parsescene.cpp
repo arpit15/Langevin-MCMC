@@ -406,8 +406,8 @@ std::shared_ptr<const Shape> ParseShape(pugi::xml_node node,
                 if (name == "radiance")
                     radiance = ParseVector3(grandChild.attribute("value").value());
                 else if (name == "filename") {
-                    ies_fname = child.attribute("value").value();
-            }
+                    ies_fname = grandChild.attribute("value").value();
+                }
             }
 
             std::string emitterType = child.attribute("type").value();

@@ -17,9 +17,11 @@ IESArea::IESArea(const Float &samplingWeight, Shape *_shape, const Vector3 &emis
     image(new Image3(fname)),
     toWorld(_toWorld), toLight(toWorld.inverse()) {
     _shape->SetAreaLight(this);
+    std::cout << "IESArea created!" << std::endl;
 }
 
-Float IESArea::getIESVal(const Vector3 &local) const {
+Float IESArea::getIESVal(const Vector3 &local_) const {
+    const Vector3 local = Normalize(local_);
   Vector2 uv(
             std::atan2(local[1], local[0]) * c_INVTWOPI,
             std::acos(local[2]) * c_INVPI
@@ -87,6 +89,7 @@ bool IESArea::SampleDirect(const BSphere & /*sceneSphere*/,
         // multiple ies val
         const Vector3 dirFromLight = -dirToLight;
         const Vector3 local = XformVector(toLight, dirFromLight);
+        const Float iesVal = getIESVal(local);
         contrib *= getIESVal(local);
         return true;
     } else {
@@ -106,6 +109,7 @@ void IESArea::Emission(const BSphere & /*sceneSphere*/,
     if (cosAtLight > Float(0.0)) {
         const Vector3 dirFromLight = -dirToLight;
         const Vector3 local = XformVector(toLight, dirFromLight);
+        const Float iesVal = getIESVal(local);
         emission = this->emission * getIESVal(local);
         directPdf = shape->SamplePdf();
         emissionPdf = cosAtLight * directPdf * c_INVPI;
@@ -138,6 +142,7 @@ void IESArea::Emit(const BSphere & /*sceneSphere*/,
     ray.dir = d[0] * b0 + d[1] * b1 + d[2] * normal;
     const Vector3 dirFromLight = ray.dir ;
     const Vector3 local = XformVector(toLight, dirFromLight);
+    const Float IESVal = getIESVal(local);
     emission = this->emission * (Float(M_PI) / shapePdf) * getIESVal(local);
     cosAtLight = d[2];
     emissionPdf = d[2] * c_INVPI * shapePdf;
