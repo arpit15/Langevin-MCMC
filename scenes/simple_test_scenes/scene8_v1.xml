@@ -1,0 +1,70 @@
+<scene version="0.6.0">
+
+
+
+	<default name="spp" value="1024" />
+	<default name="resx" value="200" />
+	<default name="resy" value="200" />
+
+		<!-- <dpt>
+        <string  name="integrator"     value="mcmc"/>
+        <integer name="mindepth"       value="-1"/>
+        <integer name="maxdepth"       value="32"/>
+        <boolean name="bidirectional"  value="true"/>
+        <integer name="spp"            value="1024"/>    
+        <float   name="largestepprob"  value="0.05"/>
+        <float   name="largestepscale" value="4"/>
+        <boolean name="mala"           value="true"/>
+        <integer name="directspp" value="1024"/>
+    </dpt> -->
+
+
+	<integrator type="bdpt">
+		<integer name="maxDepth" value="12" />
+	</integrator>
+	<sensor id="Camera" type="perspective">
+		<string name="fovAxis" value="x" />
+		<float name="fov" value="10.000000" />
+		<float name="nearClip" value="0.100000" />
+		<float name="farClip" value="1000.000000" />
+		<transform name="toWorld">
+			<matrix value="-0.000000 -0.275635 -0.961262 7.439821 -0.000000 0.961262 -0.275635 2.803710 1.000000 0.000000 -0.000000 0.000000 0.000000 0.000000 0.000000 1.000000" />
+		</transform>
+		<sampler type="independent">
+			<integer name="sampleCount" value="64" />
+		</sampler>
+		<film type="hdrfilm">
+			<integer name="width" value="200" />
+			<integer name="height" value="200" />
+			<boolean name="banner" value="false" />
+		</film>
+	</sensor>
+
+
+
+	<bsdf id="default-bsdf" type="twosided">
+		<bsdf type="diffuse" />
+	</bsdf>
+
+
+<shape type="disk">
+
+		<transform name="toWorld">
+			<scale value="0.1"/>
+			<matrix value="1.000000 0.000000 0.000000 -0.900000 0.000000 0.000000 -1.000000 0.980000 0.000000 1.000000 0.000000 0.000000 0.000000 0.000000 0.000000 1.000000" />
+
+		</transform>
+	<emitter id="emit-Point" type="iesarea">
+		<string name="filename" value="textures/rayfile_LT_T66G_20190621_IES.exr" />
+		<rgb name="radiance" value="1 0 0" />
+	</emitter>
+
+</shape>
+
+
+
+	<shape id="mesh-Plane" type="obj">
+		<string name="filename" value="meshes/Plane.obj" />
+		<ref id="default-bsdf" name="bsdf" />
+	</shape>
+</scene>

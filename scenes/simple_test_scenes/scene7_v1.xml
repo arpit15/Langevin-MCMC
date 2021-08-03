@@ -6,7 +6,7 @@
 		<integer name="maxDepth" value="32" />
 	</integrator>
 
-	<dpt>
+	<!-- <dpt>
         <string  name="integrator"     value="mc"/>
         <integer name="mindepth"       value="-1"/>
         <integer name="maxdepth"       value="32"/>
@@ -16,7 +16,7 @@
         <float   name="largestepscale" value="4"/>
         <boolean name="mala"           value="true"/>
         <integer name="directspp" value="256"/>
-    </dpt>
+    </dpt> -->
 
 	<sensor id="Camera" type="perspective">
 		<string name="fovAxis" value="x" />
