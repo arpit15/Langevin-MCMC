@@ -47,8 +47,8 @@
 	</bsdf>
 
 
-<shape type="disk">
-
+<shape type="ply">
+	<string name="filename" value="meshes/unit_disk.ply" />
 		<transform name="toWorld">
 			<scale value="0.1"/>
 			<matrix value="1.000000 0.000000 0.000000 -0.900000 0.000000 0.000000 -1.000000 0.980000 0.000000 1.000000 0.000000 0.000000 0.000000 0.000000 0.000000 1.000000" />
@@ -58,6 +58,10 @@
 		<string name="filename" value="textures/rayfile_LT_T66G_20190621_IES.exr" />
 		<rgb name="radiance" value="1 0 0" />
 	</emitter>
+
+	<bsdf id="default-bsdf" type="twosided">
+		<bsdf type="diffuse" />
+	</bsdf>
 
 </shape>
 
