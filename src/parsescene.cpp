@@ -805,15 +805,16 @@ std::shared_ptr<DptOptions> ParseDptOptions(pugi::xml_node node) {
     return dptOptions;
 }
 
-std::unique_ptr<Scene> ParseScene(pugi::xml_node node) {
-    std::shared_ptr<DptOptions> options = std::make_shared<DptOptions>();
-    std::shared_ptr<const Camera> camera;
-    std::vector<std::shared_ptr<const Shape>> objs;
-    std::vector<std::shared_ptr<const Light>> lights;
-    std::shared_ptr<const EnvLight> envLight;
-    std::map<std::string, std::shared_ptr<const BSDF>> bsdfMap;
-    std::map<std::string, std::shared_ptr<const TextureRGB>> textureMap;
-    std::string outputName = "image.exr";
+void ParseScene(pugi::xml_node node,
+    std::shared_ptr<DptOptions> &options,
+    std::shared_ptr<const Camera> &camera,
+    std::vector<std::shared_ptr<const Shape>> &objs,
+    std::vector<std::shared_ptr<const Light>> &lights,
+    std::shared_ptr<const EnvLight> &envLight,
+    std::map<std::string, std::shared_ptr<const BSDF>> &bsdfMap,
+    std::map<std::string, std::shared_ptr<const TextureRGB>> &textureMap,
+    std::string &outputName
+    ) {
     for (auto child : node.children()) {
         std::string name = child.name();
         if (name == "sensor") {
@@ -837,10 +838,18 @@ std::unique_ptr<Scene> ParseScene(pugi::xml_node node) {
             std::cout << 
                 "spp : " << options->spp << std::endl <<
                 "maxDepth : " << options->maxDepth << std::endl;
+        } else if (name == "include") {
+            std::string filename = child.attribute("filename").value();
+            pugi::xml_document doc;
+            pugi::xml_parse_result result = doc.load_file(filename.c_str());
+            if (result) {
+                ParseScene(doc.child("scene"),
+                    options, camera, objs, lights, envLight, bsdfMap, textureMap, outputName);
+            }
         }
     }
-    return std::unique_ptr<Scene>(
-        new Scene(options, camera, objs, lights, envLight, outputName));
+    // return std::unique_ptr<Scene>(
+    //     new Scene(options, camera, objs, lights, envLight, outputName));
 }
 
 std::unique_ptr<Scene> ParseScene(const std::string &filename) {
@@ -848,7 +857,19 @@ std::unique_ptr<Scene> ParseScene(const std::string &filename) {
     pugi::xml_parse_result result = doc.load_file(filename.c_str());
     std::unique_ptr<Scene> scene;
     if (result) {
-        scene = ParseScene(doc.child("scene"));
+        std::shared_ptr<DptOptions> options = std::make_shared<DptOptions>();
+        std::shared_ptr<const Camera> camera;
+        std::vector<std::shared_ptr<const Shape>> objs;
+        std::vector<std::shared_ptr<const Light>> lights;
+        std::shared_ptr<const EnvLight> envLight;
+        std::map<std::string, std::shared_ptr<const BSDF>> bsdfMap;
+        std::map<std::string, std::shared_ptr<const TextureRGB>> textureMap;
+        std::string outputName = "image.exr";
+        ParseScene(doc.child("scene"), 
+            options, camera, objs, lights, envLight, bsdfMap, textureMap, outputName);
+
+        scene = std::unique_ptr<Scene>(
+            new Scene(options, camera, objs, lights, envLight, outputName));
     } else {
         std::cerr << "Error description: " << result.description() << std::endl;
         std::cerr << "Error offset: " << result.offset << std::endl;
