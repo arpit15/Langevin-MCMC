@@ -813,7 +813,8 @@ void ParseScene(pugi::xml_node node,
     std::shared_ptr<const EnvLight> &envLight,
     std::map<std::string, std::shared_ptr<const BSDF>> &bsdfMap,
     std::map<std::string, std::shared_ptr<const TextureRGB>> &textureMap,
-    std::string &outputName
+    std::string &outputName,
+    std::unordered_map<std::string, std::string> &subs
     ) {
     for (auto child : node.children()) {
         std::string name = child.name();
@@ -844,15 +845,19 @@ void ParseScene(pugi::xml_node node,
             pugi::xml_parse_result result = doc.load_file(filename.c_str());
             if (result) {
                 ParseScene(doc.child("scene"),
-                    options, camera, objs, lights, envLight, bsdfMap, textureMap, outputName);
+                    options, camera, objs, lights, envLight, bsdfMap, textureMap, outputName, subs);
             }
+        } else if (name == "default") {
+            std::string defaultName = child.attribute("name").value();
+            std::string defaultValue = child.attribute("value").value();
+            subs[defaultName] = defaultValue;
         }
     }
     // return std::unique_ptr<Scene>(
     //     new Scene(options, camera, objs, lights, envLight, outputName));
 }
 
-std::unique_ptr<Scene> ParseScene(const std::string &filename) {
+std::unique_ptr<Scene> ParseScene(const std::string &filename, std::unordered_map<std::string, std::string> &subs) {
     pugi::xml_document doc;
     pugi::xml_parse_result result = doc.load_file(filename.c_str());
     std::unique_ptr<Scene> scene;
@@ -866,7 +871,7 @@ std::unique_ptr<Scene> ParseScene(const std::string &filename) {
         std::map<std::string, std::shared_ptr<const TextureRGB>> textureMap;
         std::string outputName = "image.exr";
         ParseScene(doc.child("scene"), 
-            options, camera, objs, lights, envLight, bsdfMap, textureMap, outputName);
+            options, camera, objs, lights, envLight, bsdfMap, textureMap, outputName, subs);
 
         scene = std::unique_ptr<Scene>(
             new Scene(options, camera, objs, lights, envLight, outputName));
