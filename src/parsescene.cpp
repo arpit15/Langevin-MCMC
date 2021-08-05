@@ -71,9 +71,9 @@ void replace_func(SubsT &subs, pugi::xml_node &node) {
             std::string value = attr.value();
             if (value.find('$') == std::string::npos)
                 continue;
-            std::cout << "Need subs " << value << std::endl;
+            // std::cout << "Need subs " << value << std::endl;
             for (const auto &kv : subs) {
-                std::cout << "Found subs " << kv.first << " = " << kv.second << std::endl;
+                // std::cout << "Found subs " << kv.first << " = " << kv.second << std::endl;
                 replace_inplace(value, "$" + kv.first, kv.second);
             }
             attr.set_value(value.c_str());
@@ -84,9 +84,9 @@ void replace_func(SubsT &subs, pugi::xml_node &node) {
                 std::string value = attr.value();
                 if (value.find('$') == std::string::npos)
                     continue;
-                std::cout << "Need subs " << value << std::endl;
+                // std::cout << "Need subs " << value << std::endl;
                 for (const auto &kv : subs) {
-                    std::cout << "Found subs " << kv.first << " = " << kv.second << std::endl;
+                    // std::cout << "Found subs " << kv.first << " = " << kv.second << std::endl;
                     replace_inplace(value, "$" + kv.first, kv.second);
             }
             attr.set_value(value.c_str());
@@ -917,6 +917,11 @@ void ParseScene(pugi::xml_node node,
         } else if (name == "default") {
             std::string defaultName = child.attribute("name").value();
             std::string defaultValue = child.attribute("value").value();
+            // donot replace if the key is already found
+            if (subs.find(defaultName) != subs.end()) {
+                std::cout << "Ignoring default for " << defaultName << std::endl;
+                continue;
+            }
             subs[defaultName] = defaultValue;
         }
     }
