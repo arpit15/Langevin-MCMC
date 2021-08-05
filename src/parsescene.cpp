@@ -28,29 +28,73 @@
 #include <regex>
 #include <map>
 
+typedef std::unordered_map<std::string, std::string> SubsT;
+
+inline void replace_inplace(std::string &str, const std::string &source,
+                            const std::string &target) {
+    size_t pos = 0;
+    while ((pos = str.find(source, pos)) != std::string::npos) {
+        str.replace(pos, source.length(), target);
+        pos += target.length();
+    }
+}
+
 using BSDFMap = std::map<std::string, std::shared_ptr<const BSDF>>;
 using TextureMap = std::map<std::string, std::shared_ptr<const TextureRGB>>;
 
 Vector3 ParseVector3(const std::string &value);
 Matrix4x4 ParseMatrix4x4(const std::string &value);
-Matrix4x4 ParseTransform(pugi::xml_node node);
-AnimatedTransform ParseAnimatedTransform(pugi::xml_node node);
-std::unique_ptr<Scene> ParseScene(pugi::xml_node node);
-std::shared_ptr<const Camera> ParseSensor(pugi::xml_node node, std::string &filename);
-std::shared_ptr<Image3> ParseFilm(pugi::xml_node node, std::string &filename);
+Matrix4x4 ParseTransform(pugi::xml_node node, SubsT &subs);
+AnimatedTransform ParseAnimatedTransform(pugi::xml_node node, SubsT &subs);
+std::unique_ptr<Scene> ParseScene(pugi::xml_node node, SubsT &subs);
+std::shared_ptr<const Camera> ParseSensor(pugi::xml_node node, std::string &filename, SubsT &subs);
+std::shared_ptr<Image3> ParseFilm(pugi::xml_node node, std::string &filename, SubsT &subs);
 std::shared_ptr<const Shape> ParseShape(pugi::xml_node node,
                                         const BSDFMap &bsdfMap,
                                         const TextureMap &textureMap,
-                                        std::shared_ptr<const Light> &areaLight);
+                                        std::shared_ptr<const Light> &areaLight, SubsT &subs);
 std::shared_ptr<const BSDF> ParseBSDF(pugi::xml_node node,
                                       const TextureMap &textureMap,
+                                      SubsT &subs,
                                       bool twoSided = false);
 std::shared_ptr<const Light> ParseEmitter(pugi::xml_node node,
-                                          std::shared_ptr<const EnvLight> &envLight);
-std::shared_ptr<const TextureRGB> ParseTexture(pugi::xml_node node);
-std::shared_ptr<const Texture1D> Parse1DMap(pugi::xml_node node, const TextureMap &textureMap);
-std::shared_ptr<const TextureRGB> Parse3DMap(pugi::xml_node node, const TextureMap &textureMap);
+                                          std::shared_ptr<const EnvLight> &envLight, SubsT &subs);
+std::shared_ptr<const TextureRGB> ParseTexture(pugi::xml_node node, SubsT &subs);
+std::shared_ptr<const Texture1D> Parse1DMap(pugi::xml_node node, const TextureMap &textureMap, SubsT &subs);
+std::shared_ptr<const TextureRGB> Parse3DMap(pugi::xml_node node, const TextureMap &textureMap, SubsT &subs);
 
+void replace_func(SubsT &subs, pugi::xml_node &node) {
+    // taken from mitsuba2
+    // https://github.com/mitsuba-renderer/mitsuba2/blob/master/src/libcore/xml.cpp#L449
+    if (!subs.empty()) {
+        for (auto attr: node.attributes()) {
+            std::string value = attr.value();
+            if (value.find('$') == std::string::npos)
+                continue;
+            std::cout << "Need subs " << value << std::endl;
+            for (const auto &kv : subs) {
+                std::cout << "Found subs " << kv.first << " = " << kv.second << std::endl;
+                replace_inplace(value, "$" + kv.first, kv.second);
+            }
+            attr.set_value(value.c_str());
+        }
+        // iterate over child attributes as well
+        for (auto child : node.children()) {
+            for (auto attr: child.attributes()) {
+                std::string value = attr.value();
+                if (value.find('$') == std::string::npos)
+                    continue;
+                std::cout << "Need subs " << value << std::endl;
+                for (const auto &kv : subs) {
+                    std::cout << "Found subs " << kv.first << " = " << kv.second << std::endl;
+                    replace_inplace(value, "$" + kv.first, kv.second);
+            }
+            attr.set_value(value.c_str());
+        }
+        }
+
+    }
+}
 Vector3 ParseVector3(const std::string &value) {
     std::regex rgx("(,| )+");
     std::sregex_token_iterator first{begin(value), end(value), rgx, -1}, last;
@@ -93,7 +137,8 @@ Matrix4x4 ParseMatrix4x4(const std::string &value) {
     return mat;
 }
 
-Matrix4x4 ParseTransform(pugi::xml_node node) {
+Matrix4x4 ParseTransform(pugi::xml_node node, SubsT &subs) {
+    replace_func(subs, node);
     Matrix4x4 tform = Matrix4x4::Identity();
     for (auto child : node.children()) {
         std::string name = child.name();
@@ -152,12 +197,12 @@ Matrix4x4 ParseTransform(pugi::xml_node node) {
     return tform;
 }
 
-AnimatedTransform ParseAnimatedTransform(pugi::xml_node node) {
+AnimatedTransform ParseAnimatedTransform(pugi::xml_node node, SubsT &subs) {
     int transformCount = 0;
     Matrix4x4 m[2];
     for (auto child : node.children()) {
         if (std::string(child.name()) == "transform") {
-            m[transformCount++] = ParseTransform(child);
+            m[transformCount++] = ParseTransform(child, subs);
             if (transformCount >= 2)
                 break;
         }
@@ -166,10 +211,11 @@ AnimatedTransform ParseAnimatedTransform(pugi::xml_node node) {
 }
 
 std::shared_ptr<Image3> ParseFilm(pugi::xml_node node, std::string &filename, 
-            int &cropOffsetX, int &cropOffsetY, int &cropWidth, int &cropHeight ) {
+            int &cropOffsetX, int &cropOffsetY, int &cropWidth, int &cropHeight, SubsT &subs ) {
     int width = 512;
     int height = 512;
 
+    replace_func(subs, node);
     for (auto child : node.children()) {
         std::string name = child.attribute("name").value();
         if (name == "width") {
@@ -202,7 +248,7 @@ std::shared_ptr<Image3> ParseFilm(pugi::xml_node node, std::string &filename,
     return std::make_shared<Image3>(width, height);
 }
 
-std::shared_ptr<const Camera> ParseSensor(pugi::xml_node node, std::string &filename) {
+std::shared_ptr<const Camera> ParseSensor(pugi::xml_node node, std::string &filename, SubsT &subs) {
     AnimatedTransform toWorld = MakeAnimatedTransform(Matrix4x4::Identity(), Matrix4x4::Identity());
     Float nearClip = 1e-2;
     Float farClip = 1000.0;
@@ -210,6 +256,8 @@ std::shared_ptr<const Camera> ParseSensor(pugi::xml_node node, std::string &file
     std::shared_ptr<Image3> film;
     int cropOffsetX = 0, cropOffsetY = 0,
          cropWidth, cropHeight;
+
+    replace_func(subs, node);
 
     for (auto child : node.children()) {
         std::string name = child.attribute("name").value();
@@ -221,13 +269,13 @@ std::shared_ptr<const Camera> ParseSensor(pugi::xml_node node, std::string &file
             fov = std::stof(child.attribute("value").value());
         } else if (name == "toWorld") {
             if (std::string(child.name()) == "transform") {
-                Matrix4x4 m = ParseTransform(child);
+                Matrix4x4 m = ParseTransform(child, subs);
                 toWorld = MakeAnimatedTransform(m, m);
             } else if (std::string(child.name()) == "animation") {
-                toWorld = ParseAnimatedTransform(child);
+                toWorld = ParseAnimatedTransform(child, subs);
             }
         } else if (std::string(child.name()) == "film") {
-            film = ParseFilm(child, filename, cropOffsetX, cropOffsetY, cropWidth, cropHeight);
+            film = ParseFilm(child, filename, cropOffsetX, cropOffsetY, cropWidth, cropHeight, subs);
         }
     }
     if (film.get() == nullptr) {
@@ -242,12 +290,14 @@ std::shared_ptr<const Camera> ParseSensor(pugi::xml_node node, std::string &file
 std::shared_ptr<const Shape> ParseShape(pugi::xml_node node,
                                         const BSDFMap &bsdfMap,
                                         const TextureMap &textureMap,
-                                        std::shared_ptr<const Light> &areaLight) {
+                                        std::shared_ptr<const Light> &areaLight, SubsT &subs) {
     std::shared_ptr<const BSDF> bsdf;
+
+    replace_func(subs, node);
     for (auto child : node.children()) {
         std::string name = child.name();
         if (name == "bsdf") {
-            bsdf = ParseBSDF(child, textureMap);
+            bsdf = ParseBSDF(child, textureMap, subs);
             break;
         } else if (name == "ref") {
             pugi::xml_attribute idAttr = child.attribute("id");
@@ -290,12 +340,12 @@ std::shared_ptr<const Shape> ParseShape(pugi::xml_node node,
                 faceNormals = child.attribute("value").value();
             } else if (name == "toWorld") {
                 if (std::string(child.name()) == "transform") {
-                    toWorld[0] = toWorld[1] = ParseTransform(child);
+                    toWorld[0] = toWorld[1] = ParseTransform(child, subs);
                 } else if (std::string(child.name()) == "animation") {
                     int transformCount = 0;
                     for (auto grandChild : child.children()) {
                         if (std::string(grandChild.name()) == "transform") {
-                            toWorld[transformCount++] = ParseTransform(grandChild);
+                            toWorld[transformCount++] = ParseTransform(grandChild, subs);
                             if (transformCount >= 2)
                                 break;
                         }
@@ -328,12 +378,12 @@ std::shared_ptr<const Shape> ParseShape(pugi::xml_node node,
                 faceNormals = child.attribute("value").value();
             } else if (name == "toWorld") {
                 if (std::string(child.name()) == "transform") {
-                    toWorld[0] = toWorld[1] = ParseTransform(child);
+                    toWorld[0] = toWorld[1] = ParseTransform(child, subs);
                 } else if (std::string(child.name()) == "animation") {
                     int transformCount = 0;
                     for (auto grandChild : child.children()) {
                         if (std::string(grandChild.name()) == "transform") {
-                            toWorld[transformCount++] = ParseTransform(grandChild);
+                            toWorld[transformCount++] = ParseTransform(grandChild, subs);
                             if (transformCount >= 2)
                                 break;
                         }
@@ -367,12 +417,12 @@ std::shared_ptr<const Shape> ParseShape(pugi::xml_node node,
                 faceNormals = child.attribute("value").value();
             } else if (name == "toWorld") {
                 if (std::string(child.name()) == "transform") {
-                    toWorld[0] = toWorld[1] = ParseTransform(child);
+                    toWorld[0] = toWorld[1] = ParseTransform(child, subs);
                 } else if (std::string(child.name()) == "animation") {
                     int transformCount = 0;
                     for (auto grandChild : child.children()) {
                         if (std::string(grandChild.name()) == "transform") {
-                            toWorld[transformCount++] = ParseTransform(grandChild);
+                            toWorld[transformCount++] = ParseTransform(grandChild, subs);
                             if (transformCount >= 2)
                                 break;
                         }
@@ -423,15 +473,20 @@ std::shared_ptr<const Shape> ParseShape(pugi::xml_node node,
 
 std::shared_ptr<const BSDF> ParseBSDF(pugi::xml_node node,
                                       const TextureMap &textureMap,
-                                      bool twoSided) {
+                                      SubsT &subs, bool twoSided) {
+    
+    replace_func(subs, node);
+
     std::string type = node.attribute("type").value();
+
+    
     if (type == "diffuse") {
         std::shared_ptr<const TextureRGB> reflectance =
             std::make_shared<const ConstantTextureRGB>(Vector3(0.5, 0.5, 0.5));
         for (auto child : node.children()) {
             std::string name = child.attribute("name").value();
             if (name == "reflectance") {
-                reflectance = Parse3DMap(child, textureMap);
+                reflectance = Parse3DMap(child, textureMap, subs);
             }
         }
         return std::make_shared<Lambertian>(twoSided, reflectance);
@@ -445,12 +500,12 @@ std::shared_ptr<const BSDF> ParseBSDF(pugi::xml_node node,
         for (auto child : node.children()) {
             std::string name = child.attribute("name").value();
             if (name == "diffuseReflectance") {
-                diffuseReflectance = Parse3DMap(child, textureMap);
+                diffuseReflectance = Parse3DMap(child, textureMap, subs);
             } else if (name == "specularReflectance") {
                 std::string value = child.attribute("value").value();
-                specularReflectance = Parse3DMap(child, textureMap);
+                specularReflectance = Parse3DMap(child, textureMap, subs);
             } else if (name == "exponent") {
-                exponent = Parse1DMap(child, textureMap);
+                exponent = Parse1DMap(child, textureMap, subs);
             }
         }
         return std::make_shared<Phong>(twoSided, diffuseReflectance, specularReflectance, exponent);
@@ -462,9 +517,9 @@ std::shared_ptr<const BSDF> ParseBSDF(pugi::xml_node node,
             std::string name = child.attribute("name").value();
             std::string type = child.name();
             if (name == "weight") {
-                weight = Parse3DMap(child, textureMap);
+                weight = Parse3DMap(child, textureMap, subs);
             } else if (type == "bsdf") {
-                bsdfs.push_back(ParseBSDF(child, textureMap, twoSided));
+                bsdfs.push_back(ParseBSDF(child, textureMap, subs, twoSided));
             }
         }
         return std::make_shared<BlendBSDF>(twoSided, weight, bsdfs.at(0), bsdfs.at(1));
@@ -487,13 +542,13 @@ std::shared_ptr<const BSDF> ParseBSDF(pugi::xml_node node,
             } else if (name == "extIOR") {
                 extIOR = std::stof(child.attribute("value").value());
             } else if (name == "alpha") {
-                alpha = Parse1DMap(child, textureMap);
+                alpha = Parse1DMap(child, textureMap, subs);
             } else if (name == "specularReflectance") {
                 std::string value = child.attribute("value").value();
-                specularReflectance = Parse3DMap(child, textureMap);
+                specularReflectance = Parse3DMap(child, textureMap, subs);
             } else if (name == "specularTransmittance") {
                 std::string value = child.attribute("value").value();
-                specularTransmittance = Parse3DMap(child, textureMap);
+                specularTransmittance = Parse3DMap(child, textureMap, subs);
             }
         }
         return std::make_shared<RoughDielectric>(
@@ -519,10 +574,10 @@ std::shared_ptr<const BSDF> ParseBSDF(pugi::xml_node node,
             } else if (name == "extEta") {
                 extIOR = std::stof(child.attribute("value").value());
             } else if (name == "alpha") {
-                alpha = Parse1DMap(child, textureMap);
+                alpha = Parse1DMap(child, textureMap, subs);
             } else if (name == "specularReflectance") {
                 std::string value = child.attribute("value").value();
-                specularReflectance = Parse3DMap(child, textureMap);
+                specularReflectance = Parse3DMap(child, textureMap, subs);
             }
         }
 
@@ -535,7 +590,7 @@ std::shared_ptr<const BSDF> ParseBSDF(pugi::xml_node node,
     } else if (type == "twosided") {
         for (auto child : node.children()) {
             if (std::string(child.name()) == "bsdf") {
-                return ParseBSDF(child, textureMap, true);
+                return ParseBSDF(child, textureMap, subs, true);
             }
         }
     } else {
@@ -545,7 +600,9 @@ std::shared_ptr<const BSDF> ParseBSDF(pugi::xml_node node,
     return nullptr;
 }
 
-std::shared_ptr<const TextureRGB> ParseTexture(pugi::xml_node node) {
+std::shared_ptr<const TextureRGB> ParseTexture(pugi::xml_node node, SubsT &subs) {
+
+    replace_func(subs, node);
     std::string type = node.attribute("type").value();
     if (type == "bitmap") {
         std::string filename = "";
@@ -566,11 +623,13 @@ std::shared_ptr<const TextureRGB> ParseTexture(pugi::xml_node node) {
 }
 
 template <int N>
-std::shared_ptr<const Texture<N>> ParseNDMap(pugi::xml_node node, const TextureMap &textureMap) {
+std::shared_ptr<const Texture<N>> ParseNDMap(pugi::xml_node node, const TextureMap &textureMap, SubsT &subs) {
+
+    replace_func(subs, node);
     std::shared_ptr<const TextureRGB> reflectance;
     std::string nodeType = node.name();
     if (nodeType == "texture") {
-        reflectance = ParseTexture(node);
+        reflectance = ParseTexture(node, subs);
     } else if (nodeType == "ref") {
         pugi::xml_attribute idAttr = node.attribute("id");
         if (!idAttr.empty()) {
@@ -609,16 +668,18 @@ std::shared_ptr<const Texture<N>> ParseNDMap(pugi::xml_node node, const TextureM
     return nullptr;
 }
 
-std::shared_ptr<const TextureRGB> Parse3DMap(pugi::xml_node node, const TextureMap &textureMap) {
-    return ParseNDMap<3>(node, textureMap);
+std::shared_ptr<const TextureRGB> Parse3DMap(pugi::xml_node node, const TextureMap &textureMap, SubsT &subs) {
+    return ParseNDMap<3>(node, textureMap, subs);
 }
 
-std::shared_ptr<const Texture1D> Parse1DMap(pugi::xml_node node, const TextureMap &textureMap) {
-    return ParseNDMap<1>(node, textureMap);
+std::shared_ptr<const Texture1D> Parse1DMap(pugi::xml_node node, const TextureMap &textureMap, SubsT &subs) {
+    return ParseNDMap<1>(node, textureMap, subs);
 }
 
 std::shared_ptr<const Light> ParseEmitter(pugi::xml_node node,
-                                          std::shared_ptr<const EnvLight> &envLight) {
+                                          std::shared_ptr<const EnvLight> &envLight, SubsT &subs) {
+    replace_func(subs, node);
+
     std::string type = node.attribute("type").value();
     if (type == "point") {
         Vector3 pos(Float(0.0), Float(0.0), Float(0.0));
@@ -652,8 +713,8 @@ std::shared_ptr<const Light> ParseEmitter(pugi::xml_node node,
             std::string name = child.attribute("name").value();
             if (name == "toWorld") {
                 if (std::string(child.name()) == "transform") {
-                    Matrix4x4 m = ParseTransform(child);
-                    toWorld = ParseTransform(child);
+                    Matrix4x4 m = ParseTransform(child, subs);
+                    toWorld = ParseTransform(child, subs);
                 } 
                 // else if (std::string(child.name()) == "animation") {
                 //     toWorld = ParseAnimatedTransform(child);
@@ -677,10 +738,10 @@ std::shared_ptr<const Light> ParseEmitter(pugi::xml_node node,
             std::string name = child.attribute("name").value();
             if (name == "toWorld") {
                 if (std::string(child.name()) == "transform") {
-                    Matrix4x4 m = ParseTransform(child);
+                    Matrix4x4 m = ParseTransform(child, subs);
                     toWorld = MakeAnimatedTransform(m, m);
                 } else if (std::string(child.name()) == "animation") {
-                    toWorld = ParseAnimatedTransform(child);
+                    toWorld = ParseAnimatedTransform(child, subs);
                 }
             } else if (name == "intensity") {
                 intensity = ParseVector3(child.attribute("value").value());
@@ -703,7 +764,7 @@ std::shared_ptr<const Light> ParseEmitter(pugi::xml_node node,
             std::string name = child.attribute("name").value();
             if (name == "toWorld") {
                 if (std::string(child.name()) == "transform") {
-                    toWorld = ParseTransform(child);
+                    toWorld = ParseTransform(child, subs);
                     // toWorld = MakeAnimatedTransform(m, m);
                 } 
                 // else if (std::string(child.name()) == "animation") {
@@ -732,10 +793,10 @@ std::shared_ptr<const Light> ParseEmitter(pugi::xml_node node,
                 filename = child.attribute("value").value();
             } else if (name == "toWorld") {
                 if (std::string(child.name()) == "transform") {
-                    Matrix4x4 m = ParseTransform(child);
+                    Matrix4x4 m = ParseTransform(child, subs);
                     toWorld = MakeAnimatedTransform(m, m);
                 } else if (std::string(child.name()) == "animation") {
-                    toWorld = ParseAnimatedTransform(child);
+                    toWorld = ParseAnimatedTransform(child, subs);
                 }
             }
         }
@@ -747,7 +808,9 @@ std::shared_ptr<const Light> ParseEmitter(pugi::xml_node node,
     return nullptr;
 }
 
-std::shared_ptr<DptOptions> ParseDptOptions(pugi::xml_node node) {
+std::shared_ptr<DptOptions> ParseDptOptions(pugi::xml_node node, SubsT &subs) {
+    replace_func(subs, node);
+
     std::shared_ptr<DptOptions> dptOptions = std::make_shared<DptOptions>();
     for (auto child : node.children()) {
         std::string name = child.attribute("name").value();
@@ -814,28 +877,32 @@ void ParseScene(pugi::xml_node node,
     std::map<std::string, std::shared_ptr<const BSDF>> &bsdfMap,
     std::map<std::string, std::shared_ptr<const TextureRGB>> &textureMap,
     std::string &outputName,
-    std::unordered_map<std::string, std::string> &subs
+    SubsT &subs
     ) {
+
+
+    replace_func(subs, node);
+
     for (auto child : node.children()) {
         std::string name = child.name();
         if (name == "sensor") {
-            camera = ParseSensor(child, outputName);
+            camera = ParseSensor(child, outputName, subs);
         } else if (name == "shape") {
             std::shared_ptr<const Light> areaLight;
-            objs.push_back(ParseShape(child, bsdfMap, textureMap, areaLight));
+            objs.push_back(ParseShape(child, bsdfMap, textureMap, areaLight, subs));
             if (areaLight.get() != nullptr) {
                 lights.push_back(areaLight);
             }
         } else if (name == "bsdf") {
             std::string id = child.attribute("id").value();
-            bsdfMap[id] = ParseBSDF(child, textureMap);
+            bsdfMap[id] = ParseBSDF(child, textureMap, subs);
         } else if (name == "emitter") {
-            lights.push_back(ParseEmitter(child, envLight));
+            lights.push_back(ParseEmitter(child, envLight, subs));
         } else if (name == "texture") {
             std::string id = child.attribute("id").value();
-            textureMap[id] = ParseTexture(child);
+            textureMap[id] = ParseTexture(child, subs);
         } else if (name == "dpt") {
-            options = ParseDptOptions(child);
+            options = ParseDptOptions(child, subs);
             std::cout << 
                 "spp : " << options->spp << std::endl <<
                 "maxDepth : " << options->maxDepth << std::endl;
@@ -857,7 +924,7 @@ void ParseScene(pugi::xml_node node,
     //     new Scene(options, camera, objs, lights, envLight, outputName));
 }
 
-std::unique_ptr<Scene> ParseScene(const std::string &filename, std::unordered_map<std::string, std::string> &subs) {
+std::unique_ptr<Scene> ParseScene(const std::string &filename, SubsT &subs) {
     pugi::xml_document doc;
     pugi::xml_parse_result result = doc.load_file(filename.c_str());
     std::unique_ptr<Scene> scene;

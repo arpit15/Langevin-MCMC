@@ -71,7 +71,7 @@ void parseExtraArgs(std::unordered_map<std::string, std::string> &subs, args::Ar
     if (subsArgs) { 
         for (const auto ch: args::get(subsArgs)) { 
             // split at =
-            // std::cout << "D: " << ch << std::endl; 
+            std::cout << "D: " << ch << std::endl; 
             const std::vector<std::string> tokens = tokenize2(ch);
             if (tokens.size() == 2) {
                 subs[tokens[0]] = tokens[1];
