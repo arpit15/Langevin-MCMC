@@ -5,4 +5,6 @@
 #include <string>
 #include <memory>
 
-std::unique_ptr<Scene> ParseScene(const std::string &filename, std::unordered_map<std::string, std::string> &subs);
+std::unique_ptr<Scene> ParseScene(const std::string &filename, 
+            const std::string &outFn,
+            std::unordered_map<std::string, std::string> &subs);

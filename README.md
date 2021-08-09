@@ -2,7 +2,7 @@
 - Parallel kernel build
 - Support for 
   - Shapes : `ply`
-  - BSDFs : `roughconductor`, `blendbsdf`
+  - BSDFs : `roughconductor`, `blendbsdf`(no recursion)
   - Light sources : `spotlight`, `collimatedbeam`, `ieslight`, `iesarea`
 - No requirement for setting path
 - Used C++17 `filesystem` for current directory assessment

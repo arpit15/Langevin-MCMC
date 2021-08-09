@@ -929,7 +929,7 @@ void ParseScene(pugi::xml_node node,
     //     new Scene(options, camera, objs, lights, envLight, outputName));
 }
 
-std::unique_ptr<Scene> ParseScene(const std::string &filename, SubsT &subs) {
+std::unique_ptr<Scene> ParseScene(const std::string &filename, const std::string &outFn, SubsT &subs) {
     pugi::xml_document doc;
     pugi::xml_parse_result result = doc.load_file(filename.c_str());
     std::unique_ptr<Scene> scene;
@@ -941,7 +941,11 @@ std::unique_ptr<Scene> ParseScene(const std::string &filename, SubsT &subs) {
         std::shared_ptr<const EnvLight> envLight;
         std::map<std::string, std::shared_ptr<const BSDF>> bsdfMap;
         std::map<std::string, std::shared_ptr<const TextureRGB>> textureMap;
-        std::string outputName = "image.exr";
+        
+        std::regex vowel_re("xml");
+        std::string outputName = std::regex_replace(filename, vowel_re, "exr");
+        if (outFn.size() != 0)
+            outputName = outFn;
         ParseScene(doc.child("scene"), 
             options, camera, objs, lights, envLight, bsdfMap, textureMap, outputName, subs);
 

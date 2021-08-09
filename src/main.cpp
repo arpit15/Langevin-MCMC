@@ -101,6 +101,8 @@ int main(int argc, char *argv[]) {
     args::ValueFlag<int> seedoffset(parser, "seedOffset", "Seed Offset", {"seedOffset"}, 0);
     args::PositionalList<std::string> filenamesArgs(parser, "filenamesArgs", "Filename args");
 
+    args::ValueFlag<std::string> outFn(parser, "outFn", "Output Filename", {'o'}, "");
+
     std::unordered_map<std::string, std::string> subs;
 
     try
@@ -132,28 +134,6 @@ int main(int argc, char *argv[]) {
         std::vector<std::string> filenames;
 
         parseExtraArgs(subs, parser, subsArgs);
-
-        // bool compilePathLib = false;
-        // bool compileBidirPathLib = false;
-        // bool compileBidirPathLib2 = false;
-        // int maxDervDepth = 8;
-        // int seedoffset = 0;
-        // for (int i = 1; i < argc; ++i) {
-        //     if (std::string(argv[i]) == "--compile-pathlib") {
-        //         compilePathLib = true;
-        //     } else if (std::string(argv[i]) == "--compile-bidirpathlib") {
-        //         compileBidirPathLib = true;
-        //     } else if (std::string(argv[i]) == "--compile-bidirpathlib2") {
-        //         compileBidirPathLib2 = true; 
-        //     } else if (std::string(argv[i]) == "--max-derivatives-depth") {
-        //         maxDervDepth = std::stoi(std::string(argv[++i]));
-        //     } else if (std::string(argv[i]) == "--seedoffset") {
-        //         seedoffset = std::stoi(std::string(argv[++i]));
-        //     }
-        //     else {
-        //         filenames.push_back(std::string(argv[i]));
-        //     }
-        // }
 
         if (pathlib) {
             CompilePathFuncLibrary(false, maxDervDepth);
@@ -195,7 +175,7 @@ int main(int argc, char *argv[]) {
                 basename = filename.substr(filename.rfind('/') + 1);
             }
 
-            std::unique_ptr<Scene> scene = ParseScene(basename, subs);
+            std::unique_ptr<Scene> scene = ParseScene(basename, outFn.Get(), subs);
             // use the xml dirname
             fs::path xmlPath(filename);
             scene->outputName =  xmlPath.parent_path() / (scene->outputName); 

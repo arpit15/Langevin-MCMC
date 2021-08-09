@@ -22,6 +22,14 @@ file(GLOB SRC_FILES
 add_subdirectory(nanoflann)
 # add_subdirectory(oiio)
 
+# libgoogle-perftools-dev
+find_library (PROFILE_LIB profiler)
+if (NOT PROFILE_LIB)
+  message (STATUS "Unable to find -lprofiler")
+else ()
+  message (STATUS "Found -lprofiler: ${PROFILE_LIB}")
+endif ()
+
 add_executable(dpt ${SRC_FILES})
 target_include_directories(dpt 
     PRIVATE
@@ -43,6 +51,7 @@ target_link_libraries (dpt
     dl 
     z
     pthread
+    profiler
 )
 
 configure_file(ispc/bin/ispc ispc COPYONLY)
