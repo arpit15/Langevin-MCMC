@@ -1,0 +1,197 @@
+<scene version="0.6.0">
+
+<shape type="ply">
+<string name="filename" value="meshes/unit_disk.ply"/>
+		<transform name="toWorld">
+			<matrix value="0.173648 -0.984808 -0.000000 -3.000000 -0.984808 -0.173648 -0.000000 36.000000 0.000000 0.000000 -1.000000 1.000000 0.000000 0.000000 0.000000 1.000000" />
+		</transform>
+	<emitter id="emit-blue1" type="iesarea">
+		<string name="filename" value="textures/ies_aniso_v4.exr" />
+		<rgb name="radiance" value="130 250 950" />
+	</emitter>
+<bsdf type="diffuse"/>
+</shape>
+
+<shape type="ply">
+<string name="filename" value="meshes/unit_disk.ply"/>
+		<transform name="toWorld">
+			<matrix value="0.500000 -0.866025 -0.000000 -7.500000 -0.866025 -0.500000 -0.000000 34.000000 0.000000 0.000000 -1.000000 1.000000 0.000000 0.000000 0.000000 1.000000" />
+		</transform>
+	<emitter id="emit-blue2" type="iesarea">
+		<string name="filename" value="textures/ies_aniso_v4.exr" />
+		<rgb name="radiance" value="130 250 950" />
+	</emitter>
+<bsdf type="diffuse"/>
+</shape>
+
+<shape type="ply">
+<string name="filename" value="meshes/unit_disk.ply"/>
+		<transform name="toWorld">
+			<matrix value="0.766044 -0.642788 -0.000000 -10.500000 -0.642788 -0.766044 -0.000000 29.500000 0.000000 0.000000 -1.000000 1.000000 0.000000 0.000000 0.000000 1.000000" />
+		</transform>
+	<emitter id="emit-blue3" type="iesarea">
+		<string name="filename" value="textures/ies_aniso_v4.exr" />
+		<rgb name="radiance" value="130 250 950" />
+	</emitter>
+<bsdf type="diffuse"/>
+</shape>
+
+<shape type="ply">
+<string name="filename" value="meshes/unit_disk.ply"/>
+		<transform name="toWorld">
+			<matrix value="1.000000 0.000000 0.000000 -11.500000 0.000000 -1.000000 -0.000000 24.500000 0.000000 0.000000 -1.000000 1.000000 0.000000 0.000000 0.000000 1.000000" />
+		</transform>
+	<emitter id="emit-blue4" type="iesarea">
+		<string name="filename" value="textures/ies_aniso_v4.exr" />
+		<rgb name="radiance" value="130 250 950" />
+	</emitter>
+<bsdf type="diffuse"/>
+</shape>
+
+	<shape type="ply">
+<string name="filename" value="meshes/unit_disk.ply"/>
+		<transform name="toWorld">
+			<matrix value="1.000000 0.000000 0.000000 -11.500000 0.000000 -1.000000 -0.000000 20.500000 0.000000 0.000000 -1.000000 1.000000 0.000000 0.000000 0.000000 1.000000" />
+		</transform>
+	<emitter id="emit-blue5" type="iesarea">
+		<string name="filename" value="textures/ies_aniso_v4.exr" />
+		<rgb name="radiance" value="130 250 950" />
+	</emitter>
+<bsdf type="diffuse"/>
+</shape>
+
+	<shape type="ply">
+<string name="filename" value="meshes/unit_disk.ply"/>
+		<transform name="toWorld">
+			<matrix value="1.000000 0.000000 0.000000 -11.500000 0.000000 -1.000000 -0.000000 16.500000 0.000000 0.000000 -1.000000 1.000000 0.000000 0.000000 0.000000 1.000000" />
+		</transform>
+	<emitter id="emit-blue6" type="iesarea">
+		<string name="filename" value="textures/ies_aniso_v4.exr" />
+		<rgb name="radiance" value="130 250 950" />
+	</emitter>
+<bsdf type="diffuse"/>
+</shape>
+
+	<shape type="ply">
+<string name="filename" value="meshes/unit_disk.ply"/>
+		<transform name="toWorld">
+			<matrix value="1.000000 0.000000 0.000000 -11.500000 0.000000 -1.000000 -0.000000 12.500000 0.000000 0.000000 -1.000000 1.000000 0.000000 0.000000 0.000000 1.000000" />
+		</transform>
+	<emitter id="emit-blue7" type="iesarea">
+		<string name="filename" value="textures/ies_aniso_v4.exr" />
+		<rgb name="radiance" value="130 250 950" />
+	</emitter>
+<bsdf type="diffuse"/>
+</shape>
+
+	<shape type="ply">
+<string name="filename" value="meshes/unit_disk.ply"/>
+		<transform name="toWorld">
+			<matrix value="1.000000 0.000000 0.000000 -11.500000 0.000000 -1.000000 -0.000000 8.500000 0.000000 0.000000 -1.000000 1.000000 0.000000 0.000000 0.000000 1.000000" />
+		</transform>
+	<emitter id="emit-blue8" type="iesarea">
+		<string name="filename" value="textures/ies_aniso_v4.exr" />
+		<rgb name="radiance" value="130 250 950" />
+	</emitter>
+<bsdf type="diffuse"/>
+</shape>
+
+	
+
+	<shape type="ply">
+<string name="filename" value="meshes/unit_disk.ply"/>
+		<transform name="toWorld">
+			<matrix value="0.173648 0.984808 0.000000 3.000000 0.984808 -0.173648 -0.000000 36.000000 0.000000 0.000000 -1.000000 1.000000 0.000000 0.000000 0.000000 1.000000" />
+		</transform>
+	<emitter id="emit-red1" type="iesarea">
+		<string name="filename" value="textures/ies_aniso_v5.exr" />
+		<rgb name="radiance" value="500 70 10" />
+	</emitter>
+<bsdf type="diffuse"/>
+</shape>
+
+	<shape type="ply">
+<string name="filename" value="meshes/unit_disk.ply"/>
+		<transform name="toWorld">
+			<matrix value="0.500000 0.866025 0.000000 7.500000 0.866025 -0.500000 -0.000000 34.000000 0.000000 0.000000 -1.000000 1.000000 0.000000 0.000000 0.000000 1.000000" />
+		</transform>
+	<emitter id="emit-red2" type="iesarea">
+		<string name="filename" value="textures/ies_aniso_v5.exr" />
+		<rgb name="radiance" value="500 70 10" />
+	</emitter>
+<bsdf type="diffuse"/>
+</shape>
+
+	<shape type="ply">
+<string name="filename" value="meshes/unit_disk.ply"/>
+		<transform name="toWorld">
+			<matrix value="0.766044 0.642788 0.000000 10.500000 0.642788 -0.766044 -0.000000 29.500000 0.000000 0.000000 -1.000000 1.000000 0.000000 0.000000 0.000000 1.000000" />
+		</transform>
+	<emitter id="emit-red3" type="iesarea">
+		<string name="filename" value="textures/ies_aniso_v5.exr" />
+		<rgb name="radiance" value="500 70 10" />
+	</emitter>
+<bsdf type="diffuse"/>
+</shape>
+	
+	<shape type="ply">
+<string name="filename" value="meshes/unit_disk.ply"/>
+		<transform name="toWorld">
+			<matrix value="1.000000 0.000000 0.000000 11.500000 0.000000 -1.000000 -0.000000 8.500000 0.000000 0.000000 -1.000000 1.000000 0.000000 0.000000 0.000000 1.000000" />
+		</transform>
+	<emitter id="emit-red8" type="iesarea">
+		<string name="filename" value="textures/ies_aniso_v5.exr" />
+		<rgb name="radiance" value="420 60 10" />
+	</emitter>
+<bsdf type="diffuse"/>
+</shape>
+
+	<shape type="ply">
+<string name="filename" value="meshes/unit_disk.ply"/>
+		<transform name="toWorld">
+			<matrix value="1.000000 0.000000 0.000000 11.500000 0.000000 -1.000000 -0.000000 12.500000 0.000000 0.000000 -1.000000 1.000000 0.000000 0.000000 0.000000 1.000000" />
+		</transform>
+	<emitter id="emit-red7" type="iesarea">
+		<string name="filename" value="textures/ies_aniso_v5.exr" />
+		<rgb name="radiance" value="500 70 10" />
+	</emitter>
+<bsdf type="diffuse"/>
+</shape>
+
+	<shape type="ply">
+<string name="filename" value="meshes/unit_disk.ply"/>
+		<transform name="toWorld">
+			<matrix value="1.000000 0.000000 0.000000 11.500000 0.000000 -1.000000 -0.000000 16.500000 0.000000 0.000000 -1.000000 1.000000 0.000000 0.000000 0.000000 1.000000" />
+		</transform>
+	<emitter id="emit-red6" type="iesarea">
+		<string name="filename" value="textures/ies_aniso_v5.exr" />
+		<rgb name="radiance" value="500 70 10" />
+	</emitter>
+<bsdf type="diffuse"/>
+</shape>
+
+	<shape type="ply">
+<string name="filename" value="meshes/unit_disk.ply"/>
+		<transform name="toWorld">
+			<matrix value="1.000000 0.000000 0.000000 11.500000 0.000000 -1.000000 -0.000000 20.500000 0.000000 0.000000 -1.000000 1.000000 0.000000 0.000000 0.000000 1.000000" />
+		</transform>
+	<emitter id="emit-red5" type="iesarea">
+		<string name="filename" value="textures/ies_aniso_v5.exr" />
+		<rgb name="radiance" value="500 70 10" />
+	</emitter>
+<bsdf type="diffuse"/>
+</shape>
+
+	<shape type="ply">
+<string name="filename" value="meshes/unit_disk.ply"/>
+		<transform name="toWorld">
+			<matrix value="1.000000 0.000000 0.000000 11.500000 0.000000 -1.000000 -0.000000 24.500000 0.000000 0.000000 -1.000000 1.000000 0.000000 0.000000 0.000000 1.000000" />
+		</transform>
+	<emitter id="emit-red4" type="iesarea">
+		<string name="filename" value="textures/ies_aniso_v5.exr" />
+		<rgb name="radiance" value="500 70 10" />
+	</emitter>
+<bsdf type="diffuse"/>
+</shape>
+
+	</scene>
