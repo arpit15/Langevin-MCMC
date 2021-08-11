@@ -136,15 +136,15 @@ int main(int argc, char *argv[]) {
         parseExtraArgs(subs, parser, subsArgs);
 
         if (pathlib) {
-            CompilePathFuncLibrary(false, maxDervDepth);
+            CompilePathFuncLibrary(false, maxDervDepth.Get());
         }
         if (hessians) {
             // hessians
-            CompilePathFuncLibrary(true, maxDervDepth);
+            CompilePathFuncLibrary(true, maxDervDepth.Get());
         }
         if (mala) {
             // mala
-            CompilePathFuncLibrary2(maxDervDepth);
+            CompilePathFuncLibrary2(maxDervDepth.Get());
         }
 
         if ( !(pathlib || hessians || mala) &&
@@ -162,8 +162,8 @@ int main(int argc, char *argv[]) {
         std::string cwd = getcwd(NULL, 0);
         std::string exeDir = getCurrExeDir();
 
-        std::cout << "current dir : " << cwd << std::endl;
-        std::cout << "Exe dir : " << exeDir << std::endl;
+        // std::cout << "current dir : " << cwd << std::endl;
+        // std::cout << "Exe dir : " << exeDir << std::endl;
 
         for (std::string filename : filenames) {
             if (filename.rfind('/') != std::string::npos &&

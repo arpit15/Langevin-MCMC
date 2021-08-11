@@ -117,14 +117,14 @@ std::shared_ptr<TriMeshData> ParsePly(const std::string &filename,
             if ( token == "vertex" ) {
                 int numVert;
                 ss >> numVert;
-                std::cout << "Num verts : " << numVert << std::endl; 
+                // std::cout << "Num verts : " << numVert << std::endl; 
                 data->position0.resize(numVert);
                 data->position1.resize(numVert);
                 // posPool.resize(numVert);
             } else if ( token == "face" ) {
                 int numFaces;
                 ss >> numFaces;
-                std::cout << "Num faces : " << numFaces << std::endl;
+                // std::cout << "Num faces : " << numFaces << std::endl;
                 // posPool.resize(numVert);
                 data->indices.resize(numFaces);
             } 
@@ -158,7 +158,7 @@ std::shared_ptr<TriMeshData> ParsePly(const std::string &filename,
     
     ifs.seekg(stream_pos);
 
-    std::cout << "Ascii format : " << ascii << std::endl;
+    // std::cout << "Ascii format : " << ascii << std::endl;
     if ( getMachineEndianness() != byte_order)
         std::cout << "Problem detected! machine endianness : " << getMachineEndianness() << ", file endianness : " << byte_order << std::endl;
 

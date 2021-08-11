@@ -89,7 +89,7 @@ void MLT(const Scene *scene, const std::shared_ptr<const PathFuncLib> pathFuncLi
         chain.globalCache = &globalCache;
         chain.ss = scene->options->malaStepsize;
         for (int sampleIdx = 0; sampleIdx < numSamplesThisChain; sampleIdx++) {
-            // std::cout << "-chainId[ " << chainId << "] mutationCtr[" << sampleIdx << "]" << std::endl;
+            
             Float a = Float(1.0);
             bool isLargeStep = false;
             // In online exploration stage, use a smaller largestep prob to ensure MALA chain learns better pc. matrix
@@ -97,13 +97,9 @@ void MLT(const Scene *scene, const std::shared_ptr<const PathFuncLib> pathFuncLi
             Float lsScale = (sampleIdx > numSamplesThisChain * LS_RATIO) ? scene->options->largeStepProbScale : Float(1.0);
             if (!currentState.valid || uniDist(rng) < largeStepProb * lsScale) {
                 isLargeStep = true;
-                // std::cout << "-largeStep chainId[ " << chainId << "] mutationCtr[" << sampleIdx << "]" << std::endl;
                 a = largeStep->Mutate(mltState, normalization, currentState, proposalState, rng, &chain);
-                // std::cout << "+largeStep chainId[ " << chainId << "] mutationCtr[" << sampleIdx << "]" << std::endl;
             } else {
-                // std::cout << "-SmallStep chainId[ " << chainId << "] mutationCtr[" << sampleIdx << "]" << std::endl;
                 a = smallStep->Mutate(mltState, normalization, currentState, proposalState, rng, &chain);
-                // std::cout << "+SmallStep chainId[ " << chainId << "] mutationCtr[" << sampleIdx << "]" << std::endl;
             }
             if (currentState.valid && a < Float(1.0)) {
                 for (const auto splat : currentState.toSplat) {
@@ -222,11 +218,22 @@ void MLT(const Scene *scene, const std::shared_ptr<const PathFuncLib> pathFuncLi
     Float indirectWeight = spp > 0 ? inverse(Float(spp)) : Float(0.0);
     MergeBuffer(directBuffer, directWeight, indirectBuffer, indirectWeight, buffer);
     BufferToFilm(buffer, film.get());
-    std::string outputNameHDR = scene->outputName + "_timeuse_" + std::to_string(elapsed) + "s.exr";
-    std::string outputNameLDR = scene->outputName + "_timeuse_" + std::to_string(elapsed) + "s.png";
+    // std::string outputNameHDR = scene->outputName + "_timeuse_" + std::to_string(elapsed) + "s.exr";
+    // std::string outputNameLDR = scene->outputName + "_timeuse_" + std::to_string(elapsed) + "s.png";
+
+    std::string outputNameHDR = scene->outputName + ".exr";
+    std::string outputNameLDR = scene->outputName + ".png";
     WriteImage(outputNameHDR, GetFilm(scene->camera.get()).get());
+    
+    std::string addRenderingTime = std::string("oiiotool ") + outputNameHDR + "--attrib 'RenderingTime' " + std::to_string(elapsed) + " -o " + outputNameHDR;
+    system(addRenderingTime.c_str());
+
     std::string hdr2ldr = std::string("hdrmanip --tonemap filmic -o ") + outputNameLDR + " " + outputNameHDR;
     system(hdr2ldr.c_str());
+
+    std::string addRenderingTime2 = std::string("oiiotool ") + outputNameLDR + "--attrib 'RenderingTime' " + std::to_string(elapsed) + " -o " + outputNameLDR;
+    system(addRenderingTime2.c_str());
+
     std::cout << "Done!" << std::endl;
 }
 

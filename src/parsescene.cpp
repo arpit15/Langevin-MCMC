@@ -522,6 +522,10 @@ std::shared_ptr<const BSDF> ParseBSDF(pugi::xml_node node,
                 bsdfs.push_back(ParseBSDF(child, textureMap, subs, twoSided));
             }
         }
+
+        std::cout << "BlendBSDF [" << std::endl
+                    << "weight : " << weight->Avg().transpose() << std::endl
+                    << "]" << std::endl;
         return std::make_shared<BlendBSDF>(twoSided, weight, bsdfs.at(0), bsdfs.at(1));
     
     } else if (type == "roughdielectric") {
@@ -726,7 +730,7 @@ std::shared_ptr<const Light> ParseEmitter(pugi::xml_node node,
             }
         }
 
-        std::cout << "Loaded a IES light" << std::endl;
+        // std::cout << "Loaded a IES light" << std::endl;
         return std::make_shared<IESLight>(Float(1.0), toWorld, intensity, ies_fname);
     } 
     else if (type == "spot") {
@@ -755,8 +759,6 @@ std::shared_ptr<const Light> ParseEmitter(pugi::xml_node node,
         return std::make_shared<SpotLight>(Float(1.0), toWorld, intensity, cutoffAngle, beamWidth);
     }
     else if (type == "collimatedbeam") {
-        // AnimatedTransform toWorld =
-        //     MakeAnimatedTransform(Matrix4x4::Identity(), Matrix4x4::Identity());
         Matrix4x4 toWorld = Matrix4x4::Identity();
         Vector3 intensity(Float(1.0), Float(1.0), Float(1.0));
         Float radius(0.01f);
@@ -764,23 +766,19 @@ std::shared_ptr<const Light> ParseEmitter(pugi::xml_node node,
             std::string name = child.attribute("name").value();
             if (name == "toWorld") {
                 if (std::string(child.name()) == "transform") {
-                    toWorld = ParseTransform(child, subs);
-                    // toWorld = MakeAnimatedTransform(m, m);
+                    toWorld = ParseTransform(child, subs);  
                 } 
-                // else if (std::string(child.name()) == "animation") {
-                //     toWorld = ParseAnimatedTransform(child);
-                // }
             } else if (name == "intensity") {
                 intensity = ParseVector3(child.attribute("value").value());
             } else if (name == "radius") {
                 radius = std::stof(child.attribute("value").value());
             } 
         }
-        std::cout << "CollimatedLight[" << std::endl
-                << "radius : " << radius << std::endl
-                << "intensity : " << intensity << std::endl
-                << "transform : " << toWorld << std::endl
-                << "]" << std::endl;
+        // std::cout << "CollimatedLight[" << std::endl
+        //         << "radius : " << radius << std::endl
+        //         << "intensity : " << intensity << std::endl
+        //         << "transform : " << toWorld << std::endl
+        //         << "]" << std::endl;
         return std::make_shared<CollimatedLight>(Float(1.0), toWorld, radius, intensity);
     } 
     else if (type == "envmap") {

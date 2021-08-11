@@ -17,7 +17,7 @@ IESArea::IESArea(const Float &samplingWeight, Shape *_shape, const Vector3 &emis
     image(new Image3(fname)),
     toWorld(_toWorld), toLight(toWorld.inverse()) {
     _shape->SetAreaLight(this);
-    std::cout << "IESArea created!" << std::endl;
+    // std::cout << "IESArea created!" << std::endl;
 }
 
 Float IESArea::getIESVal(const Vector3 &local_) const {

@@ -147,7 +147,7 @@ const ADFloat *EvaluateBSDF2(const bool adjoint,
     cosWo = ret[3];
     pdf = ret[4];
     revPdf = ret[5];
-    buffer += (GetMaxBSDFSerializedSize() - 1);
+    buffer += (GetMaxBSDFSerializedSize2() - 1);
     return buffer;
 }
 
@@ -420,7 +420,7 @@ const ADFloat *SampleBSDF2(const bool adjoint,
     cosWo = ret[6];
     pdf = ret[7];
     revPdf = ret[8];
-    buffer += (GetMaxBSDFSerializedSize() - 1);
+    buffer += (GetMaxBSDFSerializedSize2() - 1);
     return buffer;
 }
 

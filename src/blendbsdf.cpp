@@ -13,7 +13,7 @@ void BlendBSDF::Serialize(const Vector2 st, Float *buffer) const {
     // std::cout << "BlendBSDF Serialization" << std::endl;
     bsdfA->Serialize(st, buffer);
     // std::cout << "type A : " << (Float)bsdfA->GetType() << std::endl;
-    bsdfB->Serialize(st, buffer);
+    bsdfB->Serialize(st, buffer + GetMaxBSDFSerializedSize2());
     // std::cout << "type B : " << (Float)bsdfB->GetType() << std::endl;
 }
 
@@ -44,12 +44,8 @@ void Evaluate(const BlendBSDF *bsdf,
         return;
     }
 
-    Float currWeight = std::min(
-                    1.f, std::max ( 0.f,  weight )
-    );
-
-    // Vector3 currWeight = weight.cwiseMax(0.f).cwiseMin(1.f);
-    
+    Float weightB = Clamp(0.f, 1.f, weight);
+    Float weightA = 1.f - weightB;
 
     Vector3 contribA, contribB;
     Float cosWoA, cosWoB, 
@@ -63,9 +59,9 @@ void Evaluate(const BlendBSDF *bsdf,
         bsdf->bsdfA->EvaluateAdjoint(wi, normal, wo, st, contribA, cosWoA, pdfA, revPdfA);
         bsdf->bsdfB->EvaluateAdjoint(wi, normal, wo, st, contribB, cosWoB, pdfB, revPdfB);
     }
-    contrib = (Float(1.f) - currWeight) * contribA + currWeight * contribB;
-    pdf = (Float(1.f) - currWeight) * pdfA + currWeight * pdfB;
-    revPdf = (Float(1.f) - currWeight) * revPdfA + currWeight * revPdfB;
+    contrib = weightA * contribA + weightB * contribB;
+    pdf = weightA * pdfA + weightB * pdfB;
+    revPdf = weightA * revPdfA + weightB * revPdfB;
 
 }
 
@@ -109,12 +105,7 @@ bool Sample(const BlendBSDF *bsdf,
 
     Vector2 sample = rndParam;
 
-    Float weightB = std::min(
-                    1.f, std::max ( 0.f, weight )
-    );
-
-    // Vector3 weightB = weight.cwiseMax(0.f).cwiseMin(1.f);
-
+    Float weightB = Clamp(0.f, 1.f, weight);
     Float weightA = (1.f - weightB);
 
     bool result;
@@ -187,8 +178,6 @@ void EvaluateBlendBSDF(const bool adjoint,
     ADFloat weightB;
     // BSDF bsdfA, bsdfB;
     buffer = Deserialize(buffer, weightB);
-    // buffer = Deserialize(buffer, bsdfA);
-    // buffer = Deserialize(buffer, bsdfB);
 
     ADFloat cosWi = Dot(wi, normal);
     cosWo = Dot(wo, normal);
@@ -198,8 +187,8 @@ void EvaluateBlendBSDF(const bool adjoint,
         pdfA, pdfB,
         revPdfA, revPdfB;
 
-    EvaluateBSDF2(adjoint, buffer, wi, normal, wo, st, contribA, cosWoA, pdfA, revPdfA);
-    EvaluateBSDF2(adjoint, buffer + GetMaxBSDFSerializedSize2(), wi, normal, wo, st, contribB, cosWoB, pdfB, revPdfB);
+    buffer = EvaluateBSDF2(adjoint, buffer, wi, normal, wo, st, contribA, cosWoA, pdfA, revPdfA);
+    EvaluateBSDF2(adjoint, buffer, wi, normal, wo, st, contribB, cosWoB, pdfB, revPdfB);
 
     pdf = (Float(1.f) - weightB) * pdfA + weightB * pdfB;
     revPdf = (Float(1.f) - weightB) * revPdfA + weightB * revPdfB;
@@ -222,36 +211,29 @@ void SampleBlendBSDF(const bool adjoint,
                            ADFloat &pdf,
                            ADFloat &revPdf) {
 
-    ADVector2 sample = rndParam;
+    ADVector2 sampleForA = rndParam, sampleForB = rndParam;
 
     ADFloat weightB;
     // BSDF bsdfA, bsdfB;
     buffer = Deserialize(buffer, weightB);
-    // buffer = Deserialize(buffer, bsdfA);
-    // buffer = Deserialize(buffer, bsdfB);
-
+    
     ADFloat weightA = Float(1.f) - weightB;
 
-    BooleanCPtr sampleA = Lte(sample[0], weightA);
+    BooleanCPtr sampleA = Lte(sampleForA[0], weightA);
     std::vector<CondExprCPtr> ret = CreateCondExprVec(9);
 
     // Need to Deserialize both bsdf
     ADVector3 wo_A, contrib_A;
-        ADFloat cosWo_A, pdf_A, revPdf_A;
-        sample[0] /= weightA;
-    SampleBSDF2(adjoint, buffer, wi, normal, st, sample, uDiscrete, fixDiscrete, wo_A, contrib_A, cosWo_A, pdf_A, revPdf_A);
+    ADFloat cosWo_A, pdf_A, revPdf_A;
+    sampleForA[0] /= weightA;
+    buffer = SampleBSDF2(adjoint, buffer, wi, normal, st, sampleForA, uDiscrete, fixDiscrete, wo_A, contrib_A, cosWo_A, pdf_A, revPdf_A);
     ADVector3 wo_B, contrib_B;
-        ADFloat cosWo_B, pdf_B, revPdf_B;
-        sample[0] = ( sample[0] - weightA) * inverse(weightB);
-    SampleBSDF2(adjoint, buffer + GetMaxBSDFSerializedSize2(), wi, normal, st, sample, uDiscrete, fixDiscrete, wo_B, contrib_B, cosWo_B, pdf_B, revPdf_B);
+    ADFloat cosWo_B, pdf_B, revPdf_B;
+    sampleForB[0] = ( sampleForB[0] - weightA) * inverse(weightB);
+    SampleBSDF2(adjoint, buffer, wi, normal, st, sampleForB, uDiscrete, fixDiscrete, wo_B, contrib_B, cosWo_B, pdf_B, revPdf_B);
 
     BeginIf(sampleA, ret);
     {
-        // ADVector3 wo_, contrib_;
-        // ADFloat cosWo_, pdf_, revPdf_;
-        // sample[0] /= weightA;
-        // SampleBSDF2(adjoint, buffer, wi, normal, st, sample, uDiscrete, fixDiscrete, wo_, contrib_, cosWo_, pdf_, revPdf_);
-        
         contrib_A *= weightA * pdf_A;
         pdf_A *= weightA;
         revPdf_A *= weightA;
@@ -259,10 +241,6 @@ void SampleBlendBSDF(const bool adjoint,
     }
     BeginElse();
     {
-        // ADVector3 wo_, contrib_;
-        // ADFloat cosWo_, pdf_, revPdf_;
-        // sample[0] = ( sample[0] - weightA) * inverse(weightB);
-        // SampleBSDF2(adjoint, buffer + GetMaxBSDFSerializedSize2(), wi, normal, st, sample, uDiscrete, fixDiscrete, wo_, contrib_, cosWo_, pdf_, revPdf_);
         contrib_B *= weightB * pdf_B;
         pdf_B *= weightB;
         revPdf_B *= weightB;
