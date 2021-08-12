@@ -11,7 +11,7 @@
 
 	<default name="mixingcoeff" value="0.85" />
 
-	<dpt>
+	<!-- <dpt>
         <string  name="integrator"     value="mcmc"/>
         <integer name="mindepth"       value="-1"/>
         <integer name="maxdepth"       value="32"/>
@@ -22,7 +22,7 @@
         <boolean name="mala"           value="true"/>
         <boolean name="uselightcoordinatesampling"           value="true"/>
         <integer name="directspp" value="$spp"/>
-    </dpt>
+    </dpt> -->
 
 
 	<integrator type="pssmlt">
@@ -51,7 +51,7 @@
 	</sensor>
 
 
-	<include filename="ies_area.xml"/>
+	<!-- <include filename="ies_area.xml"/> -->
 
 	<!-- <emitter type="collimatedbeam" id="emit-blue5">
 		<rgb name="intensity" value="130 250 950" />
@@ -101,7 +101,7 @@
 			<translate y="-2"/>
 		</transform>
 		<string name="filename" value="meshes/diffuse_layer.ply" />
-		<ref id="mat-coated" name="bsdf" />
+		<!-- <ref id="mat-coated" name="bsdf" /> -->
 	</shape>
 
 
@@ -113,13 +113,13 @@
 		<rgb name="specularTransmittance" value="1.000000 1.000000 1.000000" />
 	</bsdf>
 
-	<shape id="mesh-PDMS_lightregion" type="ply">
+	<!-- <shape id="mesh-PDMS_lightregion" type="ply">
 		<transform name="toWorld">
 			<translate y="-2"/>
 		</transform>
 		<string name="filename" value="meshes/PDMS_lightregion.ply" />
 		<ref id="mat-pdmslightregion" name="bsdf" />
-	</shape>
+	</shape> -->
 
 	<bsdf id="mat-pdms" type="roughdielectric">
 		<float name="alpha" value="0.000400" />
@@ -129,13 +129,13 @@
 		<rgb name="specularTransmittance" value="1.000000 1.000000 1.000000" />
 	</bsdf>
 	
-	<shape id="mesh-PDMS onshape" type="ply">
+	<!-- <shape id="mesh-PDMS onshape" type="ply">
 		<transform name="toWorld">
 			<translate y="-2"/>
 		</transform>
 		<string name="filename" value="meshes/PDMS onshape.ply" />
 		<ref id="mat-pdms" name="bsdf" />
-	</shape>
+	</shape> -->
 
 	<bsdf id="mat-Epoxy" type="roughdielectric">
 		<float name="alpha" value="0.108900" />
@@ -146,12 +146,20 @@
 	</bsdf>
 
 	
-	<shape id="mesh-Epoxy onshape" type="ply">
+	<!-- <shape id="mesh-Epoxy onshape" type="ply">
 		<transform name="toWorld">
 			<translate y="-2"/>
 		</transform>
 		<string name="filename" value="meshes/Epoxy onshape.ply" />
 		<ref id="mat-Epoxy" name="bsdf" />
+	</shape> -->
+
+	<shape type="ply">
+		<string name="filename" value="meshes/unit_sphere.ply" />
+		<transform name="toWorld">
+			<scale value="4"/>
+			<translate y="25" z="-26"/>
+		</transform>
 	</shape>
 
 </scene>
