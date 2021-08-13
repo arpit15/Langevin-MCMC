@@ -3,7 +3,8 @@
 <shape type="ply">
 <string name="filename" value="meshes/unit_disk.ply"/>
 		<transform name="toWorld">
-			<matrix value="0.173648 -0.984808 -0.000000 -3.000000 -0.984808 -0.173648 -0.000000 36.000000 0.000000 0.000000 -1.000000 1.000000 0.000000 0.000000 0.000000 1.000000" />
+			<scale value="0.001"/>
+			<matrix value="0.173648 -0.984808 -0.000000 -0.003 -0.984808 -0.173648 -0.000000 0.036 0.000000 0.000000 -1.000000 0.001 0.000000 0.000000 0.000000 1.000000" />
 		</transform>
 	<emitter id="emit-blue1" type="iesarea">
 		<string name="filename" value="textures/ies_aniso_v4.exr" />
@@ -15,7 +16,8 @@
 <shape type="ply">
 <string name="filename" value="meshes/unit_disk.ply"/>
 		<transform name="toWorld">
-			<matrix value="0.500000 -0.866025 -0.000000 -7.500000 -0.866025 -0.500000 -0.000000 34.000000 0.000000 0.000000 -1.000000 1.000000 0.000000 0.000000 0.000000 1.000000" />
+			<scale value="0.001"/>
+			<matrix value="0.500000 -0.866025 -0.000000 -0.0075 -0.866025 -0.500000 -0.000000 0.034 0.000000 0.000000 -1.000000 0.001 0.000000 0.000000 0.000000 1.000000" />
 		</transform>
 	<emitter id="emit-blue2" type="iesarea">
 		<string name="filename" value="textures/ies_aniso_v4.exr" />
@@ -27,7 +29,8 @@
 <shape type="ply">
 <string name="filename" value="meshes/unit_disk.ply"/>
 		<transform name="toWorld">
-			<matrix value="0.766044 -0.642788 -0.000000 -10.500000 -0.642788 -0.766044 -0.000000 29.500000 0.000000 0.000000 -1.000000 1.000000 0.000000 0.000000 0.000000 1.000000" />
+			<scale value="0.001"/>
+			<matrix value="0.766044 -0.642788 -0.000000 -0.01 -0.642788 -0.766044 -0.000000 0.0295 0.000000 0.000000 -1.000000 0.001 0.000000 0.000000 0.000000 1.000000" />
 		</transform>
 	<emitter id="emit-blue3" type="iesarea">
 		<string name="filename" value="textures/ies_aniso_v4.exr" />
@@ -39,7 +42,8 @@
 <shape type="ply">
 <string name="filename" value="meshes/unit_disk.ply"/>
 		<transform name="toWorld">
-			<matrix value="1.000000 0.000000 0.000000 -11.500000 0.000000 -1.000000 -0.000000 24.500000 0.000000 0.000000 -1.000000 1.000000 0.000000 0.000000 0.000000 1.000000" />
+			<scale value="0.001"/>
+			<matrix value="1.000000 0.000000 0.000000 -0.0115 0.000000 -1.000000 -0.000000 0.0245 0.000000 0.000000 -1.000000 0.001 0.000000 0.000000 0.000000 1.000000" />
 		</transform>
 	<emitter id="emit-blue4" type="iesarea">
 		<string name="filename" value="textures/ies_aniso_v4.exr" />
@@ -51,7 +55,8 @@
 	<shape type="ply">
 <string name="filename" value="meshes/unit_disk.ply"/>
 		<transform name="toWorld">
-			<matrix value="1.000000 0.000000 0.000000 -11.500000 0.000000 -1.000000 -0.000000 20.500000 0.000000 0.000000 -1.000000 1.000000 0.000000 0.000000 0.000000 1.000000" />
+			<scale value="0.001"/>
+			<matrix value="1.000000 0.000000 0.000000 -0.0115 0.000000 -1.000000 -0.000000 0.0205 0.000000 0.000000 -1.000000 0.001 0.000000 0.000000 0.000000 1.000000" />
 		</transform>
 	<emitter id="emit-blue5" type="iesarea">
 		<string name="filename" value="textures/ies_aniso_v4.exr" />
@@ -63,7 +68,8 @@
 	<shape type="ply">
 <string name="filename" value="meshes/unit_disk.ply"/>
 		<transform name="toWorld">
-			<matrix value="1.000000 0.000000 0.000000 -11.500000 0.000000 -1.000000 -0.000000 16.500000 0.000000 0.000000 -1.000000 1.000000 0.000000 0.000000 0.000000 1.000000" />
+			<scale value="0.001"/>
+			<matrix value="1.000000 0.000000 0.000000 -0.0115 0.000000 -1.000000 -0.000000 0.0165 0.000000 0.000000 -1.000000 0.001 0.000000 0.000000 0.000000 1.000000" />
 		</transform>
 	<emitter id="emit-blue6" type="iesarea">
 		<string name="filename" value="textures/ies_aniso_v4.exr" />
@@ -75,7 +81,8 @@
 	<shape type="ply">
 <string name="filename" value="meshes/unit_disk.ply"/>
 		<transform name="toWorld">
-			<matrix value="1.000000 0.000000 0.000000 -11.500000 0.000000 -1.000000 -0.000000 12.500000 0.000000 0.000000 -1.000000 1.000000 0.000000 0.000000 0.000000 1.000000" />
+			<scale value="0.001"/>
+			<matrix value="1.000000 0.000000 0.000000 -0.0115 0.000000 -1.000000 -0.000000 0.0125 0.000000 0.000000 -1.000000 0.001 0.000000 0.000000 0.000000 1.000000" />
 		</transform>
 	<emitter id="emit-blue7" type="iesarea">
 		<string name="filename" value="textures/ies_aniso_v4.exr" />
@@ -87,7 +94,8 @@
 	<shape type="ply">
 <string name="filename" value="meshes/unit_disk.ply"/>
 		<transform name="toWorld">
-			<matrix value="1.000000 0.000000 0.000000 -11.500000 0.000000 -1.000000 -0.000000 8.500000 0.000000 0.000000 -1.000000 1.000000 0.000000 0.000000 0.000000 1.000000" />
+			<scale value="0.001"/>
+			<matrix value="1.000000 0.000000 0.000000 -0.0115 0.000000 -1.000000 -0.000000 0.0085 0.000000 0.000000 -1.000000 0.001 0.000000 0.000000 0.000000 1.000000" />
 		</transform>
 	<emitter id="emit-blue8" type="iesarea">
 		<string name="filename" value="textures/ies_aniso_v4.exr" />
@@ -101,7 +109,8 @@
 	<shape type="ply">
 <string name="filename" value="meshes/unit_disk.ply"/>
 		<transform name="toWorld">
-			<matrix value="0.173648 0.984808 0.000000 3.000000 0.984808 -0.173648 -0.000000 36.000000 0.000000 0.000000 -1.000000 1.000000 0.000000 0.000000 0.000000 1.000000" />
+			<scale value="0.001"/>
+			<matrix value="0.173648 0.984808 0.000000 0.003 0.984808 -0.173648 -0.000000 0.036 0.000000 0.000000 -1.000000 0.001 0.000000 0.000000 0.000000 1.000000" />
 		</transform>
 	<emitter id="emit-red1" type="iesarea">
 		<string name="filename" value="textures/ies_aniso_v5.exr" />
@@ -113,7 +122,8 @@
 	<shape type="ply">
 <string name="filename" value="meshes/unit_disk.ply"/>
 		<transform name="toWorld">
-			<matrix value="0.500000 0.866025 0.000000 7.500000 0.866025 -0.500000 -0.000000 34.000000 0.000000 0.000000 -1.000000 1.000000 0.000000 0.000000 0.000000 1.000000" />
+			<scale value="0.001"/>
+			<matrix value="0.500000 0.866025 0.000000 0.0075 0.866025 -0.500000 -0.000000 0.034 0.000000 0.000000 -1.000000 0.001 0.000000 0.000000 0.000000 1.000000" />
 		</transform>
 	<emitter id="emit-red2" type="iesarea">
 		<string name="filename" value="textures/ies_aniso_v5.exr" />
@@ -125,7 +135,8 @@
 	<shape type="ply">
 <string name="filename" value="meshes/unit_disk.ply"/>
 		<transform name="toWorld">
-			<matrix value="0.766044 0.642788 0.000000 10.500000 0.642788 -0.766044 -0.000000 29.500000 0.000000 0.000000 -1.000000 1.000000 0.000000 0.000000 0.000000 1.000000" />
+			<scale value="0.001"/>
+			<matrix value="0.766044 0.642788 0.000000 0.0105 0.642788 -0.766044 -0.000000 0.0295 0.000000 0.000000 -1.000000 0.001 0.000000 0.000000 0.000000 1.000000" />
 		</transform>
 	<emitter id="emit-red3" type="iesarea">
 		<string name="filename" value="textures/ies_aniso_v5.exr" />
@@ -137,7 +148,8 @@
 	<shape type="ply">
 <string name="filename" value="meshes/unit_disk.ply"/>
 		<transform name="toWorld">
-			<matrix value="1.000000 0.000000 0.000000 11.500000 0.000000 -1.000000 -0.000000 8.500000 0.000000 0.000000 -1.000000 1.000000 0.000000 0.000000 0.000000 1.000000" />
+			<scale value="0.001"/>
+			<matrix value="1.000000 0.000000 0.000000 0.0115 0.000000 -1.000000 -0.000000 0.0085 0.000000 0.000000 -1.000000 0.001 0.000000 0.000000 0.000000 1.000000" />
 		</transform>
 	<emitter id="emit-red8" type="iesarea">
 		<string name="filename" value="textures/ies_aniso_v5.exr" />
@@ -149,7 +161,8 @@
 	<shape type="ply">
 <string name="filename" value="meshes/unit_disk.ply"/>
 		<transform name="toWorld">
-			<matrix value="1.000000 0.000000 0.000000 11.500000 0.000000 -1.000000 -0.000000 12.500000 0.000000 0.000000 -1.000000 1.000000 0.000000 0.000000 0.000000 1.000000" />
+			<scale value="0.001"/>
+			<matrix value="1.000000 0.000000 0.000000 0.0115 0.000000 -1.000000 -0.000000 0.0125 0.000000 0.000000 -1.000000 0.001 0.000000 0.000000 0.000000 1.000000" />
 		</transform>
 	<emitter id="emit-red7" type="iesarea">
 		<string name="filename" value="textures/ies_aniso_v5.exr" />
@@ -161,7 +174,8 @@
 	<shape type="ply">
 <string name="filename" value="meshes/unit_disk.ply"/>
 		<transform name="toWorld">
-			<matrix value="1.000000 0.000000 0.000000 11.500000 0.000000 -1.000000 -0.000000 16.500000 0.000000 0.000000 -1.000000 1.000000 0.000000 0.000000 0.000000 1.000000" />
+			<scale value="0.001"/>
+			<matrix value="1.000000 0.000000 0.000000 0.0115 0.000000 -1.000000 -0.000000 0.0165 0.000000 0.000000 -1.000000 0.001 0.000000 0.000000 0.000000 1.000000" />
 		</transform>
 	<emitter id="emit-red6" type="iesarea">
 		<string name="filename" value="textures/ies_aniso_v5.exr" />
@@ -173,7 +187,8 @@
 	<shape type="ply">
 <string name="filename" value="meshes/unit_disk.ply"/>
 		<transform name="toWorld">
-			<matrix value="1.000000 0.000000 0.000000 11.500000 0.000000 -1.000000 -0.000000 20.500000 0.000000 0.000000 -1.000000 1.000000 0.000000 0.000000 0.000000 1.000000" />
+			<scale value="0.001"/>
+			<matrix value="1.000000 0.000000 0.000000 0.0115 0.000000 -1.000000 -0.000000 0.0205 0.000000 0.000000 -1.000000 0.001 0.000000 0.000000 0.000000 1.000000" />
 		</transform>
 	<emitter id="emit-red5" type="iesarea">
 		<string name="filename" value="textures/ies_aniso_v5.exr" />
@@ -185,7 +200,8 @@
 	<shape type="ply">
 <string name="filename" value="meshes/unit_disk.ply"/>
 		<transform name="toWorld">
-			<matrix value="1.000000 0.000000 0.000000 11.500000 0.000000 -1.000000 -0.000000 24.500000 0.000000 0.000000 -1.000000 1.000000 0.000000 0.000000 0.000000 1.000000" />
+			<scale value="0.001"/>
+			<matrix value="1.000000 0.000000 0.000000 0.0115 0.000000 -1.000000 -0.000000 0.0245 0.000000 0.000000 -1.000000 0.001 0.000000 0.000000 0.000000 1.000000" />
 		</transform>
 	<emitter id="emit-red4" type="iesarea">
 		<string name="filename" value="textures/ies_aniso_v5.exr" />
