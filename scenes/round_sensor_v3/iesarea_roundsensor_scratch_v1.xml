@@ -1,0 +1,132 @@
+<scene version="0.6.0">
+
+
+
+	<default name="spp" value="1024" />
+	<default name="resx" value="324" />
+	<default name="resy" value="243" />
+
+	<default name="PDMSIOR" value="1.421" />
+	<default name="EPOXYIOR" value="1.49" />
+
+	<default name="mixingcoeff" value="0.85" />
+
+	<!-- <dpt>
+        <string  name="integrator"     value="mcmc"/>
+        <integer name="mindepth"       value="-1"/>
+        <integer name="maxdepth"       value="32"/>
+        <boolean name="bidirectional"  value="true"/>
+        <integer name="spp"            value="$spp"/>    
+        <float   name="largestepprob"  value="0.05"/>
+        <float   name="largestepscale" value="4"/>
+        <boolean name="mala"           value="true"/>
+        <boolean name="uselightcoordinatesampling"           value="true"/>
+        <integer name="directspp" value="$spp"/>
+    </dpt>
+ -->
+
+	<integrator type="pssmlt">
+		<boolean name="bidirectional" value="true"/>
+		<!-- <string name="technique" value="path"/> -->
+		<boolean name="twoStage" value="true"/>
+		<integer name="maxDepth" value="-1" />
+	</integrator>
+
+	<sensor id="Camera" type="perspective">
+		<string name="fovAxis" value="x" />
+		<float name="fov" value="102" />
+		<float name="nearClip" value="0.0001" />
+		<float name="farClip" value="100" />
+		<transform name="toWorld">
+			<matrix value="-1.000000 0.000000 0.000000 0.000000 0.000000 1.000000 0.000000 0.02 -0.000000 0.000000 -1.000000 0.000000 0.000000 0.000000 0.000000 1.000000" />
+		</transform>
+		<sampler type="independent">
+			<integer name="sampleCount" value="$spp" />
+		</sampler>
+		<film type="hdrfilm">
+			<integer name="width" value="$resx" />
+			<integer name="height" value="$resy" />
+			<boolean name="banner" value="false" />
+		</film>
+	</sensor>
+
+
+	<include filename="ies_area.xml"/>
+
+	<bsdf id="mat-coated" type="blendbsdf">
+		<float name="weight" value="$mixingcoeff" />
+
+		<bsdf type="twosided" id="mat-coateddiff2">
+			<bsdf type="diffuse" id="mat-coateddiff">
+				<rgb name="reflectance" value="1.0" />
+			</bsdf>
+		</bsdf>
+
+
+		<bsdf type="twosided" id="mat-coatedcond">
+			<bsdf type="roughconductor">
+				<string name="material" value="none"/>
+				<rgb name="eta" value="0.5"/>
+				<rgb name="k" value="0.4"/>
+				<string name="distribution" value="beckmann"/>
+				<float name="alpha" value="0.18" />
+				<rgb name="specularReflectance" value="1.0" />
+			</bsdf>
+		</bsdf>
+	</bsdf>
+
+	<shape id="mesh-diffuseLayer" type="ply">
+		<string name="filename" value="meshes/diffuse_layer.ply" />
+		<ref id="mat-coated" name="bsdf" />
+	</shape>
+
+
+	<bsdf id="mat-lightboard" type="roughdielectric">
+		<float name="alpha" value="0.000400" />
+		<string name="distribution" value="beckmann" />
+		<float name="intIOR" value="$EPOXYIOR" />
+		<float name="extIOR" value="1.0" />
+		<rgb name="specularTransmittance" value="1.000000 1.000000 1.000000" />
+	</bsdf>
+
+	<shape id="mesh-lightboard" type="ply">
+		<string name="filename" value="meshes/lightboard.ply" />
+		<ref id="mat-lightboard" name="bsdf" />
+	</shape>
+
+	<bsdf id="mat-interface" type="roughdielectric">
+		<float name="alpha" value="0.000400" />
+		<string name="distribution" value="beckmann" />
+		<float name="intIOR" value="$PDMSIOR" />
+		<float name="extIOR" value="$EPOXYIOR" />
+		<rgb name="specularTransmittance" value="1.000000 1.000000 1.000000" />
+	</bsdf>
+	
+	<shape id="mesh-interface" type="ply">
+		<string name="filename" value="meshes/interface.ply" />
+		<ref id="mat-interface" name="bsdf" />
+	</shape>
+
+	<bsdf id="mat-Epoxy" type="roughdielectric">
+		<float name="alpha" value="0.108900" />
+		<string name="distribution" value="beckmann" />
+		<float name="intIOR" value="$EPOXYIOR" />
+		<float name="extIOR" value="1" />
+		<rgb name="specularTransmittance" value="1.000000 1.000000 1.000000" />
+	</bsdf>
+
+	
+	<shape id="mesh-Epoxy onshape" type="ply">
+		<string name="filename" value="meshes/Epoxy shell v3.ply" />
+		<ref id="mat-Epoxy" name="bsdf" />
+	</shape>
+
+	<!-- <shape type="ply">
+		<string name="filename" value="meshes/unit_sphere.ply" />
+		<transform name="toWorld">
+			<scale value="4"/>
+			<translate y="25" z="-26"/>
+		</transform>
+	</shape> -->
+
+</scene>
