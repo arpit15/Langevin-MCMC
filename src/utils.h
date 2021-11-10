@@ -517,3 +517,11 @@ template <>
 inline ADFloat ADEpsilon<ADFloat>() {
     return Const<ADFloat>(1e-6);
 }
+
+inline ADVector3 operator*(const ADVector3 &expr0, const ADVector3 &expr1) {
+    return expr0.array()*expr1.array();
+}
+
+inline ADVector3 operator*(const ADFloat &expr0, const ADVector3 &expr1) {
+    return expr0*expr1.array();
+}

@@ -128,7 +128,7 @@ int main(int argc, char *argv[]) {
     }
 
 
-    try {
+    // try {
         DptInit();
         
         std::vector<std::string> filenames;
@@ -225,9 +225,13 @@ int main(int argc, char *argv[]) {
             
         }
         DptCleanup();
-    } catch (std::exception &ex) {
-        std::cerr << ex.what() << std::endl;
-    }
+    // } 
+    // catch (std::exception &ex) {
+    //     std::cout << "Reached end!" <<std::endl;
+    //     std::cerr << ex.what() << std::endl;
+    //     std::cout << "After cerr!" <<std::endl;
+    // }
 
+    std::cout << "THE END!" <<std::endl;
     return 0;
 }

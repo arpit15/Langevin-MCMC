@@ -1,0 +1,18 @@
+<scene version="0.6.0">
+
+<shape type="ply" id="mesh-red1">
+		<string name="filename" value="meshes/red1.ply" />
+		<transform name="toWorld">
+			<matrix value="0.000087 0.000492 0.000000 0.002500 0.000492 -0.000087 -0.000000 0.036000 -0.000000 0.000000 -0.000500 0.001000 0.000000 0.000000 0.000000 1.000000" />
+		</transform>
+		<ref id="default-bsdf" name="bsdf" />
+		<emitter type="iesarea">
+			<transform name="toWorld">
+				<matrix value="0.000087 0.000492 0.000000 0.002500 0.000492 -0.000087 -0.000000 0.036000 -0.000000 0.000000 -0.000500 0.001000 0.000000 0.000000 0.000000 1.000000" />
+			</transform>
+			<spectrum filename="red20000.spd" name="radiance" />
+            <string name="filename" value="textures/ies_aniso_v5.exr"/>
+		</emitter>
+	</shape>
+
+    </scene>

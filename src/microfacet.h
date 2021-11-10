@@ -208,6 +208,60 @@ inline ADFloat FresnelConductorExact(const ADFloat cosThetaI_, const ADFloat eta
     return Float(0.5f) * (Rp2 + Rs2);
 }
 
+inline Vector3 FresnelConductorExact(const Float cosThetaI_, const Vector3 eta, const Vector3 k) {
+    Float cosThetaI2 = square(cosThetaI_),
+        sinThetaI2 = 1.f - cosThetaI2,
+        sinThetaI4 = sinThetaI2 * sinThetaI2;
+
+    Vector3 temp1 = eta.array()*eta.array() - k.array()*k.array() - (sinThetaI2),
+          a2pb2_sq = (temp1.array()*temp1.array() + 4.f*k.array()*k.array()*eta.array()*eta.array());
+          
+
+    Vector3 a2pb2(sqrt(a2pb2[0]), sqrt(a2pb2[1]), sqrt(a2pb2[2]));
+
+    Vector3 a_sq     = (0.5f * (a2pb2 + temp1));
+    Vector3 a(sqrt(a_sq[0]), sqrt(a_sq[1]), sqrt(a_sq[2]));
+
+    Vector3 term1 = a2pb2 + Vector3(cosThetaI2, cosThetaI2, cosThetaI2),
+          term2 = 2.f*a.array()*cosThetaI_;
+
+    Vector3 Rs2 = (term1 - term2).array() / (term1 + term2).array();
+
+    Vector3 term3 = a2pb2*(cosThetaI2) + Vector3(sinThetaI4, sinThetaI4, sinThetaI4),
+          term4 = term2*sinThetaI2;
+
+    Vector3 Rp2 = Rs2.array() * (term3 - term4).array() / (term3 + term4).array();
+
+    return 0.5f * (Rp2 + Rs2);
+}
+
+inline ADVector3 FresnelConductorExact(const ADFloat cosThetaI_, const ADVector3 eta, const ADVector3 k) {
+    ADFloat cosThetaI2 = Float(1.f) * square(cosThetaI_),
+        sinThetaI2 = Float(1.f) - cosThetaI2,
+        sinThetaI4 = sinThetaI2 * sinThetaI2;
+
+    ADVector3 temp1 = eta*eta - k*k - ADVector3(sinThetaI2, sinThetaI2, sinThetaI2),
+          a2pb2_sq = (temp1*temp1 + Const<ADFloat>(4.f)*k*k*eta*eta);
+
+        
+    ADVector3 a2pb2(sqrt(a2pb2_sq[0]), sqrt(a2pb2_sq[1]), sqrt(a2pb2_sq[2]));
+
+    ADVector3 a_sq     = ( Const<ADFloat>(0.5f) * (a2pb2 + temp1).array());
+    ADVector3 a(sqrt(a_sq[0]), sqrt(a_sq[1]), sqrt(a_sq[2]));
+
+    ADVector3 term1 = a2pb2 + ADVector3(cosThetaI2, cosThetaI2, cosThetaI2),
+          term2 = Const<ADFloat>(2.f)*a*ADVector3(cosThetaI_, cosThetaI_, cosThetaI_);
+
+    ADVector3 Rs2 = (term1 - term2).array() / (term1 + term2).array();
+
+    ADVector3 term3 = a2pb2*ADVector3(cosThetaI2, cosThetaI2, cosThetaI2) + ADVector3(sinThetaI4, sinThetaI4, sinThetaI4),
+          term4 = term2*ADVector3(sinThetaI2, sinThetaI2, sinThetaI2);
+
+    ADVector3 Rp2 = Rs2.array() * (term3 - term4).array() / (term3 + term4).array();
+
+    return Const<ADFloat>(0.5f) * (Rp2 + Rs2);
+}
+
 template <typename FloatType>
 TVector3<FloatType> SampleMicronormal(const TVector2<FloatType> rndParam,
                                       const FloatType alpha,
