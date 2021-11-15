@@ -101,6 +101,8 @@ int main(int argc, char *argv[]) {
     args::ValueFlag<int> seedoffset(parser, "seedOffset", "Seed Offset", {"seedOffset"}, 0);
     args::PositionalList<std::string> filenamesArgs(parser, "filenamesArgs", "Filename args");
 
+    args::Flag tonemap(parser, "tonemap", "tonemap", {'t'});
+
     args::ValueFlag<std::string> outFn(parser, "outFn", "Output Filename", {'o'}, "");
 
     std::unordered_map<std::string, std::string> subs;
@@ -128,7 +130,7 @@ int main(int argc, char *argv[]) {
     }
 
 
-    // try {
+    try {
         DptInit();
         
         std::vector<std::string> filenames;
@@ -161,10 +163,7 @@ int main(int argc, char *argv[]) {
         // call invoking dir
         std::string cwd = getcwd(NULL, 0);
         std::string exeDir = getCurrExeDir();
-
-        // std::cout << "current dir : " << cwd << std::endl;
-        // std::cout << "Exe dir : " << exeDir << std::endl;
-
+        
         for (std::string filename : filenames) {
             if (filename.rfind('/') != std::string::npos &&
                 chdir(filename.substr(0, filename.rfind('/')).c_str()) != 0) {
@@ -199,7 +198,7 @@ int main(int argc, char *argv[]) {
                 if (chdir(cwd.c_str()) != 0) {
                     Error("chdir failed");
                 }
-                PathTrace(scene.get(), library);
+                PathTrace(scene.get(), library, tonemap);
             } else if (integrator == "mcmc") {
                 if (scene->options->mala) { // MALA builds only first-order derivatives
                     std::shared_ptr<const PathFuncLib> library = 
@@ -209,7 +208,7 @@ int main(int argc, char *argv[]) {
                     if (chdir(cwd.c_str()) != 0) {
                         Error("chdir failed");
                     }
-                    MLT(scene.get(), library);
+                    MLT(scene.get(), library, tonemap);
                 } else {    // Hessian otherwise 
                     std::shared_ptr<const PathFuncLib> library =
                         BuildPathFuncLibrary(scene->options->bidirectional, maxDervDepth);
@@ -217,7 +216,7 @@ int main(int argc, char *argv[]) {
                     if (chdir(cwd.c_str()) != 0) {
                         Error("chdir failed");
                     }
-                    MLT(scene.get(), library);
+                    MLT(scene.get(), library, tonemap);
                 }
             } else {
                 Error("Unknown integrator");
@@ -225,13 +224,12 @@ int main(int argc, char *argv[]) {
             
         }
         DptCleanup();
-    // } 
-    // catch (std::exception &ex) {
-    //     std::cout << "Reached end!" <<std::endl;
-    //     std::cerr << ex.what() << std::endl;
-    //     std::cout << "After cerr!" <<std::endl;
-    // }
-
-    std::cout << "THE END!" <<std::endl;
+    } 
+    catch (std::exception &ex) {
+        std::cerr << ex.what() << std::endl;
+        TerminateWorkerThreads();
+        return 1;
+    }
+    
     return 0;
 }

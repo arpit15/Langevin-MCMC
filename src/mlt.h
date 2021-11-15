@@ -153,4 +153,4 @@ static Float MLTInit(const MLTState &mltState,
     return Float(totalScore) * invNumInitSamples;
 }
 
-void MLT(const Scene *scene, const std::shared_ptr<const PathFuncLib> pathFuncLib);
+void MLT(const Scene *scene, const std::shared_ptr<const PathFuncLib> pathFuncLib, const bool tonemap);

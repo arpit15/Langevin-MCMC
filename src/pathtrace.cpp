@@ -11,7 +11,7 @@
 #include <vector>
 #include <unordered_map>
 
-void PathTrace(const Scene *scene, const std::shared_ptr<const PathFuncLib> pathFuncLib) {
+void PathTrace(const Scene *scene, const std::shared_ptr<const PathFuncLib> pathFuncLib, const bool tonemap) {
     SerializedSubpath ssubPath;
 
     int maxDervDepth = pathFuncLib->maxDepth;
@@ -75,10 +75,27 @@ void PathTrace(const Scene *scene, const std::shared_ptr<const PathFuncLib> path
     std::cout << "Elapsed time:" << elapsed << std::endl;
 
     BufferToFilm(buffer, film.get());
-    std::string outputNameHDR = scene->outputName + "_timeuse_" + std::to_string(elapsed) + "s_BDPT.exr";
-    std::string outputNameLDR = scene->outputName + "_timeuse_" + std::to_string(elapsed) + "s_BDPT.png";
+    // std::string outputNameHDR = scene->outputName + "_timeuse_" + std::to_string(elapsed) + "s_BDPT.exr";
+    // std::string outputNameLDR = scene->outputName + "_timeuse_" + std::to_string(elapsed) + "s_BDPT.png";
+    // WriteImage(outputNameHDR, GetFilm(scene->camera.get()).get());
+    // std::string hdr2ldr = std::string("hdrmanip --tonemap filmic -o ") + outputNameLDR + " " + outputNameHDR;
+    // int returnVal = system(hdr2ldr.c_str());
+
+    std::string outputNameHDR = scene->outputName + ".exr";
+    std::string outputNameLDR = scene->outputName + ".png";
     WriteImage(outputNameHDR, GetFilm(scene->camera.get()).get());
-    std::string hdr2ldr = std::string("hdrmanip --tonemap filmic -o ") + outputNameLDR + " " + outputNameHDR;
-    int returnVal = system(hdr2ldr.c_str());
+    
+    std::string addRenderingTime = std::string("oiiotool ") + outputNameHDR + " --attrib 'RenderingTime' " + std::to_string(elapsed) + " -o " + outputNameHDR;
+    system(addRenderingTime.c_str());
+
+    if(tonemap){
+        std::string hdr2ldr = std::string("hdrmanip --tonemap filmic -o ") + outputNameLDR + " " + outputNameHDR;
+        system(hdr2ldr.c_str());
+
+        std::string addRenderingTime2 = std::string("oiiotool ") + outputNameLDR + " --attrib 'RenderingTime' " + std::to_string(elapsed) + " -o " + outputNameLDR;
+        system(addRenderingTime2.c_str());
+
+    }
+    
     std::cout << "Done!" << std::endl;
 }

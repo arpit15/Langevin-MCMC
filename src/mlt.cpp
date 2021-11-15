@@ -17,7 +17,7 @@
  *  we fix the camera and light subpath lengthes of the state.
  */
 
-void MLT(const Scene *scene, const std::shared_ptr<const PathFuncLib> pathFuncLib) {
+void MLT(const Scene *scene, const std::shared_ptr<const PathFuncLib> pathFuncLib, const bool tonemap) {
     const MLTState mltState{scene,
                             GeneratePathBidir,
                             PerturbPathBidir,
@@ -228,12 +228,13 @@ void MLT(const Scene *scene, const std::shared_ptr<const PathFuncLib> pathFuncLi
     std::string addRenderingTime = std::string("oiiotool ") + outputNameHDR + " --attrib 'RenderingTime' " + std::to_string(elapsed) + " -o " + outputNameHDR;
     system(addRenderingTime.c_str());
 
-    std::string hdr2ldr = std::string("hdrmanip --tonemap filmic -o ") + outputNameLDR + " " + outputNameHDR;
-    system(hdr2ldr.c_str());
+    if(tonemap){
+        std::string hdr2ldr = std::string("hdrmanip --tonemap filmic -o ") + outputNameLDR + " " + outputNameHDR;
+        system(hdr2ldr.c_str());
 
-    std::string addRenderingTime2 = std::string("oiiotool ") + outputNameLDR + " --attrib 'RenderingTime' " + std::to_string(elapsed) + " -o " + outputNameLDR;
-    system(addRenderingTime2.c_str());
-
+        std::string addRenderingTime2 = std::string("oiiotool ") + outputNameLDR + " --attrib 'RenderingTime' " + std::to_string(elapsed) + " -o " + outputNameLDR;
+        system(addRenderingTime2.c_str());
+    }
     std::cout << "Done!" << std::endl;
 }
 
