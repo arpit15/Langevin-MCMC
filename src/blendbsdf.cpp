@@ -44,7 +44,7 @@ void Evaluate(const BlendBSDF *bsdf,
         return;
     }
 
-    Float weightB = Clamp(0.f, 1.f, weight);
+    Float weightB = Clamp(weight, 0.f, 1.f );
     Float weightA = 1.f - weightB;
 
     Vector3 contribA, contribB;
@@ -62,7 +62,9 @@ void Evaluate(const BlendBSDF *bsdf,
     contrib = weightA * contribA + weightB * contribB;
     pdf = weightA * pdfA + weightB * pdfB;
     revPdf = weightA * revPdfA + weightB * revPdfB;
-
+    
+    // Not ideal. Need to figure out if the underlying BSDF is twosided
+    cosWo = weightA * cosWoA + weightB * cosWoB;
 }
 
 
@@ -105,11 +107,13 @@ bool Sample(const BlendBSDF *bsdf,
 
     Vector2 sample = rndParam;
 
-    Float weightB = Clamp(0.f, 1.f, weight);
+    Float weightB = Clamp(weight, 0.f, 1.f);
     Float weightA = (1.f - weightB);
 
     bool result;
+    int entry;
     if (sample[0] < weightA) {
+        entry = 0;
         sample[0] /= weightA;
         if(!adjoint)
             result = bsdf->bsdfA->Sample( wi, normal, st, sample, uDiscrete, wo, contrib, cosWo, pdf, revPdf);
@@ -118,7 +122,27 @@ bool Sample(const BlendBSDF *bsdf,
         contrib *= weightA * pdf;
         pdf *= weightA;
         revPdf *= weightA;
+
+        // evaluate the other component
+        // if(!adjoint){
+        //     Vector3 contribB;
+        //     Float cosWoB, pdfB, revPdfB;
+        //     bsdf->bsdfB->Evaluate(wi, normal, wo, st, contribB, cosWoB, pdfB, revPdfB);
+        //     contrib += contribB*weightB;
+        //     pdf += pdfB*weightB;
+        //     revPdf += revPdfB*weightB;
+        // }
+        // else {
+        //     Vector3 contribB;
+        //     Float cosWoB, pdfB, revPdfB;
+        //     bsdf->bsdfB->EvaluateAdjoint(wi, normal, wo, st, contribB, cosWoB, pdfB, revPdfB);
+        //     contrib += contribB*weightB;
+        //     pdf += pdfB*weightB;
+        //     revPdf += revPdfB*weightB;
+        // }
+
     } else {
+        entry = 1;
         sample[0] = ( sample[0] - weightA) / weightB;
         if(!adjoint)
             result = bsdf->bsdfB->Sample( wi, normal, st, sample, uDiscrete, wo, contrib, cosWo, pdf, revPdf);
@@ -127,10 +151,30 @@ bool Sample(const BlendBSDF *bsdf,
         contrib *= weightB * pdf;
         pdf *= weightB;
         revPdf *= weightB;
+
+        // evaluate the other component
+        // if(!adjoint){
+        //     Vector3 contribA;
+        //     Float cosWoA, pdfA, revPdfA;
+        //     bsdf->bsdfA->Evaluate(wi, normal, wo, st, contribA, cosWoA, pdfA, revPdfA);
+        //     contrib += contribA*weightA;
+        //     pdf += pdfA*weightA;
+        //     revPdf += revPdfA*weightA;
+        // }
+        // else {
+        //     Vector3 contribA;
+        //     Float cosWoA, pdfA, revPdfA;
+        //     bsdf->bsdfA->EvaluateAdjoint(wi, normal, wo, st, contribA, cosWoA, pdfA, revPdfA);
+        //     contrib += contribA*weightA;
+        //     pdf += pdfA*weightA;
+        //     revPdf += revPdfA*weightA;
+        // }
     }
 
     // Need to also account for the same component in other BSDF
 
+    // std::cout << "BLEND sampled wo " << wo.transpose() << " pdf:" << pdf << " " << "revpdf:" << revPdf << std::endl;
+    contrib = contrib/pdf;
     return result;
 }
 
@@ -193,6 +237,8 @@ void EvaluateBlendBSDF(const bool adjoint,
     pdf = (Float(1.f) - weightB) * pdfA + weightB * pdfB;
     revPdf = (Float(1.f) - weightB) * revPdfA + weightB * revPdfB;
     contrib = (1.f - weightB) * contribA + weightB * contribB;
+
+    cosWo = (1.f - weightB) * cosWoA + weightB * cosWoB;
     
 }
 
@@ -253,5 +299,7 @@ void SampleBlendBSDF(const bool adjoint,
     cosWo = ret[6];
     pdf = ret[7];
     revPdf = ret[8];
+
+    contrib = contrib/pdf;
 
 }

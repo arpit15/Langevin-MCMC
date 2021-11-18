@@ -210,6 +210,21 @@ AnimatedTransform ParseAnimatedTransform(pugi::xml_node node, SubsT &subs) {
     return MakeAnimatedTransform(m[0], m[1]);
 }
 
+Matrix4x4 remove_scale(Matrix4x4 trafo) {
+    float scalex = 0.f, scaley = 0.f, scalez=0.f;
+    for(int i=0; i<3; ++i) {
+        scalex += trafo(0,i)*trafo(0,i);
+        scaley += trafo(1,i)*trafo(1,i);
+        scalez += trafo(2,i)*trafo(2,i);
+    }
+    scalex = sqrt(scalex);
+    scaley = sqrt(scaley);
+    scalez = sqrt(scalez);
+
+    Matrix4x4 scaledT = Scale( Vector3(1.f/scalex, 1.f/scaley, 1.f/scalez));
+    return scaledT * trafo;
+}
+
 std::shared_ptr<Image3> ParseFilm(pugi::xml_node node, std::string &filename, 
             int &cropOffsetX, int &cropOffsetY, int &cropWidth, int &cropHeight, SubsT &subs ) {
     int width = 512;
@@ -460,6 +475,7 @@ std::shared_ptr<const Shape> ParseShape(pugi::xml_node node,
                 }
             }
 
+            toWorldForEmitter = remove_scale(toWorldForEmitter);
             std::string emitterType = child.attribute("type").value();
             if (emitterType == "area")
                 areaLight = std::make_shared<const AreaLight>(Float(1.0), shape.get(), radiance);
@@ -525,6 +541,8 @@ std::shared_ptr<const BSDF> ParseBSDF(pugi::xml_node node,
 
         std::cout << "BlendBSDF [" << std::endl
                     << "weight : " << weight->Avg().transpose() << std::endl
+                    << "BSDF A type : " << bsdfs.at(0)->GetBSDFTypeString() << std::endl
+                    << "BSDF B type : " << bsdfs.at(1)->GetBSDFTypeString() << std::endl
                     << "]" << std::endl;
         return std::make_shared<BlendBSDF>(twoSided, weight, bsdfs.at(0), bsdfs.at(1));
     
