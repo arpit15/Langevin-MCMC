@@ -16,6 +16,8 @@ import matplotlib.pyplot as plt
 
 from mitsuba.core import Spectrum, InterpolatedSpectrum
 
+import hdr_to_color_mit
+
 from ipdb import set_trace
 
 SPECTRUM_MIN_WAVELENGTH = 360
@@ -23,6 +25,7 @@ SPECTRUM_MAX_WAVELENGTH = 830
 SPECTRUM_RANGE = SPECTRUM_MAX_WAVELENGTH - SPECTRUM_MIN_WAVELENGTH
  
 exe = expanduser("~/projects/Langevin-MCMC/build-Release/dpt")
+# exe = expanduser("~/projects/mitsuba/dist_spectral/mitsuba")
 
 def generate_fullpath(fname, pathlist):
     for currpath in pathlist:
@@ -82,7 +85,6 @@ def generate_rgb2spec(fname, num_spec_sample, pathlist=[]):
         rgb_data = ele_m.attrib["value"]
         # ----
         r, g, b = parseRGB(rgb_data)
-        # spec_data = from_linear_rgb(rgb_data, num_spec_sample)
         spec_data_tmp = Spectrum()
         # TODO: arpita1 use parent
         spec_data_tmp.fromLinearRGB(r, g, b, Spectrum.EReflectance)
@@ -144,7 +146,7 @@ def generate_rgb2spec(fname, num_spec_sample, pathlist=[]):
         for jj in range(len(include_iters[1:])):
             
             ele_ch = include_iters[jj+1][ii]
-            lam = lam_list[jj] - stepSize
+            lam = lam_list[jj] #- stepSize
             
             # print("replaced element include name: ",filename_inc.replace(".xml", f"_lam{lam:.3f}.xml"))
             # set_trace()
@@ -173,7 +175,9 @@ def render(fname, paramlist):
     print(bashCommand)
     process = Popen(bashCommand.split(), stdout=subprocess.PIPE)
     output, error = process.communicate()
+    # print(process.returncode)
     # print(output, error)
+    if(process.returncode): print("FAILED!")
 
 # save multichannel image
 def imsave(fname, wvs, img):
@@ -235,18 +239,29 @@ if __name__ == "__main__":
     print(f"spectral filegen time : {filegen_end - start}")
     # run render command
     start_render = time()
-    for fn in output_fname_list:
+    for i, fn in enumerate(output_fname_list):
         # skip for wv > 720
+        if i<4 or i>21:
+            continue
         render(fn, args.D)
     end_render = time()
     print(f"Spectral Render time : {end_render - start_render}")
     # join the images to create a hyperspectral image
-    # h,w,_ = imread(output_fname_list[0].replace(".xml", ".exr.exr")).shape
-    # hyperspectral_img = np.zeros((h,w,args.spec_num), "float32")
+    
     firstTime = True
     start_join = time()
     for ii, xml_fn in enumerate(output_fname_list):
+        # LMC
         img_fn = xml_fn.replace(".xml", ".exr.exr")
+        # MITSUBA
+        # img_fn = xml_fn.replace(".xml", ".exr")
+        # # remove decimal part
+        # end_id = img_fn.rfind(".")
+        # start_id = img_fn[:end_id].rfind(".")
+        # img_fn_new = img_fn[:start_id] + img_fn[end_id:]
+        # # print(img_fn_new)
+        # img_fn = img_fn_new
+        # --------
         if (exists(img_fn)):
             print(img_fn)
             exr = imread(img_fn)
@@ -262,5 +277,9 @@ if __name__ == "__main__":
     lam_list = np.linspace(SPECTRUM_MIN_WAVELENGTH+stepSize/2, SPECTRUM_MAX_WAVELENGTH - stepSize/2, args.spec_num)
    
     imsave(outfn, lam_list, hyperspectral_img)
+
+    # convert to rpiv1 3 ch image
+    hdr_to_color_mit.main(outfn)
+
 
 
