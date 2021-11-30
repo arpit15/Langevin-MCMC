@@ -202,39 +202,24 @@ def imsave(fname, wvs, img):
     out.close()
     print("Done!")
 
-if __name__ == "__main__":
-    parser = ArgumentParser(description="mitsuba like cmd prompt")
-    parser.add_argument('fname', help="input filename", type=str)
-    parser.add_argument('--spec_num', help="Number of spectral samples", type=int, default=30)
-    parser.add_argument( '-o',dest='output', type=str, help="output filename. Defaults to input file with exr ext")
-    parser.add_argument("-D",
-                        metavar="KEY=VALUE",
-                        nargs='*', action='append',
-                        help="Set a number of key-value pairs "
-                             "(do not put spaces before or after the = sign). "
-                             "If a value contains spaces, you should define "
-                             "it with double quotes: "
-                             'foo="this is a sentence". Note that '
-                             "values are always treated as strings.")
 
+def main(fname, output, param_list, spec_num=30):
 
-    args = parser.parse_args()
-
-    outfn = args.output
+    outfn = output
     if (outfn == None):
-        outfn = args.fname.replace(".xml", ".exr")
+        outfn = fname.replace(".xml", ".exr")
 
     # clean up before creating new files and data
-    clear_list = glob(join(dirname(args.fname), "*_lam*.xml"))
-    clear_list += glob(join(dirname(args.fname), "*_lam*.exr.exr"))
-    clear_list += glob(join(dirname(args.fname), "*_lam*.exr.png"))
+    clear_list = glob(join(dirname(fname), "*_lam*.xml"))
+    clear_list += glob(join(dirname(fname), "*_lam*.exr.exr"))
+    clear_list += glob(join(dirname(fname), "*_lam*.exr.png"))
 
     for fn in clear_list:
         os.remove(fn)
 
     start = time()
     # take the input string from loading xml recursively
-    output_fname_list = generate_rgb2spec(args.fname, args.spec_num)
+    output_fname_list = generate_rgb2spec(fname, spec_num)
     filegen_end = time()
     print(f"spectral filegen time : {filegen_end - start}")
     # run render command
@@ -243,7 +228,7 @@ if __name__ == "__main__":
         # skip for wv > 720
         if i<4 or i>21:
             continue
-        render(fn, args.D)
+        render(fn, param_list)
     end_render = time()
     print(f"Spectral Render time : {end_render - start_render}")
     # join the images to create a hyperspectral image
@@ -267,19 +252,36 @@ if __name__ == "__main__":
             exr = imread(img_fn)
             if (firstTime):
                 h,w,_ = exr.shape
-                hyperspectral_img = np.zeros((h,w,args.spec_num), "float32")
+                hyperspectral_img = np.zeros((h,w,spec_num), "float32")
                 firstTime = False
             hyperspectral_img[...,ii] = exr[...,0]
             
     end_join = time()
     print(f"Join time : {end_join - start_join}")
-    stepSize = SPECTRUM_RANGE/args.spec_num
-    lam_list = np.linspace(SPECTRUM_MIN_WAVELENGTH+stepSize/2, SPECTRUM_MAX_WAVELENGTH - stepSize/2, args.spec_num)
+    stepSize = SPECTRUM_RANGE/spec_num
+    lam_list = np.linspace(SPECTRUM_MIN_WAVELENGTH+stepSize/2, SPECTRUM_MAX_WAVELENGTH - stepSize/2, spec_num)
    
     imsave(outfn, lam_list, hyperspectral_img)
 
     # convert to rpiv1 3 ch image
     hdr_to_color_mit.main(outfn)
 
+if __name__ == "__main__":
+    parser = ArgumentParser(description="mitsuba like cmd prompt")
+    parser.add_argument('fname', help="input filename", type=str)
+    parser.add_argument('--spec_num', help="Number of spectral samples", type=int, default=30)
+    parser.add_argument( '-o',dest='output', type=str, help="output filename. Defaults to input file with exr ext")
+    parser.add_argument("-D",
+                        metavar="KEY=VALUE",
+                        nargs='*', action='append',
+                        help="Set a number of key-value pairs "
+                             "(do not put spaces before or after the = sign). "
+                             "If a value contains spaces, you should define "
+                             "it with double quotes: "
+                             'foo="this is a sentence". Note that '
+                             "values are always treated as strings.")
 
+
+    args = parser.parse_args()
+    main(args.fname, args.output, args.D, args.spec_num)
 
