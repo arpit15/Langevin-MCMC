@@ -120,7 +120,11 @@ void Evaluate(
 
     Float scalar = fabs(F * D * G / (Float(4.0) * cosWi));
     contrib = bsdf->Ks->Eval(st) * scalar;
-    pdf = fabs(prob * F/ (Float(4.0) * cosHWo));
+    
+    // orig
+    // pdf = fabs(prob * F/ (Float(4.0) * cosHWo));
+    pdf = fabs(prob / (Float(4.0) * cosHWo));
+    
     revPdf = fabs(revProb / (Float(4.0) * revCosHWo));
     
     // taken from phong.cpp
@@ -221,7 +225,8 @@ bool Sample(
     }
     refl = F * bsdf->Ks->Eval(st);
     cosHWo = Dot(wo, H);
-    pdf = fabs(mPdf * F/ (Float(4.0) * cosHWo));
+    // pdf = fabs(mPdf * F/ (Float(4.0) * cosHWo));
+    pdf = fabs(mPdf / (Float(4.0) * cosHWo));
     
     Float revCosHWo = cosHWi;
     Float rev_dwh_dwo = inverse(Float(4.0) * revCosHWo);
@@ -233,7 +238,9 @@ bool Sample(
 
     Float revScaledAlp = alp * (Float(1.2) - Float(0.2) * sqrt(fabs(cosWo)));
     Float revD = BeckmennDistributionTerm(localH, revScaledAlp, revScaledAlp);
-    revPdf = fabs(F * revD * localH[2] * rev_dwh_dwo);
+
+    // revPdf = fabs(F * revD * localH[2] * rev_dwh_dwo);
+    revPdf = fabs( revD * localH[2] * rev_dwh_dwo);
 
     if (fabs(cosHWo) < c_CosEpsilon) {
         return false;
@@ -367,8 +374,10 @@ void EvaluateRoughConductor(const bool adjoint,
 
     ADFloat scalar = fabs(F * D * G / (Float(4.0) * cosWi));
     contrib = Ks * scalar;
-    pdf = fabs(prob * F / (Float(4.f) * cosHWo));
-    revPdf = fabs(revProb * F / (Float(4.0) * revCosHWo));
+    // pdf = fabs(prob * F / (Float(4.f) * cosHWo));
+    pdf = fabs(prob / (Float(4.f) * cosHWo));
+    // revPdf = fabs(revProb * F / (Float(4.0) * revCosHWo));
+    revPdf = fabs(revProb / (Float(4.0) * revCosHWo));
 }
 
 void SampleRoughConductor(const bool adjoint,
@@ -418,13 +427,15 @@ void SampleRoughConductor(const bool adjoint,
     ADVector3 refl = Ks;
     refl *= F;
     ADFloat cosHWo = Dot(wo, H);
-    pdf = fabs(mPdf * F / (Float(4.0) * cosHWo));
+    // pdf = fabs(mPdf * F / (Float(4.0) * cosHWo));
+    pdf = fabs(mPdf / (Float(4.0) * cosHWo));
     ADFloat revCosHWo = cosHWi;
     ADFloat rev_dwh_dwo = inverse(Float(4.0) * revCosHWo);
     cosWo = Dot(wo, normal_);
     ADFloat revScaledAlp = alpha * (Float(1.2) - Float(0.2) * sqrt(fabs(cosWo)));
     ADFloat revD = BeckmennDistributionTerm(localH, revScaledAlp, revScaledAlp);
-    revPdf = fabs(F * revD * localH[2] * rev_dwh_dwo);
+    // revPdf = fabs(F * revD * localH[2] * rev_dwh_dwo);
+    revPdf = fabs(revD * localH[2] * rev_dwh_dwo);
         
     ADFloat aCosWi = fabs(cosWi);
     ADFloat aCosWo = fabs(cosWo);

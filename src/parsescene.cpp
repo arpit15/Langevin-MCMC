@@ -26,9 +26,6 @@
 
 #include <iostream>
 #include <regex>
-#include <map>
-
-typedef std::unordered_map<std::string, std::string> SubsT;
 
 inline void replace_inplace(std::string &str, const std::string &source,
                             const std::string &target) {
@@ -40,7 +37,7 @@ inline void replace_inplace(std::string &str, const std::string &source,
 }
 
 using BSDFMap = std::map<std::string, std::shared_ptr<const BSDF>>;
-using TextureMap = std::map<std::string, std::shared_ptr<const TextureRGB>>;
+// using TextureMap = std::map<std::string, std::shared_ptr<const TextureRGB>>;
 
 Vector3 ParseVector3(const std::string &value);
 Matrix4x4 ParseMatrix4x4(const std::string &value);
@@ -53,10 +50,10 @@ std::shared_ptr<const Shape> ParseShape(pugi::xml_node node,
                                         const BSDFMap &bsdfMap,
                                         const TextureMap &textureMap,
                                         std::shared_ptr<const Light> &areaLight, SubsT &subs);
-std::shared_ptr<const BSDF> ParseBSDF(pugi::xml_node node,
-                                      const TextureMap &textureMap,
-                                      SubsT &subs,
-                                      bool twoSided = false);
+// std::shared_ptr<const BSDF> ParseBSDF(pugi::xml_node node,
+//                                       const TextureMap &textureMap,
+//                                       SubsT &subs,
+//                                       bool twoSided = false);
 std::shared_ptr<const Light> ParseEmitter(pugi::xml_node node,
                                           std::shared_ptr<const EnvLight> &envLight, SubsT &subs);
 std::shared_ptr<const TextureRGB> ParseTexture(pugi::xml_node node, SubsT &subs);

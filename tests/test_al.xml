@@ -1,0 +1,11 @@
+<scene version="0.6.0">
+
+<bsdf type="twosided" id="mat-al2">
+		<bsdf type="diffuse">
+			<!-- <rgb name="reflectance" value="0.37, 0.4, 0.37" /> -->
+			<rgb name="reflectance" value="0.37, 0.2, 0.185" />
+		</bsdf>
+	</bsdf>
+
+	</scene>
+    

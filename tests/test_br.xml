@@ -1,0 +1,26 @@
+<scene version="0.6.0">
+
+<bsdf id="mat-br" type="blendbsdf">
+		<float name="weight" value="0.85" />
+			
+		<bsdf type="twosided" id="mat-coateddiff2">
+			<bsdf type="diffuse" id="mat-coateddiff">
+				<rgb name="reflectance" value="0.8, 0.25, 0.15" />
+			</bsdf>
+		</bsdf>
+
+		<bsdf type="twosided" id="mat-coatedcond">
+			<bsdf type="roughconductor">
+				<string name="material" value="none"/>
+				<rgb name="eta" value="0.47553385 0.57597149 0.76444718"/>
+				<rgb name="k" value="0.8772515  0.81142953 0.63085948"/>
+
+				<string name="distribution" value="beckmann"/>
+				<float name="alpha" value="0.175" />
+				<rgb name="specularReflectance" value="1.0" />
+			</bsdf>
+		</bsdf>
+	</bsdf>
+
+	</scene>
+    

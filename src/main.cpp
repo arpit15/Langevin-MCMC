@@ -8,6 +8,7 @@
 #include "texturesystem.h"
 #include "parallel.h"
 #include "path.h"
+#include "timer.h"
 
 #include <iostream>
 #include <string>
@@ -146,7 +147,11 @@ int main(int argc, char *argv[]) {
         }
         if (mala) {
             // mala
+            Timer timer;
+            Tick(timer);
             CompilePathFuncLibrary2(maxDervDepth.Get());
+            Float elapsed = Tick(timer);
+            std::cout << "MALA compile time:" << elapsed << std::endl;
         }
 
         if ( !(pathlib || hessians || mala) &&
