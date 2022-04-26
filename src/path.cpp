@@ -455,10 +455,13 @@ void GeneratePath(const Scene *scene,
     const Camera *camera = scene->camera.get();
     Vector2 screenPos = Vector2(
         screenPosi[0] == -1 ? uniDist(rng)
-                            : ((screenPosi[0] + uniDist(rng)) / Float(GetPixelWidth(camera))),
+                            : ((screenPosi[0] + uniDist(rng)) / Float(GetCropWidth(camera))),
         screenPosi[1] == -1 ? uniDist(rng)
-                            : ((screenPosi[1] + uniDist(rng)) / Float(GetPixelHeight(camera))));
+                            : ((screenPosi[1] + uniDist(rng)) / Float(GetCropHeight(camera))));
     path.camVertex = CameraVertex{screenPos};
+
+    // std::cout << "xpos:" << screenPos[0] <<
+    //             ", ypos:" << screenPos[1]  << std::endl;
 
     UniPathState pathState;
     Init(pathState);
@@ -596,9 +599,9 @@ static inline void EmitFromCameraInit(const Camera *camera,
     std::uniform_real_distribution<Float> uniDist(Float(0.0), Float(1.0));
     camVertex.screenPos = Vector2(
         screenPosi[0] == -1 ? uniDist(rng)
-                            : ((screenPosi[0] + uniDist(rng)) / Float(GetPixelWidth(camera))),
+                            : ((screenPosi[0] + uniDist(rng)) / Float(GetCropWidth(camera))),
         screenPosi[1] == -1 ? uniDist(rng)
-                            : ((screenPosi[1] + uniDist(rng)) / Float(GetPixelHeight(camera))));
+                            : ((screenPosi[1] + uniDist(rng)) / Float(GetCropHeight(camera))));
 }
 
 static void EmitFromCamera(const Float time,
@@ -2655,6 +2658,55 @@ void Serialize(const Scene *scene, const Path &path, SerializedSubpath &subPath)
         buffer = Serialize(surfVertex.rrWeight, buffer);
     }
 }
+
+Vector GetPathPos(const Path& path)
+{
+    assert(path.isSubpath);
+    Vector pos(GetDimension(path));
+    int primaryIdx = 0;
+    if (path.isMoving) {
+        pos[primaryIdx++] = path.time;
+    }
+    if (path.lgtDepth>1) {
+        pos[primaryIdx++] = path.lgtVertex.rndParamPos[0];
+        pos[primaryIdx++] = path.lgtVertex.rndParamPos[1];
+        pos[primaryIdx++] = path.lgtVertex.rndParamDir[0];
+        pos[primaryIdx++] = path.lgtVertex.rndParamDir[1];
+        for (int lgtDepth = 0; lgtDepth<(int) path.lgtSurfaceVertex.size(); lgtDepth++) {
+            const SurfaceVertex& surfVertex = path.lgtSurfaceVertex[lgtDepth];
+            // If we do full BDPT with non-pinhole cameras we need to handle camera hit here
+            if (lgtDepth==(int) path.lgtSurfaceVertex.size()-1 && path.camDepth==1) {
+                return pos;
+            }
+            if (lgtDepth==(int) path.lgtSurfaceVertex.size()-1) {
+                break;
+            }
+            pos[primaryIdx++] = surfVertex.bsdfRndParam[0];
+            pos[primaryIdx++] = surfVertex.bsdfRndParam[1];
+        }
+    }
+
+    const CameraVertex& camVertex = path.camVertex;
+    pos[primaryIdx++] = camVertex.screenPos[0];
+    pos[primaryIdx++] = camVertex.screenPos[1];
+
+    for (int camDepth = 0; camDepth<(int) path.camSurfaceVertex.size(); camDepth++) {
+        const SurfaceVertex& surfVertex = path.camSurfaceVertex[camDepth];
+        if (camDepth==(int) path.camSurfaceVertex.size()-1) {
+            if (path.lgtDepth==1) {
+                pos[primaryIdx++] = surfVertex.directLightRndParam[0];
+                pos[primaryIdx++] = surfVertex.directLightRndParam[1];
+            }
+            return pos;
+        }
+
+        pos[primaryIdx++] = surfVertex.bsdfRndParam[0];
+        pos[primaryIdx++] = surfVertex.bsdfRndParam[1];
+    }
+    assert(false);
+    return Vector();
+}
+
 
 void GetPathPss(const Path &path, std::vector<Float> &pss) {
     assert(path.isSubpath);

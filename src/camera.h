@@ -13,6 +13,8 @@ struct Camera {
            const std::shared_ptr<Image3> film,
            const Float nearClip,
            const Float farClip, 
+           const int pixelWidth,
+           const int pixelHeight,
            const int cropOffsetX, 
            const int cropOffsetY, 
            const int cropWidth, 
@@ -24,6 +26,9 @@ struct Camera {
     std::shared_ptr<Image3> film;
     Float nearClip, farClip;
     Float dist;
+    int pixelWidth, pixelHeight;
+    int cropWidth, cropHeight;
+    int cropOffsetX, cropOffsetY;
 };
 
 Float *Serialize(const Camera *camera, Float *buffer);
@@ -47,9 +52,25 @@ inline std::shared_ptr<Image3> GetFilm(const Camera *camera) {
 }
 
 inline int GetPixelHeight(const Camera *camera) {
-    return camera->film->pixelHeight;
+    return camera->pixelHeight;
 }
 
 inline int GetPixelWidth(const Camera *camera) {
-    return camera->film->pixelWidth;
+    return camera->pixelWidth;
+}
+
+inline int GetCropHeight(const Camera *camera) {
+    return camera->cropHeight;
+}
+
+inline int GetCropWidth(const Camera *camera) {
+    return camera->cropWidth;
+}
+
+inline int GetCropOffsetX(const Camera *camera) {
+    return camera->cropOffsetX;
+}
+
+inline int GetCropOffsetY(const Camera *camera) {
+    return camera->cropOffsetY;
 }

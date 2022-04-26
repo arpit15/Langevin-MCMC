@@ -29,8 +29,19 @@
 
 inline void replace_inplace(std::string &str, const std::string &source,
                             const std::string &target) {
+    // std::cout << str << ", " << source << ", " << target << std::endl;
     size_t pos = 0;
-    while ((pos = str.find(source, pos)) != std::string::npos) {
+
+    // to take care of not replacing in case of str=$z40, source=$z
+    size_t dollar_pos = str.find('$');
+    size_t search_size1 = str.length() - dollar_pos;
+    size_t search_size2 = source.length();
+
+    // std::cout << str << ", " << source << ", " << target << ", " << search_size1 << ", " << search_size2 << std::endl;
+
+    if (search_size1 != search_size2) return;
+
+    while ((pos = str.find(source.c_str(), pos, search_size1)) != std::string::npos) {
         str.replace(pos, source.length(), target);
         pos += target.length();
     }
@@ -160,12 +171,18 @@ Matrix4x4 ParseTransform(pugi::xml_node node, SubsT &subs) {
             Float x = 0.0;
             Float y = 0.0;
             Float z = 0.0;
-            if (!child.attribute("x").empty())
+            if (!child.attribute("x").empty()){
+                // std::cout << "x:" << child.attribute("x").value() << std::endl;
                 x = std::stof(child.attribute("x").value());
-            if (!child.attribute("y").empty())
+            }
+            if (!child.attribute("y").empty()){
+                // std::cout << "y:" << child.attribute("y").value() << std::endl;
                 y = std::stof(child.attribute("y").value());
-            if (!child.attribute("z").empty())
+            }
+            if (!child.attribute("z").empty()){
+                // std::cout << "z:" << child.attribute("z").value() << std::endl;
                 z = std::stof(child.attribute("z").value());
+            }
             tform = Translate(Vector3(x, y, z)) * tform;
         } else if (name == "rotate") {
             Float x = 0.0;
@@ -219,10 +236,15 @@ Matrix4x4 remove_scale(Matrix4x4 trafo) {
     scalez = sqrt(scalez);
 
     Matrix4x4 scaledT = Scale( Vector3(1.f/scalex, 1.f/scaley, 1.f/scalez));
-    return scaledT * trafo;
+    Matrix4x4 finalT = scaledT * trafo;
+    // copy the translation back
+    for(int i=0;i<3;i++)
+        finalT(i,3) = trafo(i,3);
+    return finalT;
 }
 
 std::shared_ptr<Image3> ParseFilm(pugi::xml_node node, std::string &filename, 
+            int &pixelWidth, int &pixelHeight,
             int &cropOffsetX, int &cropOffsetY, int &cropWidth, int &cropHeight, SubsT &subs ) {
     int width = 512;
     int height = 512;
@@ -238,6 +260,9 @@ std::shared_ptr<Image3> ParseFilm(pugi::xml_node node, std::string &filename,
             filename = std::string(child.attribute("value").value());
         } 
     }
+
+    pixelWidth = width;
+    pixelHeight = height;
 
     cropOffsetX = 0;
     cropOffsetY = 0;
@@ -257,7 +282,7 @@ std::shared_ptr<Image3> ParseFilm(pugi::xml_node node, std::string &filename,
         }
     }
     
-    return std::make_shared<Image3>(width, height);
+    return std::make_shared<Image3>(cropWidth, cropHeight);
 }
 
 std::shared_ptr<const Camera> ParseSensor(pugi::xml_node node, std::string &filename, SubsT &subs) {
@@ -266,6 +291,7 @@ std::shared_ptr<const Camera> ParseSensor(pugi::xml_node node, std::string &file
     Float farClip = 1000.0;
     Float fov = 45.0;
     std::shared_ptr<Image3> film;
+    int pixelWidth, pixelHeight;
     int cropOffsetX = 0, cropOffsetY = 0,
          cropWidth, cropHeight;
 
@@ -287,16 +313,22 @@ std::shared_ptr<const Camera> ParseSensor(pugi::xml_node node, std::string &file
                 toWorld = ParseAnimatedTransform(child, subs);
             }
         } else if (std::string(child.name()) == "film") {
-            film = ParseFilm(child, filename, cropOffsetX, cropOffsetY, cropWidth, cropHeight, subs);
+            film = ParseFilm(child, filename, pixelWidth, pixelHeight, cropOffsetX, cropOffsetY, cropWidth, cropHeight, subs);
         }
     }
     if (film.get() == nullptr) {
         film = std::make_shared<Image3>(512, 512);
     }
 
+    std::cout << "Created Camera [" << std::endl
+                << "cropX " << cropOffsetX << std::endl
+                << "cropY " << cropOffsetY << std::endl
+                << "cropW " << cropWidth << std::endl
+                << "cropH " << cropHeight << std::endl
+                << "]" << std::endl;
     // Eigen alignment issue
     return std::allocate_shared<Camera>(
-        Eigen::aligned_allocator<Camera>(), toWorld, fov, film, nearClip, farClip, cropOffsetX, cropOffsetY, cropWidth, cropHeight );
+        Eigen::aligned_allocator<Camera>(), toWorld, fov, film, nearClip, farClip, pixelWidth, pixelHeight, cropOffsetX, cropOffsetY, cropWidth, cropHeight );
 }
 
 std::shared_ptr<const Shape> ParseShape(pugi::xml_node node,
@@ -446,6 +478,8 @@ std::shared_ptr<const Shape> ParseShape(pugi::xml_node node,
                 }
             }
         }
+
+        // std::cout << toWorld[0] << std::endl;
         shape = std::make_shared<TriangleMesh>(
             bsdf, ParsePly(filename, toWorld[0], toWorld[1], isMoving, flipNormals, faceNormals));
 
@@ -473,6 +507,7 @@ std::shared_ptr<const Shape> ParseShape(pugi::xml_node node,
             }
 
             toWorldForEmitter = remove_scale(toWorldForEmitter);
+            // std::cout << "Area light transform " << toWorldForEmitter << std::endl;
             std::string emitterType = child.attribute("type").value();
             if (emitterType == "area")
                 areaLight = std::make_shared<const AreaLight>(Float(1.0), shape.get(), radiance);

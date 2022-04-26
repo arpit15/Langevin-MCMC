@@ -61,6 +61,26 @@ struct Path {
     int camDepth;
     int lgtDepth;
 
+    bool isMoving;
+
+    void SetIsMoving(){
+        this->isMoving = false;
+        for (const auto& vertex : this->camSurfaceVertex) {
+            if (vertex.shapeInst.obj!=nullptr && vertex.shapeInst.obj->IsMoving()) {
+                this->isMoving = true;
+                break;
+            }
+        }
+        if (!this->isMoving) {
+            for (const auto& vertex : this->lgtSurfaceVertex) {
+                if (vertex.shapeInst.obj!=nullptr && vertex.shapeInst.obj->IsMoving()) {
+                    this->isMoving = true;
+                    break;
+                }
+            }
+        }
+    }
+
     // friend std::ostream& operator<<(std::ostream& os, const Path& p);
 
     // Path operator=(const Path &p) {
@@ -129,6 +149,7 @@ size_t GetVertParamSize(const int maxCamDepth, const int maxLgtDepth);
 size_t GetPrimaryParamSize(const int camDepth, const int lightDepth);
 void Serialize(const Scene *scene, const Path &path, SerializedSubpath &subPath);
 void GetPathPss(const Path &path, std::vector<Float> &pss);
+Vector GetPathPos(const Path& path);
 
 inline int GetDimension(const Path &path) {
     assert(path.isSubpath);

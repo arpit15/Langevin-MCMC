@@ -13,6 +13,8 @@ Camera::Camera(const AnimatedTransform &camToWorld,
                const std::shared_ptr<Image3> film,
                const Float nearClip,
                const Float farClip,
+               const int pixelWidth,
+                const int pixelHeight,
                const int cropOffsetX, 
                 const int cropOffsetY, 
                 const int cropWidth, 
@@ -22,13 +24,19 @@ Camera::Camera(const AnimatedTransform &camToWorld,
       worldToCamera(Invert(camToWorld)),
       film(film),
       nearClip(nearClip),
-      farClip(farClip) {
+      farClip(farClip),
+      pixelWidth(pixelWidth),
+      pixelHeight(pixelHeight),
+      cropWidth(cropWidth),
+      cropHeight(cropHeight),
+      cropOffsetX(cropOffsetX),
+      cropOffsetY(cropOffsetY) {
 
-    Vector2 film_size_f((Float)film->pixelWidth, (Float)film->pixelHeight);
+    Vector2 film_size_f((Float)pixelWidth, (Float)pixelHeight);
     Vector2 rel_size( Float(cropWidth)/film_size_f[0], Float(cropHeight)/film_size_f[1] );
     Vector2 rel_offset( Float(cropOffsetX)/film_size_f[0], Float(cropOffsetY)/film_size_f[1] );
 
-    Float aspect = (Float)film->pixelWidth / (Float)film->pixelHeight;
+    Float aspect = (Float)pixelWidth / (Float)pixelHeight;
     camToSample = Scale(Vector3( Float(1.0)/rel_size[0], Float(1.0)/rel_size[1], Float(1.0))) *
                   Translate(Vector3(-rel_offset[0], -rel_offset[1], Float(0.0))) *
                   Scale(Vector3(-Float(0.5), -Float(0.5) * aspect, Float(1.0))) *
@@ -36,7 +44,7 @@ Camera::Camera(const AnimatedTransform &camToWorld,
                   Perspective(fov, nearClip, farClip);
 
     sampleToCam = camToSample.inverse();
-    dist = film->pixelWidth / (Float(2.0) * tan((fov / Float(2.0)) * (c_PI / Float(180.0))));
+    dist = pixelWidth / (Float(2.0) * tan((fov / Float(2.0)) * (c_PI / Float(180.0))));
 }
 
 Float *Serialize(const Camera *camera, Float *buffer) {
