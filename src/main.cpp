@@ -2,6 +2,7 @@
 
 #include "parsescene.h"
 #include "pathtrace.h"
+#include "directintegrator.h"
 #include "mlt.h"
 #include "image.h"
 #include "camera.h"
@@ -195,7 +196,14 @@ int main(int argc, char *argv[]) {
             scene->options->seedOffset = seedoffset;
             
             std::cout << "Scene parsing done !" << std::endl;
-            if (integrator == "mc") {
+            if (integrator == "direct"){
+                // return to the original executable dir after parsing scene
+                if (chdir(cwd.c_str()) != 0) {
+                    Error("chdir failed");
+                }
+                Direct(scene.get());
+            }
+            else if (integrator == "mc") {
                 std::shared_ptr<const PathFuncLib> library =
                     BuildPathFuncLibrary(scene->options->bidirectional, maxDervDepth);
                 
