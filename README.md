@@ -7,6 +7,17 @@
 - No requirement for setting path
 - Used C++17 `filesystem` for current directory assessment
 
+# Profiling
+- run code with following command
+`LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libprofiler.so CPUPROFILE=profileoutput.out exe`
+
+- Generate pdf report
+`google-pprof -pdf exe profileoutput.out > profilegraph.pdf`
+
+- Use interactive view
+`google-pprof -web  ~/projects/Langevin-MCMC/build-Release/dpt mysceneprofiled.out`
+
+
 # Langevin-MCMC
 This is the code repository for paper "[Langevin Monte Carlo Rendering with Gradient-based Adaptation](https://research.cs.cornell.edu/langevin-mcmc/data/paper.pdf)" by Fujun Luan, Shuang Zhao, Kavita Bala, and Ioannis Gkioulekas. Check out the [project page](https://research.cs.cornell.edu/langevin-mcmc/) for more information. 
  

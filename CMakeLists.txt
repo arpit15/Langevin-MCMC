@@ -3,6 +3,8 @@ set (CMAKE_CXX_STANDARD 17)
 
 project(LMC CXX)
 
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+
 option (FORCE_COLORED_OUTPUT "Always produce ANSI-colored output (GNU/Clang only)." True)
 if (${FORCE_COLORED_OUTPUT})
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
@@ -16,7 +18,11 @@ add_definitions(-DSINGLE_PRECISION)
 
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 find_package(TBB)
-find_package(embree 3.8.0 REQUIRED)
+find_package(embree 3.8.0 REQUIRED
+PATHS /home/arpita1/projects/embree/build-Release
+)
+
+message(STATUS "embree dirs - ${EMBREE_INCLUDE_DIRS}")
 
 file(GLOB SRC_FILES
      "src/*.h"
@@ -64,7 +70,7 @@ target_link_libraries (dpt
     tbb
     nanoflann::nanoflann
     OpenImageIO
-    embree3
+    ${EMBREE_LIBRARY}
     boost_system
     dl 
     z

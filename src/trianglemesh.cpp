@@ -113,10 +113,11 @@ ShapeID TriangleMesh::RtcRegister(const RTCScene &rtcScene, const RTCDevice &rtc
     };
     
     RTCGeometry geom_0 = rtcNewGeometry(rtcDevice, RTC_GEOMETRY_TYPE_TRIANGLE); // EMBREE_FIXME: check if geometry gets properly committed
-     rtcSetGeometryBuildQuality(geom_0,RTC_BUILD_QUALITY_MEDIUM);
-     rtcSetGeometryTimeStepCount(geom_0,data->isMoving ? 2 : 1);
-    ShapeID geomID = rtcAttachGeometry(rtcScene,geom_0);
-     rtcReleaseGeometry(geom_0);
+    //  rtcSetGeometryBuildQuality(geom_0,RTC_BUILD_QUALITY_MEDIUM);
+    rtcSetGeometryBuildQuality(geom_0,RTC_BUILD_QUALITY_HIGH);
+    rtcSetGeometryTimeStepCount(geom_0,data->isMoving ? 2 : 1);
+    // ShapeID geomID = rtcAttachGeometry(rtcScene,geom_0);
+    //  rtcReleaseGeometry(geom_0);
 
     if (!data->isMoving) {
         Vertex *vertices = (Vertex *)rtcSetNewGeometryBuffer(geom_0,RTC_BUFFER_TYPE_VERTEX,0,RTC_FORMAT_FLOAT3,4*sizeof(float),data->position0.size());
@@ -138,6 +139,8 @@ ShapeID TriangleMesh::RtcRegister(const RTCScene &rtcScene, const RTCDevice &rtc
     for (const auto &i : data->indices)
         *indices++ = Index{i.index[0], i.index[1], i.index[2]};
     
+    ShapeID geomID = rtcAttachGeometry(rtcScene,geom_0);
+     rtcReleaseGeometry(geom_0);
     rtcCommitGeometry(geom_0);
     return geomID;
 }
