@@ -50,6 +50,9 @@ void MLT(const Scene *scene, const std::shared_ptr<const PathFuncLib> pathFuncLi
     const int reportInterval = 1000;
     int intervalImgId = 1;
 
+    std::atomic<int64_t> largeStepAccepted(0), largeStepTotal(0);
+    std::atomic<int64_t> smallStepAccepted(0), smallStepTotal(0);
+    
     GlobalCache globalCache; 
 
     SampleBuffer indirectBuffer(pixelWidth, pixelHeight);
@@ -65,7 +68,7 @@ void MLT(const Scene *scene, const std::shared_ptr<const PathFuncLib> pathFuncLi
         int64_t numSamplesThisChain =
             numSamplesPerChain + ((chainId < chainsNeedExtraSamples) ? 1 : 0);
         std::vector<Float> contribCdf;
-        MarkovState currentState = initStates[chainId];
+        MarkovState currentState = initStates.at(chainId);
         MarkovState proposalState{false};
         int64_t adjacentReject = 0;
         std::unique_ptr<LargeStep> largeStep = scene->options->sampleFromGlobalCache && scene->options->mala ? 
@@ -98,8 +101,10 @@ void MLT(const Scene *scene, const std::shared_ptr<const PathFuncLib> pathFuncLi
             if (!currentState.valid || uniDist(rng) < largeStepProb * lsScale) {
                 isLargeStep = true;
                 a = largeStep->Mutate(mltState, normalization, currentState, proposalState, rng, &chain);
+                largeStepTotal++;
             } else {
                 a = smallStep->Mutate(mltState, normalization, currentState, proposalState, rng, &chain);
+                smallStepTotal++;
             }
             if (currentState.valid && a < Float(1.0)) {
                 for (const auto splat : currentState.toSplat) {
@@ -131,6 +136,7 @@ void MLT(const Scene *scene, const std::shared_ptr<const PathFuncLib> pathFuncLi
                     largeStep->lastScore = currentState.spContrib.lsScore;
                     currentState.gaussianInitialized = false;
                     chain.buffered = false;
+                    largeStepAccepted++;
                 } else {
                     if (smallStep->lastMutationType == MutationType::MALASmall) {
                         chain.g = chain.prop_new_g;
@@ -140,6 +146,7 @@ void MLT(const Scene *scene, const std::shared_ptr<const PathFuncLib> pathFuncLi
                         chain.buffered = true; 
                         currentState.gaussianInitialized = true; 
                     }
+                    smallStepAccepted++;
                 }
             } else {
                 // Sometimes the derivatives are noisy so that the light paths
@@ -150,27 +157,33 @@ void MLT(const Scene *scene, const std::shared_ptr<const PathFuncLib> pathFuncLi
                     bool strongReject = currentState.spContrib.lsScore > OUTLIER_RATIO_THRESHOLD * normalization;
                     if (adjacentReject > OUTLIER_WEAK_REJECT_CNT || 
                         (strongReject && adjacentReject > OUTLIER_STRONG_REJECT_CNT)) {
-                        int _chainId = chainId, cnt = 0; 
+                        int64_t _chainId = chainId, cnt = 0; 
+                        bool eliminate = false;
                         // std::cout << "-outlier rejection" << std::endl;
-                        while (true) { 
-                            currentState = initStates[_chainId];
+                        // num chains to check are equal to numChains. Therefore should terminate if the cnt becomes bigger than numChains
+                        while (cnt<initStates.size()) { 
+                            currentState = initStates.at(_chainId);
                             // std::cout << "%% outlier rejection path camDepth:" << initStates[_chainId].path.camDepth 
                             //             << ", " << " lgtDepth:" << initStates[_chainId].path.lgtDepth 
                             //             << ", lscore : " << currentState.spContrib.lsScore << std::endl; 
-                            if (currentState.spContrib.lsScore < OUTLIER_RATIO_THRESHOLD * normalization)
+                            if (currentState.spContrib.lsScore < OUTLIER_RATIO_THRESHOLD * normalization){
+                                eliminate = true;
                                 break;
+                            }
                             _chainId = (_chainId + sampleIdx + cnt++) % numChains;
                         }
                         // std::cout << "+outlier rejection" << std::endl;
-                        currentState.valid = false;
-                        currentState.gaussianInitialized = false; 
-                        currentState.toSplat.clear();
-                        proposalState.valid = false;
-                        proposalState.gaussianInitialized = false; 
-                        proposalState.toSplat.clear();
-                        proposalState.pss.clear(); 
-                        Clear(proposalState.path);
-                        chain.buffered = false;
+                        if(eliminate){
+                            currentState.valid = false;
+                            currentState.gaussianInitialized = false; 
+                            currentState.toSplat.clear();
+                            proposalState.valid = false;
+                            proposalState.gaussianInitialized = false; 
+                            proposalState.toSplat.clear();
+                            proposalState.pss.clear(); 
+                            Clear(proposalState.path);
+                            chain.buffered = false;
+                        }
                     }
                 #endif 
             }
@@ -193,7 +206,7 @@ void MLT(const Scene *scene, const std::shared_ptr<const PathFuncLib> pathFuncLi
                         BufferToFilm(buffer, film.get());
                         WriteImage("intermediate.exr", film.get());
                         std::string hdr2ldr = "hdrmanip --tonemap filmic -o intermediate.png intermediate.exr";
-                        system(hdr2ldr.c_str());
+                        int syscall = system(hdr2ldr.c_str());
                         intervalImgId++;
                     }
                 }
@@ -205,11 +218,19 @@ void MLT(const Scene *scene, const std::shared_ptr<const PathFuncLib> pathFuncLi
         
     }, numChains); 
     
-    std::cout << "PARFOR done!" << std::endl;
+    // std::cout << "PARFOR done!" << std::endl;
     TerminateWorkerThreads();
     reporter.Done();
     Float elapsed = Tick(timer);
     std::cout << "Elapsed time:" << elapsed << std::endl;
+
+    std::cout << "Large step acceptance rate:" << Float(largeStepAccepted) / Float(largeStepTotal)
+              << "(" << int64_t(largeStepAccepted) << "/" << int64_t(largeStepTotal) << ")"
+              << std::endl;
+
+    std::cout << "Small step acceptance rate:" << Float(smallStepAccepted) / Float(smallStepTotal)
+              << "(" << int64_t(smallStepAccepted) << "/" << int64_t(smallStepTotal) << ")"
+              << std::endl;
 
     std::cout << "num Inf : " << numInf << std::endl;
    
@@ -226,14 +247,14 @@ void MLT(const Scene *scene, const std::shared_ptr<const PathFuncLib> pathFuncLi
     WriteImage(outputNameHDR, GetFilm(scene->camera.get()).get());
     
     std::string addRenderingTime = std::string("oiiotool ") + outputNameHDR + " --attrib 'RenderingTime' " + std::to_string(elapsed) + " -o " + outputNameHDR;
-    system(addRenderingTime.c_str());
+    int syscalltime = system(addRenderingTime.c_str());
 
     if(tonemap){
         std::string hdr2ldr = std::string("hdrmanip --tonemap filmic -o ") + outputNameLDR + " " + outputNameHDR;
-        system(hdr2ldr.c_str());
+        int syscalltonemap = system(hdr2ldr.c_str());
 
         std::string addRenderingTime2 = std::string("oiiotool ") + outputNameLDR + " --attrib 'RenderingTime' " + std::to_string(elapsed) + " -o " + outputNameLDR;
-        system(addRenderingTime2.c_str());
+        int syscalltime = system(addRenderingTime2.c_str());
     }
     std::cout << "Done!" << std::endl;
 }

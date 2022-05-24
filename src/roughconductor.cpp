@@ -145,7 +145,7 @@ void RoughConductor::Evaluate(const Vector3 &wi,
     ::Evaluate<false>(twoSided, this, wi, normal, wo, st, contrib, cosWo, pdf, revPdf);
 
     if (std::isnan(contrib.sum()))
-        std::cout << "contrib:" << contrib.transpose() << std::endl;
+        std::cout << "roughconductor contrib:" << contrib.transpose() << std::endl;
 }
 
 void RoughConductor::EvaluateAdjoint(const Vector3 &wi,
@@ -159,7 +159,7 @@ void RoughConductor::EvaluateAdjoint(const Vector3 &wi,
     ::Evaluate<true>(twoSided, this, wi, normal, wo, st, contrib, cosWo, pdf, revPdf);
 
     if (std::isnan(contrib.sum()))
-        std::cout << "Adjoint contrib:" << contrib.transpose() << std::endl;
+        std::cout << "roughconductor Adjoint contrib:" << contrib.transpose() << std::endl;
 }
 
 template <bool adjoint>

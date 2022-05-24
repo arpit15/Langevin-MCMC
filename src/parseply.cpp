@@ -56,7 +56,7 @@ std::shared_ptr<TriMeshData> ParsePly(const std::string &filename,
     std::ifstream ifs(filename.c_str(), std::ifstream::in);
 
     if (!ifs.is_open())
-        throw std::runtime_error("Unable to open the obj file");
+        throw std::runtime_error("Unable to open the PLY file: " + filename);
     else
         std::cout << "Parsing " << filename << std::endl;
 

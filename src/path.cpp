@@ -480,8 +480,9 @@ void GeneratePath(const Scene *scene,
                 if (scene->options->useLightCoordinateSampling && camDepth > 1 &&
                     light->GetType() == LightType::AreaLight) {
                     assert(hitSurface);
+                    assert( (path.camSurfaceVertex.size() - 2) >= 0);
                     SurfaceVertex &prevSurfVertex =
-                        path.camSurfaceVertex[path.camSurfaceVertex.size() - 2];
+                        path.camSurfaceVertex.at(path.camSurfaceVertex.size() - 2);
                     // Special case for area light: transform the BSDF sampling coordinates to the
                     // light's direct sampling coordinates
                     // Note that we don't handle pure Dirac surfaces here, to do this we need
@@ -1339,7 +1340,7 @@ void GeneratePathBidir(const Scene *scene,
                             camera,
                             path.time,
                             lightPathStates[lgtDepth],
-                            path.lgtSurfaceVertex[lgtDepth],
+                            path.lgtSurfaceVertex.at(lgtDepth),
                             prevLensContrib,
                             raySeg.ray.org,
                             contribs);
@@ -1401,8 +1402,9 @@ void GeneratePathBidir(const Scene *scene,
                     light->GetType() == LightType::AreaLight &&
                     light->GetType() == LightType::IESArea) {
                     assert(hitSurface);
+                    assert( (path.camSurfaceVertex.size() - 2) >= 0);
                     SurfaceVertex &prevSurfVertex =
-                        path.camSurfaceVertex[path.camSurfaceVertex.size() - 2];
+                        path.camSurfaceVertex.at(path.camSurfaceVertex.size() - 2);
                     // Special case for area light: transform the BSDF sampling coordinates to the
                     // light's direct sampling coordinates
                     // Note that we don't handle pure Dirac surfaces here, to do this we need
@@ -1419,6 +1421,8 @@ void GeneratePathBidir(const Scene *scene,
                     camPathState.ssJacobian *=
                         fabs(Dot(dirToPrev, camPathState.isect.shadingNormal) * invDistSq) *
                         (camPathState.lcJacobian * surfVertex.shapeInst.obj->SamplePdf());
+
+                    assert( std::isfinite(camPathState.ssJacobian) );
                 }
                 HandleHitLight(camDepth,
                                scene,
@@ -1479,7 +1483,7 @@ void GeneratePathBidir(const Scene *scene,
                               scene,
                               path.time,
                               lightPathStates[lgtDepth],
-                              path.lgtSurfaceVertex[lgtDepth],
+                              path.lgtSurfaceVertex.at(lgtDepth),
                               camPathState,
                               surfVertex,
                               path.camVertex.screenPos,
@@ -1560,7 +1564,7 @@ void GenerateSubpath(const Scene *scene,
                                     camera,
                                     path.time,
                                     lightPathState,
-                                    path.lgtSurfaceVertex[lgtDepth],
+                                    path.lgtSurfaceVertex.at(lgtDepth),
                                     prevLensContrib,
                                     raySeg.ray.org,
                                     contribs);
@@ -1613,8 +1617,9 @@ void GenerateSubpath(const Scene *scene,
             if (light != nullptr) {
                 if (camDepth > 1 && light->GetType() == LightType::AreaLight) {
                     assert(hitSurface);
+                    assert( (path.camSurfaceVertex.size() - 2) >= 0);
                     SurfaceVertex &prevSurfVertex =
-                        path.camSurfaceVertex[path.camSurfaceVertex.size() - 2];
+                        path.camSurfaceVertex.at(path.camSurfaceVertex.size() - 2);
                     // Special case for area light: transform the BSDF sampling coordinates to the
                     // light's direct sampling coordinates
                     // Note that we don't handle pure Dirac surfaces here, to do this we need
@@ -1828,7 +1833,7 @@ void PerturbPath(const Scene *scene,
     Init(pathState);
     SamplePrimary(camera, camVertex.screenPos, path.time, pathState.raySeg);
     for (int camDepth = 0; camDepth < (int)path.camSurfaceVertex.size(); camDepth++) {
-        SurfaceVertex &surfVertex = path.camSurfaceVertex[camDepth];
+        SurfaceVertex &surfVertex = path.camSurfaceVertex.at(camDepth);
         bool hitSurface = true;
         if (useLightCoordinatesPerturb) {
             ShapeInst &shapeInst = surfVertex.shapeInst;
@@ -2040,7 +2045,7 @@ void PerturbPathBidir(const Scene *scene,
 
         Vector3 prevLensContrib = Vector3::Zero();
         for (int lgtDepth = 0; lgtDepth < (int)path.lgtSurfaceVertex.size(); lgtDepth++) {
-            SurfaceVertex &surfVertex = path.lgtSurfaceVertex[lgtDepth];
+            SurfaceVertex &surfVertex = path.lgtSurfaceVertex.at(lgtDepth);
             if (!Intersect(scene, path.time, raySeg, surfVertex.shapeInst, lightPathState.isect)) {
                 return;
             }
@@ -2058,7 +2063,7 @@ void PerturbPathBidir(const Scene *scene,
                                 camera,
                                 path.time,
                                 lightPathState,
-                                path.lgtSurfaceVertex[lgtDepth],
+                                path.lgtSurfaceVertex.at(lgtDepth),
                                 prevLensContrib,
                                 raySeg.ray.org,
                                 contribs);
@@ -2099,7 +2104,7 @@ void PerturbPathBidir(const Scene *scene,
     EmitFromCamera(path.time, camera, path.camVertex, raySeg, camPathState);
     bool useLightCoordinatesPerturb = false;
     for (int camDepth = 0; camDepth < (int)path.camSurfaceVertex.size(); camDepth++) {
-        SurfaceVertex &surfVertex = path.camSurfaceVertex[camDepth];
+        SurfaceVertex &surfVertex = path.camSurfaceVertex.at(camDepth);
         bool hitSurface =
             Intersect(scene, path.time, raySeg, surfVertex.shapeInst, camPathState.isect);
 
@@ -2574,7 +2579,7 @@ void Serialize(const Scene *scene, const Path &path, SerializedSubpath &subPath)
         buffer += GetMaxLightSerializedSize();
 
         for (int lgtDepth = 0; lgtDepth < (int)path.lgtSurfaceVertex.size(); lgtDepth++) {
-            const SurfaceVertex &surfVertex = path.lgtSurfaceVertex[lgtDepth];
+            const SurfaceVertex &surfVertex = path.lgtSurfaceVertex.at(lgtDepth);
             const ShapeInst &shapeInst = surfVertex.shapeInst;
             shapeInst.obj->Serialize(shapeInst.primID, buffer);
             buffer += GetMaxShapeSerializedSize();
@@ -2603,7 +2608,7 @@ void Serialize(const Scene *scene, const Path &path, SerializedSubpath &subPath)
     subPath.primary[primaryIdx++] = camVertex.screenPos[1];
 
     for (int camDepth = 0; camDepth < (int)path.camSurfaceVertex.size(); camDepth++) {
-        const SurfaceVertex &surfVertex = path.camSurfaceVertex[camDepth];
+        const SurfaceVertex &surfVertex = path.camSurfaceVertex.at(camDepth);
         const ShapeInst &shapeInst = surfVertex.shapeInst;
         if (shapeInst.obj != nullptr) {
             shapeInst.obj->Serialize(shapeInst.primID, buffer);
@@ -2673,7 +2678,7 @@ Vector GetPathPos(const Path& path)
         pos[primaryIdx++] = path.lgtVertex.rndParamDir[0];
         pos[primaryIdx++] = path.lgtVertex.rndParamDir[1];
         for (int lgtDepth = 0; lgtDepth<(int) path.lgtSurfaceVertex.size(); lgtDepth++) {
-            const SurfaceVertex& surfVertex = path.lgtSurfaceVertex[lgtDepth];
+            const SurfaceVertex& surfVertex = path.lgtSurfaceVertex.at(lgtDepth);
             // If we do full BDPT with non-pinhole cameras we need to handle camera hit here
             if (lgtDepth==(int) path.lgtSurfaceVertex.size()-1 && path.camDepth==1) {
                 return pos;
@@ -2691,7 +2696,7 @@ Vector GetPathPos(const Path& path)
     pos[primaryIdx++] = camVertex.screenPos[1];
 
     for (int camDepth = 0; camDepth<(int) path.camSurfaceVertex.size(); camDepth++) {
-        const SurfaceVertex& surfVertex = path.camSurfaceVertex[camDepth];
+        const SurfaceVertex& surfVertex = path.camSurfaceVertex.at(camDepth);
         if (camDepth==(int) path.camSurfaceVertex.size()-1) {
             if (path.lgtDepth==1) {
                 pos[primaryIdx++] = surfVertex.directLightRndParam[0];
@@ -2720,7 +2725,7 @@ void GetPathPss(const Path &path, std::vector<Float> &pss) {
         pss[primaryIdx++] = path.lgtVertex.rndParamDir[0];
         pss[primaryIdx++] = path.lgtVertex.rndParamDir[1];
         for (int lgtDepth = 0; lgtDepth < (int)path.lgtSurfaceVertex.size(); lgtDepth++) {
-            const SurfaceVertex &surfVertex = path.lgtSurfaceVertex[lgtDepth];
+            const SurfaceVertex &surfVertex = path.lgtSurfaceVertex.at(lgtDepth);
             // If we do full BDPT with non-pinhole cameras we need to handle camera hit here
             if (lgtDepth == (int)path.lgtSurfaceVertex.size() - 1 && path.camDepth == 1) {
                 return ;
@@ -2738,7 +2743,7 @@ void GetPathPss(const Path &path, std::vector<Float> &pss) {
     pss[primaryIdx++] = camVertex.screenPos[1];
 
     for (int camDepth = 0; camDepth < (int)path.camSurfaceVertex.size(); camDepth++) {
-        const SurfaceVertex &surfVertex = path.camSurfaceVertex[camDepth];
+        const SurfaceVertex &surfVertex = path.camSurfaceVertex.at(camDepth);
         if (camDepth == (int)path.camSurfaceVertex.size() - 1) {
             if (path.lgtDepth == 1) {
                 pss[primaryIdx++] = surfVertex.directLightRndParam[0];

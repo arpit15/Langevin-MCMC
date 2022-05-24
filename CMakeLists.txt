@@ -5,6 +5,7 @@ project(LMC CXX)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
+option(LMC_OUTLIER_REMOVAL "Add outlier removal step in LMC" False)
 option (FORCE_COLORED_OUTPUT "Always produce ANSI-colored output (GNU/Clang only)." True)
 if (${FORCE_COLORED_OUTPUT})
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
@@ -13,6 +14,11 @@ if (${FORCE_COLORED_OUTPUT})
        add_compile_options (-fcolor-diagnostics)
     endif ()
 endif ()
+
+if (${LMC_OUTLIER_REMOVAL}) 
+  message("++ Outlier removal added")
+  add_definitions(-DREMOVE_OUTLIERS)
+endif()
 
 add_definitions(-DSINGLE_PRECISION)
 
@@ -23,6 +29,7 @@ PATHS /home/arpita1/projects/embree/build-Release
 )
 
 message(STATUS "embree dirs - ${EMBREE_INCLUDE_DIRS}")
+message(STATUS "embree libs - ${EMBREE_LIBRARY}")
 
 file(GLOB SRC_FILES
      "src/*.h"

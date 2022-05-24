@@ -2,7 +2,7 @@
 
 #include "global_cache.h"
 
-#define REMOVE_OUTLIERS
+// #define REMOVE_OUTLIERS
 #define OUTLIER_WEAK_REJECT_CNT    10000
 #define OUTLIER_STRONG_REJECT_CNT  1000
 #define OUTLIER_RATIO_THRESHOLD    Float(30.0)
