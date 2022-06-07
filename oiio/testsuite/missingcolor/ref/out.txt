@@ -1,2 +1,0 @@
-Comparing "missing.tif" and "ref/missing.tif"
-PASS

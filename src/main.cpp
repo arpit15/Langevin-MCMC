@@ -15,7 +15,11 @@
 #include <string>
 #include <unistd.h>
 #include <sys/resource.h>
-#include <linux/limits.h>   // PATH_MAX
+#ifdef __APPLE__
+    #include <limits.h>
+#else
+    #include <linux/limits.h>   // PATH_MAX
+#endif
 #include <libgen.h>
 #include <filesystem>
 #include <regex>

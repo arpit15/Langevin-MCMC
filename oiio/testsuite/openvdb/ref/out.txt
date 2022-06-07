@@ -1,2 +1,0 @@
-Comparing "sphere.exr" and "ref/sphere.exr"
-Comparing "sphereCd.exr" and "ref/sphereCd.exr"

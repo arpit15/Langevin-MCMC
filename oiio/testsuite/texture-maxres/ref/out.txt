@@ -1,2 +1,0 @@
-Comparing "out.tif" and "ref/out.tif"
-PASS

@@ -45,36 +45,39 @@ file(GLOB SRC_FILES
 # list(REMOVE_ITEM SRC_FILES
 #     "${PROJECT_SOURCE_DIR}/src/drmlt.cpp"
 # )
+include_directories(/usr/local/include)
 
 add_subdirectory(nanoflann)
-# add_subdirectory(oiio)
+include(build_embree.cmake)
+find_package(OpenImageIO REQUIRED)
+find_package(TBB REQUIRED)
 
 # libgoogle-perftools-dev
-find_library (PROFILE_LIB profiler)
-if (NOT PROFILE_LIB)
-  message (STATUS "Unable to find -lprofiler")
-else ()
-  message (STATUS "Found -lprofiler: ${PROFILE_LIB}")
-endif ()
+# find_library (PROFILE_LIB profiler)
+# if (NOT PROFILE_LIB)
+#   message (STATUS "Unable to find -lprofiler")
+# else ()
+#   message (STATUS "Found -lprofiler: ${PROFILE_LIB}")
+# endif ()
 
 add_executable(dpt ${SRC_FILES})
 target_include_directories(dpt 
     PRIVATE
-    # ../embree3/include
     ${EMBREE_INCLUDE_DIRS}
-    ../oiio/dist/linux64/include
+    ${OpenImageIO_INCLUDES}
 )
 
 target_link_directories(dpt
     PRIVATE
-    # embree3/lib
-    oiio/dist/linux64/lib
+    /usr/local/lib
 )
+
+# message(STATUS "oiio lib: "${OpenImageIO_LIBRARIES})
+# message(STATUS "tbb lib: "${TBB_LIBRARIES})
 
 target_link_libraries (dpt 
     profiler
     Eigen3::Eigen
-    tbb
     nanoflann::nanoflann
     OpenImageIO
     ${EMBREE_LIBRARY}
@@ -82,6 +85,7 @@ target_link_libraries (dpt
     dl 
     z
     pthread
+    tbb
 )
 
 configure_file(ispc/bin/ispc ispc COPYONLY)

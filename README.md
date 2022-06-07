@@ -1,3 +1,6 @@
+# Install instructions
+- Install `OpenImageIO`, `IMath`, `TBB`
+
 # New updates
 - Parallel kernel build
 - Support for 
