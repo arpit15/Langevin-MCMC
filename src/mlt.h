@@ -100,6 +100,7 @@ static Float MLTInit(const MLTState &mltState,
 
     if (int(mStates.size()) < numChains) {
         Error(
+            "Failed as " + std::to_string(mStates.size()) + " < " + std::to_string(numChains) + "\n" + 
             "MLT initialization failed, consider using a larger number of initial samples or "
             "smaller number of chains");
     }
