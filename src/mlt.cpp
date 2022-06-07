@@ -19,8 +19,8 @@
 
 void MLT(const Scene *scene, const std::shared_ptr<const PathFuncLib> pathFuncLib, const bool tonemap) {
     const MLTState mltState{scene,
-                            GeneratePathBidir,
-                            PerturbPathBidir,
+                            scene->options->bidirectional ? GeneratePathBidir : GeneratePath,
+                            scene->options->bidirectional ? PerturbPathBidir : PerturbPath,
                             pathFuncLib->staticFuncMap,
                             pathFuncLib->staticDervFuncMap};
     const int spp = scene->options->spp;
