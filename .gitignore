@@ -1,3 +1,6 @@
+# pybuild stuff
+_skbuild/
+
 # Compiled Object files
 *.slo
 *.lo

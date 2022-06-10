@@ -278,7 +278,7 @@ std::shared_ptr<TriMeshData> ParsePly(const std::string &filename,
                 numVertPerFace = numVertPerFace_char;
               
             if (numVertPerFace != 3)
-                throw std::runtime_error("Only support trimeshes!. Input mesh contains " + std::to_string(numVertPerFace) + " faces");
+                throw std::runtime_error(filename + ": Only support trimeshes!. Input mesh contains " + std::to_string(numVertPerFace) + " faces");
             
             int si0, si1, si2;
 
