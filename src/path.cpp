@@ -4103,7 +4103,7 @@ std::shared_ptr<const PathFuncLib> BuildPathFuncLibrary(const bool bidirectional
                                                         const int maxDepth) 
 {
     std::shared_ptr<Library> pathLib =
-        std::make_shared<Library>(GetLibPath(), bidirectional ? "pathlibbidir" : "pathlib");
+        std::make_shared<Library>(fs::current_path(), bidirectional ? "pathlibbidir" : "pathlib");
     if (!pathLib->IsLinked()) {
         pathLib = CompilePathFuncLibrary(bidirectional, maxDepth, &pathLib);
     }
@@ -4146,9 +4146,9 @@ std::shared_ptr<const PathFuncLib> BuildPathFuncLibrary(const bool bidirectional
                                                      staticFuncDervMap});
 }
 
-std::shared_ptr<const PathFuncLib> BuildPathFuncLibrary2(const int maxDepth) {
+std::shared_ptr<const PathFuncLib> BuildPathFuncLibrary2(const int maxDepth, const std::string libpath) {
     std::shared_ptr<Library> pathLib = 
-        std::make_shared<Library>(GetLibPath(), "pathlibbidir_mala");
+        std::make_shared<Library>(libpath, "pathlibbidir_mala");
     if (!pathLib->IsLinked()) {
         pathLib = CompilePathFuncLibrary2(maxDepth, &pathLib);
     }

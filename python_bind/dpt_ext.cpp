@@ -23,6 +23,10 @@ NB_MODULE(dpt_ext, m) {
 			.def("ray_intersect", &PyScene::ray_intersect, 
 				"rayorg"_a, "raydir"_a, "normal"_a, "pos"_a
 				)
+			.def("ray_intersect_all", &PyScene::ray_intersect_all, 
+				"rayorg"_a, "raydir"_a
+				)
+			.def("render", &PyScene::render, "outfn"_a, "tonemap"_a, "libpath"_a)
 			.def("refract", &PyScene::refract,
 				"inrayorg"_a, "inraydir"_a,
 				 "normal"_a, "eta"_a, 

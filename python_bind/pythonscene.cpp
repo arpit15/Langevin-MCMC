@@ -17,10 +17,14 @@
 #include "parsescene.h"
 #include "scene.h"
 #include "shape.h"
+#include "texturesystem.h"
 #include "utils.h"
 
-// #define Epsilon std::numeric_limits<float>::epsilon() / 2;
-// #define RayEpsilon Epsilon * 1500;
+#include "path.h"
+#include "pathtrace.h"
+#include "directintegrator.h"
+#include "mlt.h"
+
 template <typename T> constexpr auto Epsilon         = std::numeric_limits<T>::epsilon() / 2;
 template <typename T> constexpr auto RayEpsilon      = Epsilon<T> * 1500;
 
@@ -34,11 +38,17 @@ std::string getCurrExeDir() {
     return path;
 }
 
+// PyScene::~PyScene(){
+	// TextureSystem::Destroy();
+ //    TerminateWorkerThreads();
+// }
+
 PyScene::PyScene(nb::str &filename_nb, 
              nb::str &outFn_nb,
             nb::dict &subsDict)
 	
 {
+	TextureSystem::Init();
 	std::string filename = std::string(filename_nb.c_str());
 	std::string outFn = std::string(outFn_nb.c_str());
 
@@ -60,8 +70,8 @@ PyScene::PyScene(nb::str &filename_nb,
 			basename = filename.substr(filename.rfind('/') + 1);
 	}
 	_scene = ParseScene(basename, outFn, _subs);
-	// return to the original executable dir after parsing scene
-	if (chdir(exeDir.c_str()) != 0) {
+	// return to the calling dir after parsing scene
+	if (chdir(cwd.c_str()) != 0) {
 			Error("chdir failed");
 	}
 
@@ -112,7 +122,146 @@ void PyScene::camera_rays(tensorhw3 &rayorg, tensorhw3 &raydir){
 	);
 
 	std::cout << std::endl;
-	TerminateWorkerThreads();
+	// TerminateWorkerThreads();
+}
+
+void PyScene::render(nb::str &outfn, const bool tonemap, nb::str &_libpath){
+
+	_scene->outputName = std::string(outfn.c_str());
+	std::string libpath = std::string(_libpath.c_str());
+
+	std::string integrator = _scene->options->integrator;
+	if (integrator == "direct"){
+        Direct(_scene.get());
+    }
+    else if (integrator == "mc") {
+        std::shared_ptr<const PathFuncLib> library =
+            BuildPathFuncLibrary(_scene->options->bidirectional, 8);
+        PathTrace(_scene.get(), library, tonemap);
+    } else if (integrator == "mcmc") {
+        if (_scene->options->mala) { // MALA builds only first-order derivatives
+            std::shared_ptr<const PathFuncLib> library = 
+                BuildPathFuncLibrary2(8, libpath);
+            MLT(_scene.get(), library, tonemap);
+        } else {    // Hessian otherwise 
+            std::shared_ptr<const PathFuncLib> library =
+                BuildPathFuncLibrary(_scene->options->bidirectional, 8);
+            MLT(_scene.get(), library, tonemap);
+        }
+    } else {
+        Error("Unknown integrator");
+    }
+
+}
+
+nb::tuple PyScene::ray_intersect_all(
+			tensorhw3 &rayorg,
+			tensorhw3 &raydir){
+	
+	// std::cout << "ray_intersect_all started!" << std::endl;
+	ProgressReporter reporter(rayorg.shape(1)*rayorg.shape(0));
+	
+	size_t shape[3] = { rayorg.shape(0), rayorg.shape(1), rayorg.shape(2) };
+	
+	float *normdata = new float[shape[0]*shape[1]*shape[2]];
+	float *posdata = new float[shape[0]*shape[1]*shape[2]];
+	
+	// Delete 'data' when the 'owner' capsule expires
+    nb::capsule normowner(normdata, [](void *p) noexcept {
+       delete[] (float *) p;
+    });
+    // Delete 'data' when the 'owner' capsule expires
+    nb::capsule posowner(posdata, [](void *p) noexcept {
+       delete[] (float *) p;
+    });
+
+	nphw3 normals(new float[shape[0]*shape[1]*shape[2]], rayorg.ndim(), shape, normowner), 
+		pos(new float[shape[0]*shape[1]*shape[2]], rayorg.ndim(), shape, posowner);
+
+	// std::cout << "Going in par" << std::endl;
+	ParallelFor(
+	[&](const Vector2i tile) {
+
+		const size_t x = tile[0];
+		const size_t y = tile[1];
+
+		Vector3 currrayorg, currraydir, currnorm, currpos;
+		// // -----
+		for (int i = 0; i < 3; ++i)
+		{
+			currrayorg(i) = rayorg(y,x,i);
+			currraydir(i) = raydir(y,x,i);
+		}
+		
+		ray_intersect1(
+			currrayorg, currraydir,
+			currnorm, currpos
+		);
+		
+		for (int i = 0; i < 3; ++i)
+		{
+			normals(y,x,i) = currnorm(i);
+			pos(y,x,i) = currpos(i);
+		}
+
+		reporter.Update(1);
+	}, 
+		Vector2i(rayorg.shape(1), rayorg.shape(0))
+	);
+
+	// TerminateWorkerThreads();
+	return nb::make_tuple(normals, pos);
+}
+
+bool PyScene::ray_intersect1(
+			Vector3 &rayorg,
+			Vector3 &raydir,	
+			Vector3 &shNormal,
+			Vector3 &pos 
+			){
+
+	// no copy change data ptr
+	Ray _ray;
+	for (size_t i = 0; i < 3; ++i)
+	{
+		_ray.org(i) = rayorg(i);
+		_ray.dir(i) = raydir(i);
+	}
+
+	Vector3 _normal, _pos;
+
+	ShapeInst shapeInst;
+	RaySegment raySeg;
+	raySeg.ray = _ray;
+	auto tmpval = raySeg.ray.org.array().abs(); 
+	float tmpval2 = std::max(tmpval(0), std::max(tmpval(1), tmpval(2)));
+	raySeg.minT = (1.f + tmpval2)*RayEpsilon<float>;
+	raySeg.maxT = std::numeric_limits<Float>::infinity();
+
+	Intersection isect;
+
+	bool hit = false;
+	Float time = 0.f;
+    if (Intersect(_scene.get(), time, raySeg, shapeInst)) {
+    	// std::cout << "Hit something" << std::endl;
+        if (shapeInst.obj->Intersect(shapeInst.primID, time, raySeg, isect, shapeInst.st)) {
+            // copy data
+			_normal = isect.shadingNormal;
+			_pos = isect.position; 
+			// std::cout << "n:" << _normal.transpose() 
+			// 		<< ", pos:" << _pos.transpose() << std::endl;
+            hit = true;
+        }
+    }
+
+    for (size_t i = 0; i < 3; ++i)
+	{
+		shNormal(i) = _normal(i);
+		pos(i) = _pos(i);
+	}
+
+  	return hit;
+
 }
 
 bool PyScene::ray_intersect(

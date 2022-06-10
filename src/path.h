@@ -6,6 +6,9 @@
 #include "shape.h"
 #include <vector>
 #include <unordered_map>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 struct EnvLight;
 
@@ -187,4 +190,5 @@ std::shared_ptr<Library> CompilePathFuncLibrary2(const int maxDepth,
 std::shared_ptr<const PathFuncLib> BuildPathFuncLibrary(const bool bidirectional,
                                                         const int maxDepth);
 
-std::shared_ptr<const PathFuncLib> BuildPathFuncLibrary2(const int maxDepth); 
+std::shared_ptr<const PathFuncLib> BuildPathFuncLibrary2(const int maxDepth,
+             const std::string libpath=fs::current_path()); 
