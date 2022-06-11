@@ -57,19 +57,11 @@ for y in range(h):
         outrayorg1, outraydir1
       )
 
-      # print(f"Event1 - oldpos: {currorg} newpos: {pos[y,x,:]}")
-      # print(f"Event1 - d1.d2: {np.dot(currdir, outraydir1)}")
-      # print(f"Event1 - n.d1: {np.dot(currdir, -shading_normals[y,x,:])}")
-      # print(f"Event1 - n.d2: {np.dot(outraydir1, -shading_normals[y,x,:])}")
-      # set_trace()
-
       # ray trace
       scene.ray_intersect(
         outrayorg1, outraydir1, 
         shading_normals1[y,x,:], pos1[y,x,:]
       )
-
-      # print(f"Event2 - oldpos: {outrayorg1} newpos: {pos1[y,x,:]}")
 
       if num_layers>2:
         # refract 
@@ -82,20 +74,11 @@ for y in range(h):
           outrayorg2, outraydir2
         )
 
-        # print(f"Event2 - oldpos: {outrayorg1} newpos: {pos1[y,x,:]}")
-        # print(f"Event2 - d2.d3: {np.dot(outraydir1, outraydir2)}")
-        # print(f"Event2 - n.d2: {np.dot(outraydir1, -shading_normals1[y,x,:])}")
-        # print(f"Event2 - n.d3: {np.dot(outraydir2, -shading_normals1[y,x,:])}")
-        # set_trace()
-
         # ray trace
         scene.ray_intersect(
           outrayorg2, -outraydir2, 
           shading_normals2[y,x,:], pos2[y,x,:]
         )
-
-        # print(f"Event3 - oldpos: {outrayorg2} newpos: {pos2[y,x,:]}")
-        # set_trace()
 
     
 # plt.imshow((shading_normals+1)/2)
