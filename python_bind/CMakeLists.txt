@@ -41,7 +41,6 @@ nanobind_add_module(
 target_link_directories(dpt_ext
     PRIVATE
     /usr/local/lib
-    /home/arpita1/projects/embree/build-Release
 )
 
 target_include_directories(dpt_ext
@@ -53,17 +52,8 @@ target_include_directories(dpt_ext
 target_link_libraries(dpt_ext 
   PRIVATE
   Eigen3::Eigen
-  dpt_lib
-  # ${EMBREE_LIBRARY}
-  
+  dpt_lib 
 )
-
-# set(lib_path "${PYTHON_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
-# message("lib path -- ${lib_path}")
-# set_target_properties(dpt_ext PROPERTIES
-#         INSTALL_RPATH_USE_LINK_PATH TRUE
-#         INSTALL_RPATH "${lib_path}")
-
 
 # Install directive for scikit-build
 install(TARGETS dpt_ext LIBRARY DESTINATION .)

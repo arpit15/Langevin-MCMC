@@ -30,9 +30,12 @@ add_definitions(-DSINGLE_PRECISION)
 
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 find_package(TBB)
-find_package(embree 3.8.0 REQUIRED
-PATHS /home/arpita1/projects/embree/build-Release
-)
+
+include(cmake/build_embree.cmake)
+set(EMBREE_LIBRARY embree)
+# find_package(embree 3.8.0 REQUIRED
+# PATHS /home/arpita1/projects/embree/build-Release
+# )
 
 message(STATUS "embree dirs - ${EMBREE_INCLUDE_DIRS}")
 message(STATUS "embree libs - ${EMBREE_LIBRARY}")
