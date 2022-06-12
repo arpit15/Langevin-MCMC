@@ -9,6 +9,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 option(LMC_OUTLIER_REMOVAL "Add outlier removal step in LMC" False)
 option (FORCE_COLORED_OUTPUT "Always produce ANSI-colored output (GNU/Clang only)." True)
 option(BUILD_PYTHON "BUILD python bindings" False)
+option(BUILD_EXE "build executable" True)
 
 message("PYTHON selection -- ${BUILD_PYTHON}")
 
@@ -75,6 +76,7 @@ add_library(dpt_lib
 # SHARED 
 STATIC
 ${SRC_FILES_NOMAIN})
+
 target_include_directories(dpt_lib  
     PRIVATE
     ${EMBREE_INCLUDE_DIRS}
@@ -86,6 +88,7 @@ set_target_properties(dpt_lib PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_link_directories(dpt_lib
     PRIVATE
     /usr/local/lib
+    /home/arpita1/projects/embree/build-Release
 )
 
 
@@ -103,6 +106,7 @@ target_link_libraries (dpt_lib
 )
 
 
+if(BUILD_EXE)
 add_executable(dpt src/main.cpp)
 target_include_directories(dpt 
     PRIVATE
@@ -118,6 +122,7 @@ target_include_directories(dpt
 target_link_libraries (dpt 
     dpt_lib
 )
+endif()
 
 
 configure_file(ispc/bin/ispc ispc COPYONLY)

@@ -38,15 +38,24 @@ nanobind_add_module(
   pythonscene.cpp
 )
 
+target_link_directories(dpt_ext
+    PRIVATE
+    /usr/local/lib
+    /home/arpita1/projects/embree/build-Release
+)
+
 target_include_directories(dpt_ext
   PRIVATE
   ${PROJECT_SOURCE_DIR}/src
+  ${EMBREE_INCLUDE_DIRS}
 )
 
 target_link_libraries(dpt_ext 
   PRIVATE
   Eigen3::Eigen
   dpt_lib
+  # ${EMBREE_LIBRARY}
+  
 )
 
 # set(lib_path "${PYTHON_PREFIX}/${CMAKE_INSTALL_LIBDIR}")

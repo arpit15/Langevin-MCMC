@@ -20,7 +20,12 @@ setup(
     # license="BSD",
     packages=["lmc"],
     package_dir={'': 'python_bind'},
-    cmake_args=['-DBUILD_PYTHON:BOOL=ON'],
+    cmake_args=[
+        '-DBUILD_PYTHON:BOOL=ON', 
+        '-DBUILD_EXE:BOOL=OFF', 
+        '-DCMAKE_C_COMPILER=gcc-10',
+        '-DCMAKE_CXX_COMPILER=g++-10'
+        ],
     cmake_install_dir="python_bind/lmc",
     include_package_data=True,
     python_requires=">=3.8"

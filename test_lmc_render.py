@@ -1,4 +1,4 @@
-from os.path import join
+from os.path import join, expanduser
 import numpy as np
 import lmc
 import matplotlib.pyplot as plt
@@ -13,17 +13,17 @@ num_layers = 3
 vis = False
 
 # fname = join("scenes", "simple_test_scenes", "scene4_v1.xml")
-fname = "/home/arpit/projects/round_sensor_scene_files/fingertipsensor_recon_test/test_indenter.xml"
+fname = expanduser("~/projects/round_sensor_scene_files/fingertipsensor_recon_test/test_indenter.xml")
 
 params = {}
 scene = lmc.PyScene(fname, "myfn", params)
 
-libpath = "/home/arpit/projects/Langevin-MCMC/build-Release"
+libpath = expanduser("~/projects/lmc/build-Release")
 img_fn = "myimg"
 scene.render(img_fn, False, libpath)
 img = imread(f"{img_fn}.exr")
 print(img.shape)
 
-plt.imshow(img)
-plt.title("Rendered image")
-plt.show()
+# plt.imshow(img)
+# plt.title("Rendered image")
+# plt.show()
