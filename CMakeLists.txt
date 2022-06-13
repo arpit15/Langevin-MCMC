@@ -6,7 +6,7 @@ project(LMC CXX)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-option(LMC_OUTLIER_REMOVAL "Add outlier removal step in LMC" False)
+option(LMC_OUTLIER_REMOVAL "Add outlier removal step in LMC" True)
 option (FORCE_COLORED_OUTPUT "Always produce ANSI-colored output (GNU/Clang only)." True)
 option(BUILD_PYTHON "BUILD python bindings" False)
 option(BUILD_EXE "build executable" True)
@@ -29,10 +29,15 @@ endif()
 add_definitions(-DSINGLE_PRECISION)
 
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)
-find_package(TBB)
+
+
 
 include(cmake/build_embree.cmake)
-set(EMBREE_LIBRARY embree)
+
+if (NOT TBB_FOUND)
+find_package(TBB)
+endif()
+
 # find_package(embree 3.8.0 REQUIRED
 # PATHS /home/arpita1/projects/embree/build-Release
 # )
