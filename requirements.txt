@@ -2,3 +2,4 @@ numpy
 scikit-image
 matplotlib
 ipdb
+imageio
