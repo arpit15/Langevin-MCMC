@@ -46,7 +46,18 @@ pyenv install -v 3.8.2
 pyenv global 3.8.2
 # create virtual env
 pyenv virtualenv 3.8.2 py382
-
+pyenv activate py382
 #
 cd ~/projects/lmc
 pip install -ve .
+
+# python requirements
+pip install -r requirements.txt
+
+# scene setup
+cd ~/projects
+git clone https://github.com/arpit15/round_sensor_scene_files.git
+
+# shape optim repo
+git clone https://github.com/arpit15/fingertip_sensor_design_optim.git
+pip install -r requirements.txt
