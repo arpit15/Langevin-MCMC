@@ -106,7 +106,7 @@ target_link_libraries (dpt_lib
     nanoflann::nanoflann
     OpenImageIO
     ${EMBREE_LIBRARY}
-    boost_system
+    # boost_system
     dl 
     z
     pthread
