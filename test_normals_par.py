@@ -1,4 +1,4 @@
-from os.path import join
+from os.path import join, expanduser
 import numpy as np
 import lmc
 import matplotlib.pyplot as plt
@@ -13,7 +13,7 @@ num_layers = 3
 vis = False
 
 # fname = join("scenes", "simple_test_scenes", "scene4_v1.xml")
-fname = "/home/arpit/projects/round_sensor_scene_files/fingertipsensor_recon_test/test_indenter.xml"
+fname = expanduser("~/projects/round_sensor_scene_files/new_design_sanbox_v1/new_design_sandbox.xml")
 
 params = dict()
 scene = lmc.PyScene(fname, "myfn", params)

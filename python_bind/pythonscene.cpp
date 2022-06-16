@@ -129,6 +129,7 @@ void PyScene::render(nb::str &outfn, const bool tonemap, nb::str &_libpath){
 
 	_scene->outputName = std::string(outfn.c_str());
 	std::string libpath = std::string(_libpath.c_str());
+	std::cout << "libpath: " << libpath << std::endl;
 
 	std::string integrator = _scene->options->integrator;
 	if (integrator == "direct"){
