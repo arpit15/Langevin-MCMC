@@ -122,7 +122,7 @@ void PyScene::camera_rays(tensorhw3 &rayorg, tensorhw3 &raydir){
 	);
 
 	std::cout << std::endl;
-	// TerminateWorkerThreads();
+	TerminateWorkerThreads();
 }
 
 void PyScene::render(nb::str &outfn, const bool tonemap, nb::str &_libpath){
@@ -210,7 +210,7 @@ nb::tuple PyScene::ray_intersect_all(
 		Vector2i(rayorg.shape(1), rayorg.shape(0))
 	);
 
-	// TerminateWorkerThreads();
+	TerminateWorkerThreads();
 	return nb::make_tuple(normals, pos);
 }
 
