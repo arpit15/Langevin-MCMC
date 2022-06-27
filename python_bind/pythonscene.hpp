@@ -11,6 +11,7 @@
 
 namespace nb = nanobind;
 
+typedef nb::tensor<nb::numpy, float, nb::shape<4,4>, nb::device::cpu> trafo;
 typedef nb::tensor<float, nb::shape<6>, nb::device::cpu> nbvec6;
 typedef nb::tensor<float, nb::shape<3>, nb::device::cpu> nbvec3;
 typedef nb::tensor<float, nb::shape<nb::any, nb::any, 3>, nb::device::cpu> tensorhw3;
@@ -24,8 +25,9 @@ public:
            nb::str &outFn,
             nb::dict &subsDict);
 	
-	// ~PyScene();
-
+	
+	trafo camera_trafo();
+	
 	void camera_rays(tensorhw3 &rayorg, tensorhw3 &raydir);
 
 	bool ray_intersect(

@@ -17,6 +17,7 @@ NB_MODULE(dpt_ext, m) {
 				)
 			.def_readonly("pixelHeight", &PyScene::pixelHeight)
 			.def_readonly("pixelWidth", &PyScene::pixelWidth)
+			.def("camera_trafo", &PyScene::camera_trafo)
 			.def("camera_rays", &PyScene::camera_rays,
 				"rayorg"_a, "raydir"_a
 				)

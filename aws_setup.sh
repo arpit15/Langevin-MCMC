@@ -1,12 +1,12 @@
-sudo apt update
-sudo apt upgrade
+sudo apt -y update
+sudo apt -y upgrade
 sudo apt install -y git ninja-build tmux vim cmake-curses-gui unzip
 
 sudo apt install -y gcc-10 g++-10 google-perftools libgoogle-perftools-dev zlib1g-dev
 
 sudo apt install -y libopenimageio-dev \
   libtbb-dev libeigen3-dev openimageio-tools \
-  libopenexr-dev \
+  libopenexr-dev libfreeimage-dev \
   libglu1-mesa libxi-dev libxmu-dev libglu1-mesa-dev
 
 # get cmake version 3.21
@@ -21,6 +21,7 @@ cd lmc
 git submodule update --init --recursive
 
 # lmc build instructions
+mkdir ~/projects/lmc/build-Release && cd ~/projects/lmc/build-Release
 cmake -GNinja .. \
 -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10 \
 -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON
@@ -28,6 +29,8 @@ cmake -GNinja .. \
 
 ninja
 ./dpt -m
+
+echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/ubuntu/projects/lmc/build-Release/embree" >> ~/.bashrc
 
 # pyenv setup
 sudo apt-get install -y make build-essential libssl-dev \
@@ -52,6 +55,7 @@ cd ~/projects/lmc
 pip install -ve .
 
 # python requirements
+cd ~/projects/lmc
 pip install -r requirements.txt
 
 # scene setup
@@ -60,4 +64,5 @@ git clone https://github.com/arpit15/round_sensor_scene_files.git
 
 # shape optim repo
 git clone https://github.com/arpit15/fingertip_sensor_design_optim.git
+cd ~/projects/fingertip_sensor_design_optim
 pip install -r requirements.txt

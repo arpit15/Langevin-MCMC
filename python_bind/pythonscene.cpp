@@ -81,6 +81,31 @@ PyScene::PyScene(nb::str &filename_nb,
 
 }
 
+trafo PyScene::camera_trafo(){
+	const Camera *camera = _scene->camera.get();
+
+	size_t shape[2] = {4,4};
+	float *trafodata = new float[shape[0]*shape[1]];
+	// Delete 'data' when the 'owner' capsule expires
+    nb::capsule trafoowner(trafodata, [](void *p) noexcept {
+       delete[] (float *) p;
+    });
+	trafo outmat(trafodata, 2, shape, trafoowner); 
+
+	Matrix4x4 currtrafo = Interpolate(camera->worldToCamera, 0.f);
+	for (int i = 0; i < 4; ++i)
+	{
+		for (int j = 0; j < 4; ++j)
+		{
+			outmat(i,j) = currtrafo(i,j);
+		}
+	}
+
+	// std::cout << "camera trafo copied!" << std::endl;
+
+	return outmat;
+}
+
 void PyScene::camera_rays(tensorhw3 &rayorg, tensorhw3 &raydir){
 	// std::cout << "Num cores: " << NumSystemCores() << std::endl;
 	const Camera *camera = _scene->camera.get();
