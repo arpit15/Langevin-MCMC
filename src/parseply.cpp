@@ -1,3 +1,5 @@
+#include "nanolog.hh"
+
 #include "parseply.h"
 #include "transform.h"
 #include "utils.h"
@@ -58,7 +60,7 @@ std::shared_ptr<TriMeshData> ParsePly(const std::string &filename,
     if (!ifs.is_open())
         throw std::runtime_error("Unable to open the PLY file: " + filename);
     else
-        std::cout << "Parsing " << filename << std::endl;
+        NANOLOG_TRACE("Parsing {}", filename);
 
     bool ply_tag_seen = false,
      ascii = false,
@@ -160,7 +162,8 @@ std::shared_ptr<TriMeshData> ParsePly(const std::string &filename,
 
     // std::cout << "Ascii format : " << ascii << std::endl;
     if ( getMachineEndianness() != byte_order)
-        std::cout << "Problem detected! machine endianness : " << getMachineEndianness() << ", file endianness : " << byte_order << std::endl;
+        NANOLOG_WARN("Problem detected! machine endianness : {} , file endianness : {}", 
+                getMachineEndianness(), byte_order);
 
     // std::cout << "contain vert normals : " << contain_vert_normal << ", contain uv : " << contain_uv << std::endl;
     // parse the vert data

@@ -1,3 +1,5 @@
+#include "nanolog.hh"
+
 #include "roughconductor.h"
 #include "microfacet.h"
 
@@ -145,7 +147,7 @@ void RoughConductor::Evaluate(const Vector3 &wi,
     ::Evaluate<false>(twoSided, this, wi, normal, wo, st, contrib, cosWo, pdf, revPdf);
 
     if (std::isnan(contrib.sum()))
-        std::cout << "roughconductor contrib:" << contrib.transpose() << std::endl;
+        NANOLOG_DEBUG("roughconductor contrib: {}", contrib.transpose());
 }
 
 void RoughConductor::EvaluateAdjoint(const Vector3 &wi,
@@ -159,7 +161,7 @@ void RoughConductor::EvaluateAdjoint(const Vector3 &wi,
     ::Evaluate<true>(twoSided, this, wi, normal, wo, st, contrib, cosWo, pdf, revPdf);
 
     if (std::isnan(contrib.sum()))
-        std::cout << "roughconductor Adjoint contrib:" << contrib.transpose() << std::endl;
+        NANOLOG_DEBUG("roughconductor Adjoint contrib: {}", contrib.transpose());
 }
 
 template <bool adjoint>
@@ -293,7 +295,7 @@ bool RoughConductor::Sample(const Vector3 &wi,
         twoSided, this, wi, normal, st, rndParam, uDiscrete, wo, contrib, cosWo, pdf, revPdf);
 
     if (std::isnan(contrib.sum()))
-        std::cout << "Sample contrib:" << contrib.transpose() << std::endl;
+        NANOLOG_DEBUG("Sample contrib: {}", contrib.transpose());
 }
 
 bool RoughConductor::SampleAdjoint(const Vector3 &wi,
@@ -310,7 +312,7 @@ bool RoughConductor::SampleAdjoint(const Vector3 &wi,
         twoSided, this, wi, normal, st, rndParam, uDiscrete, wo, contrib, cosWo, pdf, revPdf);
 
     if (std::isnan(contrib.sum()))
-        std::cout << "sample adjoint contrib:" << contrib.transpose() << std::endl;
+        NANOLOG_DEBUG("sample adjoint contrib: {}", contrib.transpose());
 }
 
 void EvaluateRoughConductor(const bool adjoint,

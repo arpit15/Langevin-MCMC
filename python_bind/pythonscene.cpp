@@ -8,6 +8,8 @@
 #endif
 #include <libgen.h>
 
+#include "nanolog.hh"
+
 #include "pythonscene.hpp"
 
 #include "camera.h"
@@ -48,6 +50,8 @@ PyScene::PyScene(nb::str &filename_nb,
             nb::dict &subsDict)
 	
 {
+	nanolog::set_level(nanolog::kERROR);
+
 	TextureSystem::Init();
 	std::string filename = std::string(filename_nb.c_str());
 	std::string outFn = std::string(outFn_nb.c_str());
@@ -79,6 +83,24 @@ PyScene::PyScene(nb::str &filename_nb,
 	pixelHeight = GetPixelHeight(camera);
 	pixelWidth = GetPixelWidth(camera);
 
+}
+
+void PyScene::set_log_level(const std::string &loglevel){
+	if (loglevel == "trace"){
+        nanolog::set_level(nanolog::kTRACE);
+    }
+    else if (loglevel == "debug") {
+        nanolog::set_level(nanolog::kDEBUG);
+    }
+    else if (loglevel == "err") {
+        nanolog::set_level(nanolog::kERROR);
+    }
+    else if (loglevel == "warn") {
+        nanolog::set_level(nanolog::kWARN);
+    }
+    else {
+        nanolog::set_level(nanolog::kINFO);
+    }
 }
 
 trafo PyScene::camera_trafo(){

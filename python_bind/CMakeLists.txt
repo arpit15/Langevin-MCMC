@@ -36,6 +36,7 @@ nanobind_add_module(
   dpt_ext.cpp
   # pythonscene.hpp
   pythonscene.cpp
+  "${PROJECT_SOURCE_DIR}/nanolog/src/nanolog.cc"
 )
 
 target_link_directories(dpt_ext
@@ -47,6 +48,7 @@ target_include_directories(dpt_ext
   PRIVATE
   ${PROJECT_SOURCE_DIR}/src
   ${EMBREE_INCLUDE_DIRS}
+  "${PROJECT_SOURCE_DIR}/nanolog/include"
 )
 
 target_link_libraries(dpt_ext 

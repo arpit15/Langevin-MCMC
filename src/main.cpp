@@ -1,4 +1,6 @@
 #include "args.hxx"
+// #include "spdlog/spdlog.h"
+#include "nanolog.hh"
 
 #include "parsescene.h"
 #include "pathtrace.h"
@@ -37,8 +39,8 @@ std::string getCurrExeDir() {
 }
 void DptInit() {
     TextureSystem::Init();
-    std::cout << "Langevin MCMC dpt version 1.0" << std::endl;
-    std::cout << "Running with " << NumSystemCores() << " threads." << std::endl;
+    NANOLOG_INFO("Langevin MCMC dpt version 1.1");
+    NANOLOG_INFO("Running with {} threads.", NumSystemCores());
 }
 
 void DptCleanup() {
@@ -77,7 +79,8 @@ void parseExtraArgs(std::unordered_map<std::string, std::string> &subs, args::Ar
     if (subsArgs) { 
         for (const auto ch: args::get(subsArgs)) { 
             // split at =
-            std::cout << "D: " << ch << std::endl; 
+            // std::cout << "D: " << ch << std::endl; 
+            NANOLOG_DEBUG("D: {}", ch);
             const std::vector<std::string> tokens = tokenize2(ch);
             if (tokens.size() == 2) {
                 subs[tokens[0]] = tokens[1];
@@ -107,9 +110,11 @@ int main(int argc, char *argv[]) {
     args::ValueFlag<int> seedoffset(parser, "seedOffset", "Seed Offset", {"seedOffset"}, 0);
     args::PositionalList<std::string> filenamesArgs(parser, "filenamesArgs", "Filename args");
 
-    args::Flag tonemap(parser, "tonemap", "tonemap", {'t'});
+    args::Flag tonemap(parser, "tonemap", "tonemap", {'t'}, false);
 
     args::ValueFlag<std::string> outFn(parser, "outFn", "Output Filename", {'o'}, "");
+
+    args::ValueFlag<std::string> logLevel(parser, "logLevel", "Logging level", {"L"}, "info");
 
     std::unordered_map<std::string, std::string> subs;
 
@@ -135,6 +140,44 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    // default 
+    // spdlog::set_level(nanolog::info);
+    // // get log level
+    // if (logLevel.Get() == "info"){
+    //     spdlog::set_level(nanolog::info);
+    // }
+    // else if (logLevel.Get() == "debug") {
+    //     spdlog::set_level(nanolog::debug);
+    // }
+    // else if (logLevel.Get() == "err") {
+    //     spdlog::set_level(nanolog::err);
+    // }
+    // else if (logLevel.Get() == "warn") {
+    //     spdlog::set_level(nanolog::warn);
+    // }
+    // else if (logLevel.Get() == "trace") {
+    //     spdlog::set_level(nanolog::trace);
+    // }
+
+    // order 
+    // trace < debug < info < warn < error < fatal
+    nanolog::set_level(nanolog::kINFO);
+    // // get log level
+    if (logLevel.Get() == "info"){
+        nanolog::set_level(nanolog::kINFO);
+    }
+    else if (logLevel.Get() == "debug") {
+        nanolog::set_level(nanolog::kDEBUG);
+    }
+    else if (logLevel.Get() == "err") {
+        nanolog::set_level(nanolog::kERROR);
+    }
+    else if (logLevel.Get() == "warn") {
+        nanolog::set_level(nanolog::kWARN);
+    }
+    else if (logLevel.Get() == "trace") {
+        nanolog::set_level(nanolog::kTRACE);
+    }
 
     try {
         DptInit();

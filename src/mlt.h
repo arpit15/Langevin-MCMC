@@ -1,5 +1,8 @@
 #pragma once
 
+// #include "spdlog/spdlog.h"
+#include "nanolog.hh"
+
 #include "direct.h"
 #include "parallel.h"
 #include "h2mc.h"
@@ -11,6 +14,8 @@
 #include <deque>
 #include <mutex>
 #include <memory>
+
+// using namespace spdlog;
 
 struct PathFuncLib;
 
@@ -82,6 +87,9 @@ static Float MLTInit(const MLTState &mltState,
                         spContribs,
                         rng);
 
+            // debug("thread:%d, sampleID:%d - genPathFunc done!", threadId, sampleIdx);
+            NANOLOG_TRACE("thread:{}, sampleID:{} - genPathFunc done!", threadId, sampleIdx);
+
             std::lock_guard<std::mutex> lock(mStateMutex);
             for (const auto &spContrib : spContribs) {
                 totalScore += spContrib.lsScore;
@@ -95,6 +103,8 @@ static Float MLTInit(const MLTState &mltState,
             }
         }
     }, NumSystemCores());
+
+    NANOLOG_DEBUG("MLTInit Path gen done");
 
     lengthDist = std::make_shared<PiecewiseConstant1D>(&lengthContrib[0], lengthContrib.size());
 
@@ -112,15 +122,21 @@ static Float MLTInit(const MLTState &mltState,
         cdf[i + 1] = cdf[i] + mStates[i].lsScore;
     }
     const Float interval = cdf.back() / Float(numChains);
+    NANOLOG_DEBUG("interval : {}, cdftotal: {}", interval, cdf.back());
+
     std::uniform_real_distribution<Float> uniDist(Float(0.0), interval);
     RNG rng(mStates.size());
     Float pos = uniDist(rng);
     int cdfPos = 0;
     initStates.reserve(numChains);
     std::vector<SubpathContrib> spContribs;
+    NANOLOG_DEBUG("Seeding part");
     for (int i = 0; i < (int)numChains; i++) {
+        NANOLOG_TRACE("Seeding chain: {}, pos: {}, cdfval:{} cdfPos: {}",
+         i, pos, 
+         cdf[cdfPos], cdfPos);
         while (pos > cdf[cdfPos]) {
-            cdfPos = std::min(cdfPos + 1, int(mStates.size()) - 1);
+            cdfPos = std::min(cdfPos + 1, int(mStates.size()));
         }
         initStates.push_back(MarkovState{false});
         MarkovState &state = initStates.back();
@@ -134,6 +150,7 @@ static Float MLTInit(const MLTState &mltState,
                     state.path,
                     spContribs,
                     rngCheckpoint);
+
         state.scoreSum = Float(0.0);
         for (const auto &spContrib : spContribs) {
             state.scoreSum += spContrib.lsScore;
@@ -143,7 +160,9 @@ static Float MLTInit(const MLTState &mltState,
             }
         }
         ToSubpath(state.spContrib.camDepth, state.spContrib.lightDepth, state.path);
+        // NANOLOG_DEBUG("Seeding tosubpath: {} DONE", i);
         GetPathPss(state.path, state.pss);
+        // NANOLOG_DEBUG("Seeding GetPathPss: {} DONE", i);
         state.gaussianInitialized = false;
         pos += interval;
     }

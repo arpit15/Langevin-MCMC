@@ -48,6 +48,7 @@ message(STATUS "embree libs - ${EMBREE_LIBRARY}")
 file(GLOB SRC_FILES
      "src/*.h"
      "src/*.cpp"
+     "nanolog/src/nanolog.cc"
 )
 
 set(SRC_FILES_NOMAIN ${SRC_FILES})
@@ -69,6 +70,8 @@ add_subdirectory(nanoflann)
 find_package(OpenImageIO REQUIRED)
 find_package(TBB REQUIRED)
 
+# add_subdirectory(nanolog)
+
 # libgoogle-perftools-dev
 # find_library (PROFILE_LIB profiler)
 # if (NOT PROFILE_LIB)
@@ -89,6 +92,7 @@ target_include_directories(dpt_lib
     PRIVATE
     ${EMBREE_INCLUDE_DIRS}
     ${OpenImageIO_INCLUDES}
+    "${PROJECT_SOURCE_DIR}/nanolog/include"
 )
 
 set_target_properties(dpt_lib PROPERTIES POSITION_INDEPENDENT_CODE ON)
@@ -106,7 +110,6 @@ target_link_libraries (dpt_lib
     nanoflann::nanoflann
     OpenImageIO
     ${EMBREE_LIBRARY}
-    # boost_system
     dl 
     z
     pthread
@@ -120,6 +123,7 @@ target_include_directories(dpt
     PRIVATE
     ${EMBREE_INCLUDE_DIRS}
     ${OpenImageIO_INCLUDES}
+    "${PROJECT_SOURCE_DIR}/nanolog/include"
 )
 
 # target_link_directories(dpt

@@ -15,6 +15,7 @@ NB_MODULE(dpt_ext, m) {
 				nb::init<nb::str&,  nb::str&, nb::dict&>(),
 				"filename"_a, "outFn"_a, "subs"_a
 				)
+			.def("set_log_level", &PyScene::set_log_level, "loglevel"_a)
 			.def_readonly("pixelHeight", &PyScene::pixelHeight)
 			.def_readonly("pixelWidth", &PyScene::pixelWidth)
 			.def("camera_trafo", &PyScene::camera_trafo)

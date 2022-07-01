@@ -222,17 +222,18 @@ void MLT(const Scene *scene, const std::shared_ptr<const PathFuncLib> pathFuncLi
     TerminateWorkerThreads();
     reporter.Done();
     Float elapsed = Tick(timer);
+    
     std::cout << "Elapsed time:" << elapsed << std::endl;
 
-    std::cout << "Large step acceptance rate:" << Float(largeStepAccepted) / Float(largeStepTotal)
-              << "(" << int64_t(largeStepAccepted) << "/" << int64_t(largeStepTotal) << ")"
-              << std::endl;
+    NANOLOG_INFO("Large step acceptance rate: {}({}/{})",
+                Float(largeStepAccepted) / Float(largeStepTotal),
+                int64_t(largeStepAccepted), int64_t(largeStepTotal));
 
-    std::cout << "Small step acceptance rate:" << Float(smallStepAccepted) / Float(smallStepTotal)
-              << "(" << int64_t(smallStepAccepted) << "/" << int64_t(smallStepTotal) << ")"
-              << std::endl;
+    NANOLOG_INFO("Small step acceptance rate: {}({}/{})",
+                Float(smallStepAccepted) / Float(smallStepTotal),
+                int64_t(smallStepAccepted), int64_t(smallStepTotal));
 
-    std::cout << "num Inf : " << numInf << std::endl;
+    NANOLOG_DEBUG("num Inf : {}", numInf);
    
     SampleBuffer buffer(pixelWidth, pixelHeight);
     Float directWeight = scene->options->directSpp > 0 ? inverse(Float(scene->options->directSpp)) : Float(0.0);
@@ -256,6 +257,6 @@ void MLT(const Scene *scene, const std::shared_ptr<const PathFuncLib> pathFuncLi
         std::string addRenderingTime2 = std::string("oiiotool ") + outputNameLDR + " --attrib 'RenderingTime' " + std::to_string(elapsed) + " -o " + outputNameLDR;
         int syscalltime = system(addRenderingTime2.c_str());
     }
-    std::cout << "Done!" << std::endl;
+    NANOLOG_INFO("Done!");
 }
 

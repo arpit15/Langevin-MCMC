@@ -1,3 +1,5 @@
+#include "nanolog.hh"
+
 #include "parsescene.h"
 #include "pugixml.hpp"
 #include "animatedtransform.h"
@@ -320,12 +322,16 @@ std::shared_ptr<const Camera> ParseSensor(pugi::xml_node node, std::string &file
         film = std::make_shared<Image3>(512, 512);
     }
 
-    std::cout << "Created Camera [" << std::endl
-                << "cropX " << cropOffsetX << std::endl
-                << "cropY " << cropOffsetY << std::endl
-                << "cropW " << cropWidth << std::endl
-                << "cropH " << cropHeight << std::endl
-                << "]" << std::endl;
+    // std::cout << "Created Camera [" << std::endl
+    //             << "cropX " << cropOffsetX << std::endl
+    //             << "cropY " << cropOffsetY << std::endl
+    //             << "cropW " << cropWidth << std::endl
+    //             << "cropH " << cropHeight << std::endl
+    //             << "]" << std::endl;
+    NANOLOG_TRACE("Created Camera [\n cropX: {}\n cropY: {}\n cropW: {}\n cropH: {}",
+            cropOffsetX, cropOffsetY, cropWidth, cropHeight);
+
+
     // Eigen alignment issue
     return std::allocate_shared<Camera>(
         Eigen::aligned_allocator<Camera>(), toWorld, fov, film, nearClip, farClip, pixelWidth, pixelHeight, cropOffsetX, cropOffsetY, cropWidth, cropHeight );
@@ -571,11 +577,17 @@ std::shared_ptr<const BSDF> ParseBSDF(pugi::xml_node node,
             }
         }
 
-        std::cout << "BlendBSDF [" << std::endl
-                    << "weight : " << weight->Avg().transpose() << std::endl
-                    << "BSDF A type : " << bsdfs.at(0)->GetBSDFTypeString() << std::endl
-                    << "BSDF B type : " << bsdfs.at(1)->GetBSDFTypeString() << std::endl
-                    << "]" << std::endl;
+        // std::cout << "BlendBSDF [" << std::endl
+        //             << "weight : " << weight->Avg().transpose() << std::endl
+        //             << "BSDF A type : " << bsdfs.at(0)->GetBSDFTypeString() << std::endl
+        //             << "BSDF B type : " << bsdfs.at(1)->GetBSDFTypeString() << std::endl
+        //             << "]" << std::endl;
+        NANOLOG_TRACE("BlendBSDF [\nweight: {}\nBDSF A type: {}\n BDSF B type: {}\n]",
+            weight->Avg().transpose(),
+            bsdfs.at(0)->GetBSDFTypeString(),
+            bsdfs.at(1)->GetBSDFTypeString()
+        );
+
         return std::make_shared<BlendBSDF>(twoSided, weight, bsdfs.at(0), bsdfs.at(1));
     
     } else if (type == "roughdielectric") {
@@ -617,7 +629,9 @@ std::shared_ptr<const BSDF> ParseBSDF(pugi::xml_node node,
         Vector1 v(0.1);
         std::shared_ptr<const Texture1D> alpha = std::make_shared<const ConstantTexture1D>(v);
 
-        std::cout << "parsing roughconductor" << std::endl;
+        // std::cout << "parsing roughconductor" << std::endl;
+        NANOLOG_DEBUG("parsing roughconductor");
+
         for (auto child : node.children()) {
             std::string name = child.attribute("name").value();
             // std::cout << "name : " << name << std::endl;
@@ -862,7 +876,9 @@ std::shared_ptr<DptOptions> ParseDptOptions(pugi::xml_node node, SubsT &subs) {
     std::shared_ptr<DptOptions> dptOptions = std::make_shared<DptOptions>();
     for (auto child : node.children()) {
         std::string name = child.attribute("name").value();
-        std::cout << "Parsing " << name << std::endl;
+        // std::cout << "Parsing " << name << std::endl;
+        NANOLOG_DEBUG("Parsing {}", name);
+        
         if (name == "integrator") {
             dptOptions->integrator = child.attribute("value").value();
         } else if (name == "spp") {
@@ -967,7 +983,8 @@ void ParseScene(pugi::xml_node node,
             std::string defaultValue = child.attribute("value").value();
             // donot replace if the key is already found
             if (subs.find(defaultName) != subs.end()) {
-                std::cout << "Ignoring default for " << defaultName << std::endl;
+                // std::cout << "Ignoring default for " << defaultName << std::endl;
+                NANOLOG_WARN("Ignoring default for {}", defaultName);
                 continue;
             }
             subs[defaultName] = defaultValue;

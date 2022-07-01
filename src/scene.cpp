@@ -1,3 +1,5 @@
+#include "nanolog.hh"
+
 #include "scene.h"
 #include "distribution.h"
 #include "shape.h"
@@ -38,10 +40,10 @@ Scene::Scene(std::shared_ptr<DptOptions> &options,
     }
     bSphere = BSphere(bbox);
     bSphere.radius *= Float(1000.0); // important: ensure it's far enough for MIS weighting
-    std::cout << "bSphere: center = " << bSphere.center[0] << "," << 
-                                         bSphere.center[1] << "," << 
-                                         bSphere.center[2] << 
-                         " radius = " << bSphere.radius << std::endl; 
+    NANOLOG_TRACE("bSphere: center = {}, {}, {}, radius: {}",
+                bSphere.center[0], bSphere.center[1], bSphere.center[2],
+                bSphere.radius);
+
     rtcCommitScene(rtcScene);
 }
 

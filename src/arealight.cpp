@@ -12,7 +12,6 @@ int GetAreaLightSerializedSize() {
 AreaLight::AreaLight(const Float &samplingWeight, Shape *_shape, const Vector3 &emission)
     : Light(samplingWeight), shape(_shape), emission(emission) {
     _shape->SetAreaLight(this);
-    std::cout << "AreaLight created!" << std::endl;
 }
 
 void AreaLight::Serialize(const LightPrimID &lPrimID, const Vector2 &rndDir, const Vector3 &dirToLight, Float *buffer) const {

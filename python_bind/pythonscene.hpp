@@ -25,7 +25,8 @@ public:
            nb::str &outFn,
             nb::dict &subsDict);
 	
-	
+	void set_log_level(const std::string &loglevel);
+
 	trafo camera_trafo();
 	
 	void camera_rays(tensorhw3 &rayorg, tensorhw3 &raydir);
