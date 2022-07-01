@@ -1,12 +1,6 @@
 [submodule "embree"]
 	path = embree
 	url = https://github.com/embree/embree.git
-[submodule "spdlog"]
-	path = spdlog
-	url = git@github.com:gabime/spdlog.git
-[submodule "NanoLog"]
-	path = NanoLog
-	url = git@github.com:PlatformLab/NanoLog.git
 [submodule "nanolog"]
 	path = nanolog
 	url = https://github.com/lighttransport/nanolog.git
