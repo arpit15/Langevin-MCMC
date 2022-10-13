@@ -1,9 +1,9 @@
 #pragma once
 
+#include "alignedallocator.h"
 #include "chad.h"
 #include "flexception.h"
 #include "pcg_random.hpp"
-#include "alignedallocator.h"
 
 #include <Eigen/Dense>
 #include <random>
@@ -50,8 +50,11 @@ using Matrix = Eigen::Matrix<Float, Eigen::Dynamic, Eigen::Dynamic>;
 using AlignedStdVector = std::vector<Float, aligned_allocator<Float, 64>>;
 
 #if defined(SINGLE_PRECISION)
-const Float c_IsectEpsilon = Float(5e-4); // Float(1e-3);
-const Float c_ShadowEpsilon = Float(5e-4); // Float(1e-3);
+// const Float c_IsectEpsilon = Float(5e-4); // Float(1e-3);
+// const Float c_ShadowEpsilon = Float(5e-4); // Float(1e-3);
+// my constants
+const Float c_IsectEpsilon = Float(1e-5);
+const Float c_ShadowEpsilon = Float(5e-4);
 #elif defined(DOUBLE_PRECISION)
 const Float c_IsectEpsilon = Float(1e-7);
 const Float c_ShadowEpsilon = Float(1e-5);
