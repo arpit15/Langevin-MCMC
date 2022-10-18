@@ -11,6 +11,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/ubuntu/projects/lmc/build-Release/
 export LMCEXE=/home/ubuntu/projects/lmc/build-Release/dpt
 
 cd ~/projects/lmc
-pip install -ve .
+pip install -v .
+pip install -e .
 # HACK
 cp _skbuild/linux-x86_64-3.8/cmake-build/python_bind/dpt_ext.cpython-38-x86_64-linux-gnu.so python_bind/lmc
