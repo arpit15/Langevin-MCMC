@@ -223,7 +223,7 @@ static void DirectLighting(const int camDepth,
                            const bool doOcclusion,
                            SurfaceVertex &surfVertex,
                            std::vector<SubpathContrib> &contribs) {
-    // NANOLOG_INFO("======directlight");
+    NANOLOG_DEBUG("======directlight");
     const ShapeInst &shapeInst = surfVertex.shapeInst;
     const BSDF *bsdf = shapeInst.obj->bsdf.get();
     const Intersection &isect = pathState.isect;
@@ -507,9 +507,9 @@ void GeneratePath(const Scene *scene,
         bool hitSurface =
             Intersect(scene, time, pathState.raySeg, surfVertex.shapeInst, pathState.isect);
 
-        // NANOLOG_INFO("HIT: {}", hitSurface);
+        NANOLOG_DEBUG("HIT: {}", hitSurface);
         if (hitSurface) {
-            // NANOLOG_INFO("hit {}", surfVertex.shapeInst.obj->GetId());
+            NANOLOG_DEBUG("hit {}", surfVertex.shapeInst.obj->GetId());
         }
 
         const Light *light = GetHitLight(scene, hitSurface, surfVertex.shapeInst.obj);

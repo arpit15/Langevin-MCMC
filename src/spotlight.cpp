@@ -15,18 +15,18 @@ int GetSpotLightSerializedSize() {
 SpotLight::SpotLight(const Float &samplingWeight, 
                 const AnimatedTransform &toWorld, 
                 const Vector3 &emission,
-                const Float &cutoffangle, 
-                const Float &beamWidth)
+                const Float &_cutoffangle, 
+                const Float &_beamWidth)
     : Light(samplingWeight), 
       toWorld(toWorld), 
       toLight(Invert(toWorld)), 
       emission(emission),
-      cutoffAngle(cutoffAngle),
-      beamWidth(beamWidth) {
+      cutoffAngle(_cutoffangle),
+      beamWidth(_beamWidth) {
 
-        NANOLOG_INFO("toWorld: {}\ntoLight: {}", 
+        NANOLOG_INFO("toWorld: {}\ntoLight: {}\ncutoffAngle:{}", 
             Interpolate(toWorld, 0.f),
-            Interpolate(toLight, 0.f));
+            Interpolate(toLight, 0.f), cutoffAngle);
 
         cosCutoffAngle = cos(cutoffAngle);
         cosBeamWidth = cos(beamWidth);
@@ -73,7 +73,8 @@ void _SampleDirectSpotLight(const TAnimatedTransform<FloatType> &toWorld,
                              FloatType &dist,
                              TVector3<FloatType> &dirToLight,
                              TVector3<FloatType> &lightContrib,
-                             FloatType &pdf) {
+                             FloatType &pdf,
+                             TVector3<FloatType> &local) {
     
     FloatType time = Const<FloatType>(0.0);
     TMatrix4x4<FloatType> trao = Interpolate(toWorld, time);
@@ -88,7 +89,7 @@ void _SampleDirectSpotLight(const TAnimatedTransform<FloatType> &toWorld,
     dirToLight = dirToLight / dist;
 
     TMatrix4x4<FloatType> trao_l = Interpolate(toLight, time);
-    TVector3<FloatType> local = -XformVector(trao_l, dirToLight);
+    local = -XformVector(trao_l, dirToLight);
     lightContrib = emission.cwiseProduct(falloffCurve(local, cutoffAngle, beamWidth)) * inverse(distSq);
 }
 
@@ -104,7 +105,11 @@ bool SpotLight::SampleDirect(const BSphere & /*sceneSphere*/,
                               Float &cosAtLight,
                               Float &directPdf,
                               Float &emissionPdf) const {
-    _SampleDirectSpotLight(toWorld, toLight, emission, cutoffAngle, beamWidth, pos, dist, dirToLight, contrib, directPdf);
+
+    Vector3 local;
+    _SampleDirectSpotLight(toWorld, toLight, emission, cutoffAngle, beamWidth, pos, dist, dirToLight, contrib, directPdf, local);
+    NANOLOG_DEBUG("SpotLight contrib: {}, local: {}, cos: {}(<={})",
+     contrib.transpose(), local.transpose(), local[0], cos(cutoffAngle));
     assert(dist > Float(0.0));
     emissionPdf = c_INVTWOPI / (1-cosCutoffAngle);
     cosAtLight = Float(1.0);
@@ -161,7 +166,8 @@ void SampleDirectSpotLight(const ADFloat *buffer,
     Deserialize(buffer, cutoffAngle);
     Deserialize(buffer, beamWidth);
     ADFloat dist;
-    _SampleDirectSpotLight(toWorld, toLight, emission, cutoffAngle, beamWidth, pos, dist, dirToLight, lightContrib, directPdf);
+    ADVector3 local;
+    _SampleDirectSpotLight(toWorld, toLight, emission, cutoffAngle, beamWidth, pos, dist, dirToLight, lightContrib, directPdf, local);
     emissionPdf = c_INVTWOPI/ (1.f - cos(cutoffAngle));
     cosAtLight = Const<ADFloat>(1.0);
 }

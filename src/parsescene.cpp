@@ -826,11 +826,18 @@ std::shared_ptr<const Light> ParseEmitter(pugi::xml_node node,
             }
         }
 
-        NANOLOG_INFO("SpotLight[\ncutOffAngle: {}\nbeamWidth: {}\nintensity: {}\ntransform: {}\n]", 
+        cutoffAngle = c_PI*cutoffAngle/180.f;
+        beamWidth = c_PI*beamWidth/180.f;
+
+        NANOLOG_INFO("SpotLight[\ncutOffAngle(rad): {}\nbeamWidth(rad): {}\nintensity: {}\ntransform: {}\n]", 
             cutoffAngle, beamWidth, intensity.transpose(),
             Interpolate(toWorld, 0.f));
 
-        return std::make_shared<SpotLight>(Float(1.0), toWorld, intensity, cutoffAngle, beamWidth);
+        // cutoffAngle = c_PI*cutoffAngle/180.f;
+        // beamWidth = c_PI*beamWidth/180.f;
+
+        return std::make_shared<SpotLight>(Float(1.0), toWorld, intensity, 
+            cutoffAngle, beamWidth);
     }
     else if (type == "collimatedbeam") {
         Matrix4x4 toWorld = Matrix4x4::Identity();
