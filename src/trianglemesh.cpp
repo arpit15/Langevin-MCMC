@@ -23,8 +23,9 @@ BBox ComputeBBox(const std::shared_ptr<TriMeshData> data) {
 }
 
 TriangleMesh::TriangleMesh(const std::shared_ptr<const BSDF> bsdf,
-                           const std::shared_ptr<TriMeshData> data)
-    : Shape(bsdf), data(data), bbox(ComputeBBox(data)) {
+                           const std::shared_ptr<TriMeshData> data,
+                           const std::string _id)
+    : Shape(bsdf), data(data), bbox(ComputeBBox(data)), id(_id) {
 }
 
 static inline bool TriangleIntersect(const RaySegment &raySeg,

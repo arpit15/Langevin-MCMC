@@ -456,6 +456,8 @@ std::shared_ptr<const Shape> ParseShape(pugi::xml_node node,
         bool isMoving = false;
         bool flipNormals = false;
         bool faceNormals = false;
+
+        std::string id = node.attribute("id").value();;
         
         for (auto child : node.children()) {
             std::string name = child.attribute("name").value();
@@ -485,9 +487,9 @@ std::shared_ptr<const Shape> ParseShape(pugi::xml_node node,
             }
         }
 
-        // std::cout << toWorld[0] << std::endl;
+        std::cout << "Created PLY with id: " << id << std::endl;
         shape = std::make_shared<TriangleMesh>(
-            bsdf, ParsePly(filename, toWorld[0], toWorld[1], isMoving, flipNormals, faceNormals));
+            bsdf, ParsePly(filename, toWorld[0], toWorld[1], isMoving, flipNormals, faceNormals), id);
 
         toWorldForEmitter = toWorld[0];
     } else {
@@ -749,6 +751,9 @@ std::shared_ptr<const Light> ParseEmitter(pugi::xml_node node,
     replace_func(subs, node);
 
     std::string type = node.attribute("type").value();
+    std::string id = node.attribute("id").value();
+    NANOLOG_INFO("Light {}", id);
+
     if (type == "point") {
         Vector3 pos(Float(0.0), Float(0.0), Float(0.0));
         Vector3 intensity(Float(1.0), Float(1.0), Float(1.0));
@@ -802,6 +807,7 @@ std::shared_ptr<const Light> ParseEmitter(pugi::xml_node node,
             MakeAnimatedTransform(Matrix4x4::Identity(), Matrix4x4::Identity());
         Vector3 intensity(Float(1.0), Float(1.0), Float(1.0));
         Float cutoffAngle(20.f), beamWidth(cutoffAngle * 3.f/4.f);
+
         for (auto child : node.children()) {
             std::string name = child.attribute("name").value();
             if (name == "toWorld") {
@@ -819,6 +825,10 @@ std::shared_ptr<const Light> ParseEmitter(pugi::xml_node node,
                 beamWidth = std::stof(child.attribute("value").value());
             }
         }
+
+        NANOLOG_INFO("SpotLight[\ncutOffAngle: {}\nbeamWidth: {}\nintensity: {}\ntransform: {}\n]", 
+            cutoffAngle, beamWidth, intensity.transpose(),
+            Interpolate(toWorld, 0.f));
 
         return std::make_shared<SpotLight>(Float(1.0), toWorld, intensity, cutoffAngle, beamWidth);
     }

@@ -16,6 +16,8 @@ fname = "/home/arpit/projects/round_sensor_scene_files/fingertipsensor_recon_tes
 params = dict()
 scene = lmc.PyScene(fname, "myfn", params)
 
+set_trace()
+
 h = scene.pixelHeight
 w = scene.pixelWidth
 rayorg = np.zeros((h,w,3), dtype=np.float32)

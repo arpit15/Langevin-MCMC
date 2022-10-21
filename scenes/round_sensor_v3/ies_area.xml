@@ -8,7 +8,7 @@
 		<bsdf type="diffuse" />
 	</bsdf>
 
-<shape type="ply" id="mesh-unitDisk">
+<!-- <shape type="ply" id="mesh-unitDisk">
 		<string name="filename" value="meshes/unit_disk.ply" />
 		<ref id="default-bsdf" name="bsdf" />
 		<emitter  type="iesarea">
@@ -31,8 +31,11 @@
 		<string name="filename" value="textures/ies_aniso_v4.exr" />
 		<rgb name="radiance" value="130 250 950" />
 	</emitter>
-	</shape>
+	</shape> -->
 	<shape type="ply" id="mesh-unitDisk.003">
+		<!-- <transform name="toWorld">
+			<translate x="0.001"/>
+		</transform> -->
 		<string name="filename" value="meshes/unit_disk.003.ply" />
 		<ref id="default-bsdf" name="bsdf" />
 		<emitter  type="iesarea">
@@ -41,6 +44,9 @@
 	</emitter>
 	</shape>
 	<shape type="ply" id="mesh-unitDisk.004">
+		<!-- <transform name="toWorld">
+			<translate x="0.001"/>
+		</transform> -->
 		<string name="filename" value="meshes/unit_disk.004.ply" />
 		<ref id="default-bsdf" name="bsdf" />
 		<emitter  type="iesarea">
@@ -49,6 +55,9 @@
 	</emitter>
 	</shape>
 	<shape type="ply" id="mesh-unitDisk.005">
+		<!-- <transform name="toWorld">
+			<translate x="0.001"/>
+		</transform> -->
 		<string name="filename" value="meshes/unit_disk.005.ply" />
 		<ref id="default-bsdf" name="bsdf" />
 		<emitter  type="iesarea">
@@ -57,6 +66,9 @@
 	</emitter>
 	</shape>
 	<shape type="ply" id="mesh-unitDisk.006">
+		<!-- <transform name="toWorld">
+			<translate x="0.001"/>
+		</transform> -->
 		<string name="filename" value="meshes/unit_disk.006.ply" />
 		<ref id="default-bsdf" name="bsdf" />
 		<emitter  type="iesarea">
@@ -65,6 +77,9 @@
 	</emitter>
 	</shape>
 	<shape type="ply" id="mesh-unitDisk.007">
+		<!-- <transform name="toWorld">
+			<translate x="0.001"/>
+		</transform> -->
 		<string name="filename" value="meshes/unit_disk.007.ply" />
 		<ref id="default-bsdf" name="bsdf" />
 		<emitter  type="iesarea">
@@ -72,7 +87,7 @@
 		<rgb name="radiance" value="130 250 950" />
 	</emitter>
 	</shape>
-	<shape type="ply" id="mesh-unitDisk.008">
+	<!-- <shape type="ply" id="mesh-unitDisk.008">
 		<string name="filename" value="meshes/unit_disk.008.ply" />
 		<ref id="default-bsdf" name="bsdf" />
 		<emitter  type="iesarea">
@@ -95,8 +110,11 @@
 		<string name="filename" value="textures/ies_aniso_v5.exr" />
 		<rgb name="radiance" value="500 70 10" />
 	</emitter>
-	</shape>
+	</shape> -->
 	<shape type="ply" id="mesh-unitDisk.011">
+		<!-- <transform name="toWorld">
+			<translate x="-0.001"/>
+		</transform> -->
 		<string name="filename" value="meshes/unit_disk.011.ply" />
 		<ref id="default-bsdf" name="bsdf" />
 		<emitter  type="iesarea">
@@ -105,6 +123,9 @@
 	</emitter>
 	</shape>
 	<shape type="ply" id="mesh-unitDisk.012">
+		<!-- <transform name="toWorld">
+			<translate x="-0.001"/>
+		</transform> -->
 		<string name="filename" value="meshes/unit_disk.012.ply" />
 		<ref id="default-bsdf" name="bsdf" />
 		<emitter  type="iesarea">
@@ -113,6 +134,9 @@
 	</emitter>
 	</shape>
 	<shape type="ply" id="mesh-unitDisk.013">
+		<!-- <transform name="toWorld">
+			<translate x="-0.001"/>
+		</transform> -->
 		<string name="filename" value="meshes/unit_disk.013.ply" />
 		<ref id="default-bsdf" name="bsdf" />
 		<emitter  type="iesarea">
@@ -121,6 +145,9 @@
 	</emitter>
 	</shape>
 	<shape type="ply" id="mesh-unitDisk.014">
+		<!-- <transform name="toWorld">
+			<translate x="-0.001"/>
+		</transform> -->
 		<string name="filename" value="meshes/unit_disk.014.ply" />
 		<ref id="default-bsdf" name="bsdf" />
 		<emitter  type="iesarea">
@@ -129,6 +156,9 @@
 	</emitter>
 	</shape>
 	<shape type="ply" id="mesh-unitDisk.015">
+		<!-- <transform name="toWorld">
+			<translate x="-0.001"/>
+		</transform> -->
 		<string name="filename" value="meshes/unit_disk.015.ply" />
 		<ref id="mat-Material" name="bsdf" />
 		<emitter  type="iesarea">

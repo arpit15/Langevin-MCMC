@@ -6,6 +6,7 @@
 #include "parallel.h"
 #include "timer.h"
 #include "bsdf.h"
+#include "nanolog.hh"
 
 #include <algorithm>
 #include <vector>
@@ -74,10 +75,12 @@ void PathTrace(const Scene *scene, const std::shared_ptr<const PathFuncLib> path
                     // std::cout << "#contribs: " << spContribs.size() << std::endl;
                     for (const auto &spContrib : spContribs) {
                         // std::cout << "lum:" << Luminance(spContrib.contrib) << std::endl;
+                        // NANOLOG_INFO("***individuals: {}", spContrib.contrib.transpose());
                         if (Luminance(spContrib.contrib) <= Float(1e-10)) {
                             continue;
                         }
                         Vector3 contrib = spContrib.contrib / Float(spp);
+                        // NANOLOG_INFO("++++++++++++SPLAT contrib: {}", contrib.transpose());
                         Splat(buffer, spContrib.screenPos, contrib);
                     }
                 }

@@ -24,6 +24,10 @@ SpotLight::SpotLight(const Float &samplingWeight,
       cutoffAngle(cutoffAngle),
       beamWidth(beamWidth) {
 
+        NANOLOG_INFO("toWorld: {}\ntoLight: {}", 
+            Interpolate(toWorld, 0.f),
+            Interpolate(toLight, 0.f));
+
         cosCutoffAngle = cos(cutoffAngle);
         cosBeamWidth = cos(beamWidth);
         uvFactor = tan(cutoffAngle);

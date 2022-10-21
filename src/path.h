@@ -84,7 +84,7 @@ struct Path {
         }
     }
 
-    // friend std::ostream& operator<<(std::ostream& os, const Path& p);
+    friend std::ostream& operator<<(std::ostream& os, const Path& p);
 
     // Path operator=(const Path &p) {
     //     std::cout << "camDepth:" << p.camDepth << ", lgtDepth:" << p.lgtDepth << std::endl;
@@ -188,7 +188,8 @@ std::shared_ptr<Library> CompilePathFuncLibrary2(const int maxDepth,
                                                 std::shared_ptr<Library> *library = nullptr);
 
 std::shared_ptr<const PathFuncLib> BuildPathFuncLibrary(const bool bidirectional,
-                                                        const int maxDepth);
+                                                        const int maxDepth,
+                        const std::string libpath=fs::current_path());
 
 std::shared_ptr<const PathFuncLib> BuildPathFuncLibrary2(const int maxDepth,
              const std::string libpath=fs::current_path()); 

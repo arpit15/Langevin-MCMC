@@ -2,27 +2,34 @@
 
 
 
-	<default name="spp" value="128" />
+	<default name="spp" value="512" />
 	<default name="resx" value="324" />
 	<default name="resy" value="243" />
 
 	<default name="PDMSIOR" value="1.421" />
-	<default name="EPOXYIOR" value="1.49" />
+	<!-- <default name="EPOXYIOR" value="1.49" /> -->
+	<!-- <default name="EPOXYIOR" value="1.51" /> -->
+
+	<default name="EPOXYIOR" value="1.55" />
 
 	<default name="pixel" value="rgb"/>
 
+	<default name="diffusemat" value="mat-al"/>
+
 
 	<integrator type="pssmlt">
+		<!-- <string name="technique" value="bdpt"/> -->
 		<boolean name="bidirectional" value="true"/>
-		<!-- <string name="technique" value="path"/> -->
 		<boolean name="twoStage" value="true"/>
 		<integer name="maxDepth" value="-1" />
+		<integer name="rrDepth" value="-1" />
 	</integrator>
 
 	<sensor type="perspective" id="Camera">
 		<string name="fovAxis" value="x" />
 		<!-- <float name="fov" value="102.000003" /> -->
-		<float name="fov" value="106" />
+		<float name="fov" value="106.26" />
+		<!-- <float name="fov" value="120" /> -->
 		<float name="nearClip" value="0.001000" />
 		<float name="farClip" value="1000.000000" />
 		<!-- <transform name="toWorld">
@@ -35,6 +42,7 @@
 			<matrix value="-1.000000 0.000000 0.000000 0.000000 0.000000 1.000000 0.000000 0.020 -0.000000 0.000000 -1.000000 0.0012 0.000000 0.000000 0.000000 1.000000" />
 			<rotate z="1" angle="-2"/>
 			<rotate x="1" angle="5"/>
+			<!-- <translate z="0.006"/> -->
 		</transform>
 		<sampler type="independent">
 			<integer name="sampleCount" value="$spp" />
@@ -48,7 +56,8 @@
 	</sensor>
 
 
-	<include filename="lights_spec.xml"/>
+	<!-- <include filename="lights_spec.xml"/> -->
+	<include filename="lights_spec_all.xml"/>
 
 
 	
@@ -110,8 +119,12 @@
 	<bsdf id="mat-interface" type="roughdielectric">
 		<float name="alpha" value="0.000400" />
 		<string name="distribution" value="beckmann" />
-		<float name="intIOR" value="$PDMSIOR" />
-		<float name="extIOR" value="$EPOXYIOR" />
+		
+		<!-- <float name="intIOR" value="$PDMSIOR" />
+		<float name="extIOR" value="$EPOXYIOR" /> -->
+
+		<float name="extIOR" value="$PDMSIOR" />
+		<float name="intIOR" value="$EPOXYIOR" />
 		<rgb name="specularTransmittance" value="1.000000 1.000000 1.000000" />
 	</bsdf>
 
@@ -136,7 +149,8 @@
 
 	<shape type="ply" id="mesh-diffuseLayer">
 		<string name="filename" value="meshes/diffuse_layer.ply" />
-		<ref id="mat-al" name="bsdf" />
+		<!-- <ref id="mat-al" name="bsdf" /> -->
+		<ref id="$diffusemat" name="bsdf" />
 	</shape>
 
 	<shape type="sphere">
@@ -146,10 +160,11 @@
 			<!-- <translate x="0.005" y="0.018" z="-0.021"/> -->
 			<!-- <translate x="0.0" y="0.027" z="-0.023"/> -->
 			<!-- <translate x="0.007" y="0.018" z="-0.020"/> -->
-			<!-- <translate x="-0.013" y="0.023" z="-0.016"/> -->
+			<translate x="-0.013" y="0.023" z="-0.016"/>
 
-			<translate x="$spherex" y="$spherey" z="$spherez"/>
+			<!-- <translate x="$spherex" y="$spherey" z="$spherez"/> -->
 		</transform>
+		<ref id="$diffusemat" name="bsdf" />
 	</shape>
 
 </scene>

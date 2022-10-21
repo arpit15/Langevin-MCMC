@@ -53,6 +53,9 @@ struct Shape {
     virtual BBox GetBBox() const = 0;
     virtual bool IsMoving() const = 0;
 
+    // virtual std::string GetId() const { return ""; }
+    virtual std::string GetId() const = 0;
+
     const std::shared_ptr<const BSDF> bsdf;
     // const AreaLight *areaLight;
     const Light *areaLight;

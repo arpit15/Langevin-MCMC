@@ -2,7 +2,7 @@
 
 
 
-	<default name="spp" value="1024" />
+	<default name="spp" value="64" />
 	<default name="resx" value="324" />
 	<default name="resy" value="243" />
 
@@ -34,11 +34,14 @@
 
 	<sensor id="Camera" type="perspective">
 		<string name="fovAxis" value="x" />
-		<float name="fov" value="102" />
+		<!-- <float name="fov" value="102" /> -->
+		<float name="fov" value="106" />
 		<float name="nearClip" value="0.0001" />
 		<float name="farClip" value="100" />
 		<transform name="toWorld">
-			<matrix value="-1.000000 0.000000 0.000000 0.000000 0.000000 1.000000 0.000000 0.02 -0.000000 0.000000 -1.000000 0.000000 0.000000 0.000000 0.000000 1.000000" />
+			<matrix value="-1.000000 0.000000 0.000000 0.000000 0.000000 1.000000 0.000000 0.020 -0.000000 0.000000 -1.000000 0.0012 0.000000 0.000000 0.000000 1.000000" />
+			<rotate z="1" angle="-2"/>
+			<rotate x="1" angle="5"/>
 		</transform>
 		<sampler type="independent">
 			<integer name="sampleCount" value="$spp" />
@@ -53,23 +56,110 @@
 
 	<include filename="ies_area.xml"/>
 
-	<bsdf id="mat-coated" type="blendbsdf">
-		<float name="weight" value="$mixingcoeff" />
+	<shape type="ply" id="mesh-texturedcylinder">
+		<string name="filename" value="meshes/texturedcylinder.ply" />
+		<bsdf type="twosided">
+		<bsdf type="diffuse">
+			<texture name="reflectance" type="bitmap">
+				<string name="filename" value="textures/exact_cylinder_crop2.png"/>
+			</texture>
+		</bsdf>
+	</bsdf>
+	</shape>
 
-		<bsdf type="twosided" id="mat-coateddiff2">
-			<bsdf type="diffuse" id="mat-coateddiff">
-				<rgb name="reflectance" value="1.0" />
+
+	<!-- <emitter type="collimatedbeam" id="emit-blue5">
+		<rgb name="intensity" value="130 250 950" />
+		<transform name="toWorld">
+			<scale value="0.001"/>
+			<matrix value="1.000000 0.000000 0.000000 -0.0115 0.000000 -1.000000 -0.000000 0.0205 0.000000 0.000000 -1.000000 0.001 0.000000 0.000000 0.000000 1.000000" />
+			<translate x="0.0035"/>
+		</transform>
+		<float name="radius" value="1"/>
+		
+	</emitter>
+
+	<emitter type="collimatedbeam" id="emit-red5">
+		<rgb name="intensity" value="500 70 10" />
+		<transform name="toWorld">
+			<scale value="0.001"/>
+			<matrix value="1.000000 0.000000 0.000000 0.0115 0.000000 -1.000000 -0.000000 0.0205 0.000000 0.000000 -1.000000 0.001 0.000000 0.000000 0.000000 1.000000" />
+			<translate x="-0.0035"/>
+		</transform>
+		<float name="radius" value="1"/>
+	</emitter> -->
+
+	<!-- <shape type="disk">
+		<transform name="toWorld">
+			<scale value="0.001"/>
+			<matrix value="1.000000 0.000000 0.000000 -0.0115 0.000000 -1.000000 -0.000000 0.0205 0.000000 0.000000 -1.000000 0.001 0.000000 0.000000 0.000000 1.000000" />
+			<translate x="0.0035"/>
+		</transform>
+	</shape>
+
+	<shape type="disk">
+		<transform name="toWorld">
+			<scale value="0.001"/>
+			<matrix value="1.000000 0.000000 0.000000 0.0115 0.000000 -1.000000 -0.000000 0.0205 0.000000 0.000000 -1.000000 0.001 0.000000 0.000000 0.000000 1.000000" />
+			<translate x="-0.0035"/>
+		</transform>
+	</shape> -->
+
+	<!-- <shape type="ply">
+<string name="filename" value="meshes/unit_disk.ply"/>
+		<transform name="toWorld">
+			<scale value="0.001"/>
+			<matrix value="1.000000 0.000000 0.000000 -0.0115 0.000000 -1.000000 -0.000000 0.0205 0.000000 0.000000 -1.000000 0.001 0.000000 0.000000 0.000000 1.000000" />
+		</transform>
+	<emitter id="emit-blue5" type="iesarea">
+		<string name="filename" value="textures/ies_aniso_v4.exr" />
+		<rgb name="radiance" value="130 250 950" />
+	</emitter>
+<bsdf type="diffuse"/>
+</shape>
+
+	<shape type="ply">
+<string name="filename" value="meshes/unit_disk.ply"/>
+		<transform name="toWorld">
+			<scale value="0.001"/>
+			<matrix value="1.000000 0.000000 0.000000 0.0115 0.000000 -1.000000 -0.000000 0.0205 0.000000 0.000000 -1.000000 0.001 0.000000 0.000000 0.000000 1.000000" />
+		</transform>
+	<emitter id="emit-red5" type="iesarea">
+		<string name="filename" value="textures/ies_aniso_v5.exr" />
+		<rgb name="radiance" value="500 70 10" />
+	</emitter>
+<bsdf type="diffuse"/>
+</shape> -->
+
+	<bsdf type="twosided" id="mat-al">
+			<bsdf type="roughdiffuse">
+				<rgb name="reflectance" value="0.35, 0.38, 0.35" />
+				<float name="alpha" value="0.7"/>
 			</bsdf>
 		</bsdf>
+
+	<bsdf id="mat-br" type="blendbsdf">
+		<float name="weight" value="0.85" />
+		
+		
+		<bsdf type="twosided" id="mat-coateddiff2">
+			<bsdf type="diffuse" id="mat-coateddiff">
+				<rgb name="reflectance" value="0.52, 0.5, 0.3" />
+			</bsdf>
+		</bsdf>
+
 
 
 		<bsdf type="twosided" id="mat-coatedcond">
 			<bsdf type="roughconductor">
 				<string name="material" value="none"/>
-				<rgb name="eta" value="0.5"/>
-				<rgb name="k" value="0.4"/>
+				
+				<rgb name="eta" value="0.47553385 0.57597149 0.76444718"/>
+				<rgb name="k" value="0.8772515  0.81142953 0.63085948"/>
+				<!-- <float name="extEta" value="1.0"/> -->
+
 				<string name="distribution" value="beckmann"/>
-				<float name="alpha" value="0.18" />
+				<float name="alpha" value="0.25" />
 				<rgb name="specularReflectance" value="1.0" />
 			</bsdf>
 		</bsdf>
@@ -77,7 +167,7 @@
 
 	<shape id="mesh-diffuseLayer" type="ply">
 		<string name="filename" value="meshes/diffuse_layer.ply" />
-		<ref id="mat-coated" name="bsdf" />
+		<ref id="mat-al" name="bsdf" />
 	</shape>
 
 
@@ -102,24 +192,24 @@
 		<rgb name="specularTransmittance" value="1.000000 1.000000 1.000000" />
 	</bsdf>
 	
-	<shape id="mesh-interface" type="ply">
+	<!-- <shape id="mesh-interface" type="ply">
 		<string name="filename" value="meshes/interface.ply" />
 		<ref id="mat-interface" name="bsdf" />
-	</shape>
+	</shape> -->
 
-	<bsdf id="mat-Epoxy" type="roughdielectric">
+	<!-- <bsdf id="mat-Epoxy" type="roughdielectric">
 		<float name="alpha" value="0.108900" />
 		<string name="distribution" value="beckmann" />
 		<float name="intIOR" value="$EPOXYIOR" />
 		<float name="extIOR" value="1" />
 		<rgb name="specularTransmittance" value="1.000000 1.000000 1.000000" />
-	</bsdf>
+	</bsdf> -->
 
 	
-	<shape id="mesh-Epoxy onshape" type="ply">
+	<!-- <shape id="mesh-Epoxy onshape" type="ply">
 		<string name="filename" value="meshes/Epoxy shell v3.ply" />
 		<ref id="mat-Epoxy" name="bsdf" />
-	</shape>
+	</shape> -->
 
 	<!-- <shape type="ply">
 		<string name="filename" value="meshes/unit_sphere.ply" />

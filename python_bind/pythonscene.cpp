@@ -184,16 +184,24 @@ void PyScene::render(nb::str &outfn, const bool tonemap, nb::str &_libpath){
     }
     else if (integrator == "mc") {
         std::shared_ptr<const PathFuncLib> library =
-            BuildPathFuncLibrary(_scene->options->bidirectional, 8);
+            BuildPathFuncLibrary(_scene->options->bidirectional, 8, libpath);
         PathTrace(_scene.get(), library, tonemap);
     } else if (integrator == "mcmc") {
         if (_scene->options->mala) { // MALA builds only first-order derivatives
+            std::cout << "MALA mutations" << std::endl;
             std::shared_ptr<const PathFuncLib> library = 
                 BuildPathFuncLibrary2(8, libpath);
             MLT(_scene.get(), library, tonemap);
-        } else {    // Hessian otherwise 
+        } else if (_scene->options->h2mc) {    // Hessian otherwise 
             std::shared_ptr<const PathFuncLib> library =
-                BuildPathFuncLibrary(_scene->options->bidirectional, 8);
+                BuildPathFuncLibrary(_scene->options->bidirectional, 8, libpath);
+            MLT(_scene.get(), library, tonemap);
+        } else {
+        	std::cout << "ISOTROPIC mutations" << std::endl;
+        	// isotropic mutation
+        	// HACK: using MALA lib for code to work
+        	std::shared_ptr<const PathFuncLib> library = 
+                BuildPathFuncLibrary2(8, libpath);
             MLT(_scene.get(), library, tonemap);
         }
     } else {

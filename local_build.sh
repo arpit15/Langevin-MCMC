@@ -11,6 +11,6 @@ echo "python ver: ${pyver}"
 pyvernodot="${pyver//./}"
 # echo "python ver: ${pyvernodot}"
 
-pip install -ve .
+pip install -v .
 # HACK
 cp _skbuild/linux-x86_64-${pyver}/cmake-build/python_bind/dpt_ext.cpython-${pyvernodot}-x86_64-linux-gnu.so python_bind/lmc

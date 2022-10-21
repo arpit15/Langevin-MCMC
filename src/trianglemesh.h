@@ -7,7 +7,9 @@
 int GetTriangleMeshSerializedSize();
 
 struct TriangleMesh : public Shape {
-    TriangleMesh(const std::shared_ptr<const BSDF> bsdf, const std::shared_ptr<TriMeshData> data);
+    TriangleMesh(const std::shared_ptr<const BSDF> bsdf, const std::shared_ptr<TriMeshData> data,
+        const std::string _id=""
+        );
     ShapeType GetType() const override {
         return ShapeType::TriangleMesh;
     }
@@ -40,11 +42,14 @@ struct TriangleMesh : public Shape {
         return data->isMoving;
     }
 
+    std::string GetId() const override { return id; }
+
     const std::shared_ptr<const TriMeshData> data;
     const BBox bbox;
     // Only used when the mesh is associated with an area light
     Float totalArea;
     std::unique_ptr<PiecewiseConstant1D> areaDist;
+    std::string id;
 };
 
 void IntersectTriangleMesh(const ADFloat *buffer,

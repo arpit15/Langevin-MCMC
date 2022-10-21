@@ -177,17 +177,21 @@ endif()
 # dl
 # )
 
-# # brdf tests
-# add_executable(brdf_test 
-#     tests/sample_bsdf.cpp
-#     ${SRC_FILES_NOMAIN}
-# )
+# brdf tests
+add_executable(brdf_test 
+    tests/sample_bsdf.cpp
+    ${SRC_FILES_NOMAIN}
+)
 
-# target_include_directories(brdf_test
-# PRIVATE src
-# )
+target_include_directories(brdf_test
+PRIVATE src
+PRIVATE
+    ${EMBREE_INCLUDE_DIRS}
+    ${OpenImageIO_INCLUDES}
+    "${PROJECT_SOURCE_DIR}/nanolog/include"
+)
 
-# target_link_libraries(brdf_test
+target_link_libraries(brdf_test
 #     Eigen3::Eigen
 #     tbb
 #     nanoflann::nanoflann
@@ -197,4 +201,5 @@ endif()
 #     dl 
 #     z
 #     pthread
-# )
+    dpt_lib
+)

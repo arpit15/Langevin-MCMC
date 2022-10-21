@@ -16,8 +16,6 @@ setup(
     author="Arpit Agarwal",
     author_email="arpit15945@gmail.com",
     description="Langevin MCMC ",
-    # url="https://github.com/wjakob/nanobind_example",
-    # license="BSD",
     packages=["lmc"],
     package_dir={'': 'python_bind'},
     cmake_args=[

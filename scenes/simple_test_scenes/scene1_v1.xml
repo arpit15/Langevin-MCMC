@@ -4,9 +4,22 @@
 
 	<default name="spp" value="1024" />
 
+	<dpt>
+        <string  name="integrator"     value="mc"/>
+        <!-- <integer name="mindepth"       value="-1"/> -->
+        <!-- <integer name="maxdepth"       value="32"/> -->
+        <boolean name="bidirectional"  value="true"/>
+        <integer name="spp"            value="64"/>    
+        <!-- <float   name="largestepprob"  value="0.05"/> -->
+        <!-- <float   name="largestepscale" value="4"/> -->
+        <!-- <boolean name="mala"           value="true"/> -->
+        <!-- <integer name="directspp" value="64"/> -->
+    </dpt>
+
 	<integrator type="path">
 		<integer name="maxDepth" value="8" />
 	</integrator>
+	
 	<sensor id="Camera" type="perspective">
 		<string name="fovAxis" value="x" />
 		<float name="fov" value="39.597755" />
@@ -21,6 +34,12 @@
 		<film type="hdrfilm">
 			<integer name="width" value="500" />
 			<integer name="height" value="500" />
+			
+			<integer name="cropOffsetX" value="0" />
+			<integer name="cropOffsetY" value="0" />
+			<integer name="cropWidth" value="100" />
+			<integer name="cropHeight" value="100" />
+
 			<boolean name="banner" value="false" />
 		</film>
 	</sensor>
@@ -28,10 +47,10 @@
 
 
 	<bsdf id="mat-Material.002" type="blendbsdf">
-		<texture type="bitmap" name="weight">
+		<!-- <texture type="bitmap" name="weight">
 			<string name="filename" value="textures/checker_scaled.png"/> 
-		</texture>
-		<!-- <float name="weight" value="0.500000" /> -->
+		</texture> -->
+		<float name="weight" value="0.500000" />
 		<bsdf type="twosided">
 			<bsdf type="diffuse">
 				<rgb name="reflectance" value="0.800000 0.090275 0.090275" />

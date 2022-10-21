@@ -9,9 +9,18 @@
 #include "arealight.h"
 #include "ray.h"
 #include "sampling.h"
+#include "nanolog.hh"
 
 #include <limits>
 #include <random>
+
+std::ostream& operator<<(std::ostream& os, const Path& p)
+{
+    os << "t:" << p.time << std::endl
+        << "camsurfvert:" << p.camSurfaceVertex.size() << std::endl
+        << "lgtSurfaceVert:" << p.lgtSurfaceVertex.size() << std::endl;
+    return os;
+}
 
 void Clear(Path &path) {
     path.camSurfaceVertex.clear();
@@ -214,6 +223,7 @@ static void DirectLighting(const int camDepth,
                            const bool doOcclusion,
                            SurfaceVertex &surfVertex,
                            std::vector<SubpathContrib> &contribs) {
+    // NANOLOG_INFO("======directlight");
     const ShapeInst &shapeInst = surfVertex.shapeInst;
     const BSDF *bsdf = shapeInst.obj->bsdf.get();
     const Intersection &isect = pathState.isect;
@@ -242,14 +252,25 @@ static void DirectLighting(const int camDepth,
                              cosAtLight,
                              directPdf,
                              emissionPdf)) {
+        NANOLOG_DEBUG("SampleDirect didn't work\n-----");
         return;
     }
+
 
     // assign for serialization
     lightInst.dirToLight = dirToLight;
 
     if (doOcclusion && Occluded(scene, time, Ray{isect.position, dirToLight}, distToLight)) {
+        NANOLOG_DEBUG("Occluded pos: {}, dir: {} \n-----", isect.position.transpose(), dirToLight.transpose());
+        // find more info
+        ShapeInst occShapeInst;
+        
+        RaySegment occRaySeg{Ray{isect.position, dirToLight}, c_IsectEpsilon, (Float(1.0) - c_ShadowEpsilon) * distToLight};
+        bool occIntersect = Intersect(scene, time, occRaySeg, occShapeInst);
+        NANOLOG_DEBUG("what is occluding: {}", occShapeInst.obj->GetId());
         return;
+    } else {
+        // NANOLOG_DEBUG("Found a decent light contrib");
     }
 
     Vector3 bsdfContrib;
@@ -257,6 +278,7 @@ static void DirectLighting(const int camDepth,
     bsdf->Evaluate(
         wi, isect.shadingNormal, dirToLight, shapeInst.st, bsdfContrib, cosWo, bsdfPdf, bsdfRevPdf);
     if (bsdfContrib.isZero()) {
+        NANOLOG_DEBUG("BSDF contrib failed. bsdftype:{}\n-----", bsdf->GetBSDFTypeString());
         return;
     }
 
@@ -292,10 +314,13 @@ static void DirectLighting(const int camDepth,
     }
 
     const Float score = Luminance(contrib);
+    NANOLOG_DEBUG("lum: {}, contrib: {}, lightContrib: {}",
+         score, contrib.transpose(), lightContrib.transpose());
     if (score > Float(0.0)) {
         const Float lensScore = camDepth >= 1 ? Luminance(lensThroughput) : Float(0.0);
         assert(std::isfinite(score * pathState.ssJacobian));
         assert(std::isfinite(lensScore));
+        NANOLOG_DEBUG("directlight contrib: {}", contrib.transpose());
         contribs.emplace_back(SubpathContrib{
             2 + camDepth,                  // camDepth
             1,                             // lightDepth
@@ -316,7 +341,8 @@ static bool BSDFSampling(const int camDepth,
                          SurfaceVertex &surfVertex,
                          Vector3 &bsdfContrib) {
 
-    // std::cout << "BSDFSampling - jac : " << pathState.ssJacobian << std::endl;           
+    // NANOLOG_INFO("--BSDFSampling");
+
     const ShapeInst &shapeInst = surfVertex.shapeInst;
     const BSDF *bsdf = shapeInst.obj->bsdf.get();
     const Vector3 &wi = pathState.wi;
@@ -329,6 +355,8 @@ static bool BSDFSampling(const int camDepth,
     Float bsdfPdfRev;
     surfVertex.useAbsoluteParam =
         BoolToFloat(bsdf->Roughness(shapeInst.st, surfVertex.bsdfDiscrete) > roughnessThreshold);
+    // NANOLOG_INFO("useAbsoluteParam: {}", surfVertex.useAbsoluteParam);
+
     if (!perturb || surfVertex.useAbsoluteParam == FFALSE) {
         // std::cout << "BSDF S - jac : " << pathState.ssJacobian << std::endl;
         
@@ -369,7 +397,7 @@ static bool BSDFSampling(const int camDepth,
     } else {
         Float jacobian;
         ray.dir = SampleSphere(surfVertex.bsdfRndParam, jacobian);
-        std::cout << "bsdf type : " << bsdf->GetBSDFTypeString() << std::endl;
+        // std::cout << "bsdf type : " << bsdf->GetBSDFTypeString() << std::endl;
         bsdf->Evaluate(wi,
                        isect.shadingNormal,
                        ray.dir,
@@ -416,7 +444,8 @@ static bool BSDFSampling(const int camDepth,
     throughput = throughput.cwiseProduct(bsdfContrib);
     ray.org = isect.position;
 
-    // std::cout << "BSDFSampling + jac : " << pathState.ssJacobian << std::endl; 
+    // NANOLOG_INFO("throughput: {}", throughput.transpose());
+    
     return true;
 }
 
@@ -462,17 +491,26 @@ void GeneratePath(const Scene *scene,
 
     // std::cout << "xpos:" << screenPos[0] <<
     //             ", ypos:" << screenPos[1]  << std::endl;
+    // NANOLOG_INFO("--GENPATH xpos:{} ypos:{}", screenPos[0], screenPos[1]);
 
     UniPathState pathState;
     Init(pathState);
     SamplePrimary(camera, screenPos, time, pathState.raySeg);
     // std::cout << "GenPath" << std::endl;
     for (int camDepth = 0;; camDepth++) {
+        // NANOLOG_INFO("camDepth: {}", camDepth);
+        // NANOLOG_INFO("{}", path);
+
         // std::cout << "start camDepth : " << camDepth << ", jac : " << pathState.ssJacobian << std::endl;
         path.camSurfaceVertex.push_back(SurfaceVertex());
         SurfaceVertex &surfVertex = path.camSurfaceVertex.back();
         bool hitSurface =
             Intersect(scene, time, pathState.raySeg, surfVertex.shapeInst, pathState.isect);
+
+        // NANOLOG_INFO("HIT: {}", hitSurface);
+        if (hitSurface) {
+            // NANOLOG_INFO("hit {}", surfVertex.shapeInst.obj->GetId());
+        }
 
         const Light *light = GetHitLight(scene, hitSurface, surfVertex.shapeInst.obj);
         if (light != nullptr) {
@@ -541,6 +579,7 @@ void GeneratePath(const Scene *scene,
 
         // std::cout << "Direct - camDepth : " << camDepth << ", jac : " << pathState.ssJacobian << std::endl;
         if (camDepth + 2 >= minDepth) {
+            // NANOLOG_INFO("Testing for DirectLighting");
             Float directLightPickProb = Float(1.0);
             DirectLightingInit(scene, surfVertex, directLightPickProb, rng);
             DirectLighting(camDepth,
@@ -552,16 +591,13 @@ void GeneratePath(const Scene *scene,
                            true,
                            surfVertex,
                            contribs);
-            // std::cout << "Direct + camDepth : " << camDepth << ", jac : " << pathState.ssJacobian << std::endl;
-        
+            
         }
 
         surfVertex.bsdfRndParam = Vector2(uniDist(rng), uniDist(rng));
 
         Vector3 bsdfContrib;
 
-        // std::cout << "BSDF - camDepth : " << camDepth << ", jac : " << pathState.ssJacobian << std::endl;
-        
         if (!BSDFSampling(
                 camDepth, scene->options->roughnessThreshold, pathState, surfVertex, bsdfContrib)) {
             break;
@@ -4100,10 +4136,11 @@ std::shared_ptr<Library> CompilePathFuncLibrary2(const int maxDepth,
 }
 
 std::shared_ptr<const PathFuncLib> BuildPathFuncLibrary(const bool bidirectional,
-                                                        const int maxDepth) 
+                                                        const int maxDepth,
+                                                        const std::string libpath) 
 {
     std::shared_ptr<Library> pathLib =
-        std::make_shared<Library>(fs::current_path(), bidirectional ? "pathlibbidir" : "pathlib");
+        std::make_shared<Library>(libpath, bidirectional ? "pathlibbidir" : "pathlib");
     if (!pathLib->IsLinked()) {
         pathLib = CompilePathFuncLibrary(bidirectional, maxDepth, &pathLib);
     }

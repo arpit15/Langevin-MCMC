@@ -11,6 +11,9 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/ubuntu/projects/lmc/build-Release/
 export LMCEXE=/home/ubuntu/projects/lmc/build-Release/dpt
 
 cd ~/projects/lmc
+git pullall
+rm -r _skbuild
+
 pip install -v .
 pip install -e .
 # HACK

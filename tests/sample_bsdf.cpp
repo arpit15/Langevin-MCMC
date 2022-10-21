@@ -72,10 +72,14 @@ Vector3 normalize(Vector3 vec){
 }
 
 int main() {
-    std::string filename = "/home/arpit/projects/Langevin-MCMC/tests/test_al.xml";
-    std::string name="diffuseCoating";
+    // std::string filename = "/home/arpit/projects/Langevin-MCMC/tests/test_al.xml";
+    // std::string name="diffuseCoating";
     // std::string filename = "/home/arpit/projects/Langevin-MCMC/tests/test_br.xml";
     // std::string name="semispecularCoating";
+
+    std::string filename = "/home/arpit/projects/Langevin-MCMC/tests/test_interface.xml";
+    std::string name="roughdielectric";
+
     pugi::xml_document doc;
     pugi::xml_parse_result result = doc.load_file(filename.c_str());
 
@@ -100,7 +104,7 @@ int main() {
         for (int x = 0; x < ImageW; x++)
         {
             wo = pixelToSpherical(Vector2(x,y)); 
-            bsdf->Evaluate(wi, normal1, wo, st, 
+            bsdf->Evaluate(wi, normal2, wo, st, 
                         contrib, cosWo, pdfVal, revPdf);
             pdf(x, y) = pdfVal;
         }
@@ -123,7 +127,7 @@ int main() {
     for (int i = 0; i < NumSamples; ++i) {
         // Sample material
         rndParam = Vector2(uniDist(rng), uniDist(rng));
-        bsdf->Sample(wi, normal1, st, rndParam, uDiscrete,
+        bsdf->Sample(wi, normal2, st, rndParam, uDiscrete,
                         wo, contrib, cosWo, pdfVal, revPdf
                 );
 

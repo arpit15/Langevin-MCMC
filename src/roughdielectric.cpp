@@ -1,5 +1,6 @@
 #include "roughdielectric.h"
 #include "microfacet.h"
+#include "nanolog.hh"
 
 int GetRoughDielectricSerializedSize() {
     return 1 +  // type
@@ -29,6 +30,14 @@ void Evaluate(const RoughDielectric *bsdf,
               Float &cosWo,
               Float &pdf,
               Float &revPdf) {
+
+    // NANOLOG_INFO("Evaluate INPUTS");
+    // NANOLOG_INFO("wi: {}", wi.transpose());
+    // NANOLOG_INFO("normal: {}", normal.transpose());
+    // NANOLOG_INFO("wo: {}", wo.transpose());
+    // NANOLOG_INFO("st: {}", st.transpose());
+    // NANOLOG_INFO("------------");
+
     Float cosWi = Dot(wi, normal);
     contrib.setZero();
     cosWo = Float(0.0);
@@ -41,6 +50,7 @@ void Evaluate(const RoughDielectric *bsdf,
         return;
     }
     bool reflect = cosWi * cosWo > Float(0.0);
+    // NANOLOG_INFO("REFLECTED: {}", reflect);
     Float eta_ = if_else(Gt(cosWi, Float(0.0)), bsdf->eta, bsdf->invEta);
     Float revEta_ = if_else(Gt(cosWo, Float(0.0)), bsdf->eta, bsdf->invEta);
     Vector3 H;
@@ -54,12 +64,15 @@ void Evaluate(const RoughDielectric *bsdf,
         H = -H;
     }
 
+
     Float cosHWi = Dot(wi, H);
     Float cosHWo = Dot(wo, H);
     if (fabs(cosHWi) < c_CosEpsilon || fabs(cosHWo) < c_CosEpsilon) {
         return;
     }
     contrib = Vector3::Zero();
+
+    // NANOLOG_INFO("Valid Half vector cos");
 
     // Geometry term
     if (cosHWi * cosWi <= Float(0.0)) {
@@ -69,6 +82,8 @@ void Evaluate(const RoughDielectric *bsdf,
         return;
     }
 
+    // NANOLOG_INFO("Valid Geometry term cos");
+
     Vector3 b0;
     Vector3 b1;
     CoordinateSystem(normal, b0, b1);
@@ -77,8 +92,11 @@ void Evaluate(const RoughDielectric *bsdf,
     Float alp = bsdf->alpha->Eval(st)[0];
     Float D = BeckmennDistributionTerm(localH, alp, alp);
     if (D <= Float(0.0)) {
+        // NANOLOG_INFO("Invalid D: {}, localH: {}, alp: {}", 
+            // D, localH.transpose(), alp);
         return;
     }
+    // NANOLOG_INFO("Valid D term");
 
     // This is confusing, but when computing reverse probability,
     // wo and wi are reversed
@@ -99,6 +117,7 @@ void Evaluate(const RoughDielectric *bsdf,
         contrib = Vector3::Zero();
         return;
     }
+    // NANOLOG_INFO("Valid beckmann prob");
 
     Float revScaledAlpha = alp * (Float(1.2) - Float(0.2) * sqrt(aCosWo));
     Float revScaledD = BeckmennDistributionTerm(localH, revScaledAlpha, revScaledAlpha);
@@ -119,6 +138,11 @@ void Evaluate(const RoughDielectric *bsdf,
         revPdf = fabs(revProb * (Float(1.0) - F) * (square(revEta_) * revCosHWo) /
                       (square(revSqrtDenom)));
     }
+
+    // NANOLOG_INFO("OUTPUTS");
+    // NANOLOG_INFO("contrib: {}", contrib.transpose());
+    // NANOLOG_INFO("cosWo: {}, pdf: {}, revPdf: {}", cosWo, pdf, revPdf);
+    // NANOLOG_INFO("------------");
 }
 
 void RoughDielectric::Evaluate(const Vector3 &wi,
@@ -156,6 +180,13 @@ bool Sample(const RoughDielectric *bsdf,
             Float &cosWo,
             Float &pdf,
             Float &revPdf) {
+
+    // NANOLOG_INFO("SAMPLE INPUTS");
+    // NANOLOG_INFO("wi: {}", wi.transpose());
+    // NANOLOG_INFO("normal: {}", normal.transpose());
+    // NANOLOG_INFO("st: {}", st.transpose());
+    // NANOLOG_INFO("------------");
+
 #if 0
     Float cosWi = Dot(wi, normal);
     if (fabs(cosWi) < c_CosEpsilon) {
@@ -213,6 +244,7 @@ bool Sample(const RoughDielectric *bsdf,
     Float cosThetaT = 0.0;
     Float F = FresnelDielectricExt(cosHWi, cosThetaT, bsdf->eta, bsdf->invEta);
     bool reflect = uDiscrete <= F;
+    // NANOLOG_INFO("REFLECTED: {}", reflect);
     Vector3 refl;
     Float cosHWo;
 
@@ -297,6 +329,12 @@ bool Sample(const RoughDielectric *bsdf,
     contrib = refl * fabs(numerator / denominator) * trueFresnelFactor;
     #endif 
     contrib = refl * fabs(numerator / denominator);
+
+    // NANOLOG_INFO("OUTPUTS");
+    // NANOLOG_INFO("wo: {}", wo.transpose());
+    // NANOLOG_INFO("contrib: {}", contrib.transpose());
+    // NANOLOG_INFO("cosWo: {}, pdf: {}, revPdf: {}", cosWo, pdf, revPdf);
+    // NANOLOG_INFO("------------");
 
     return true;
 }

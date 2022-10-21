@@ -52,11 +52,14 @@
 		<transform name="toWorld">
 			<scale value="0.1"/>
 			<matrix value="1.000000 0.000000 0.000000 -0.900000 0.000000 0.000000 -1.000000 0.980000 0.000000 1.000000 0.000000 0.000000 0.000000 0.000000 0.000000 1.000000" />
-
+			<translate x="-0.1"/>
+			<rotate x="1" angle="20"/>
 		</transform>
-	<emitter id="emit-Point" type="iesarea">
-		<string name="filename" value="textures/rayfile_LT_T66G_20190621_IES.exr" />
-		<rgb name="radiance" value="1 0 0" />
+		<emitter id="emit-Point" type="iesarea">
+		<!-- <string name="filename" value="textures/rayfile_LT_T66G_20190621_IES.exr" /> -->
+		<!-- <string name="filename" value="textures/ies_aniso_v4.exr" /> -->
+		<string name="filename" value="textures/ies_aniso_v4_blacked.exr" />
+		<rgb name="radiance" value="10 0 0" />
 	</emitter>
 
 		<bsdf type="diffuse" />

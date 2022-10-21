@@ -29,6 +29,8 @@ void Lambertian::Evaluate(const Vector3 &wi,
     cosWo = Dot(normal_, wo);
     contrib.setZero();
     if (cosWi < c_CosEpsilon || cosWo < c_CosEpsilon) {
+        // NANOLOG_INFO("bsdf eval failed: cosWi: {}, cosWo:{}", cosWi, cosWo);
+        // NANOLOG_INFO("wi: {}, normal: {}, wo: {}", wi.transpose(), normal.transpose(), wo.transpose());
         return;
     }
 

@@ -269,10 +269,20 @@ int main(int argc, char *argv[]) {
                         Error("chdir failed");
                     }
                     MLT(scene.get(), library, tonemap);
-                } else {    // Hessian otherwise 
+                } else if (scene->options->h2mc) {    // Hessian otherwise 
                     std::shared_ptr<const PathFuncLib> library =
                         BuildPathFuncLibrary(scene->options->bidirectional, maxDervDepth);
                     // return to the original executable dir after parsing scene
+                    if (chdir(cwd.c_str()) != 0) {
+                        Error("chdir failed");
+                    }
+                    MLT(scene.get(), library, tonemap);
+                } else {
+                    // TODO: create a separate lib for isotropic mutations
+                    // HACK: send MALA lib
+                    std::shared_ptr<const PathFuncLib> library = 
+                        BuildPathFuncLibrary2(maxDervDepth);
+
                     if (chdir(cwd.c_str()) != 0) {
                         Error("chdir failed");
                     }

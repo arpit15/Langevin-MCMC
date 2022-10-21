@@ -11,7 +11,7 @@
 
 	<default name="mixingcoeff" value="0.85" />
 
-	<dpt>
+	<!-- <dpt>
         <string  name="integrator"     value="mcmc"/>
         <integer name="mindepth"       value="-1"/>
         <integer name="maxdepth"       value="32"/>
@@ -23,7 +23,7 @@
         <boolean name="uselightcoordinatesampling"           value="true"/>
         <integer name="directspp" value="$spp"/>
     </dpt>
-
+ -->
 
 	<integrator type="pssmlt">
 		<boolean name="bidirectional" value="true"/>
@@ -51,7 +51,20 @@
 	</sensor>
 
 
-	<include filename="ies_area.xml"/>
+	<!-- <include filename="ies_area.xml"/> -->
+
+	<shape type="ply">
+<string name="filename" value="meshes/unit_disk.ply"/>
+		<transform name="toWorld">
+			<scale value="0.001"/>
+			<matrix value="0.173648 -0.984808 -0.000000 -0.003 -0.984808 -0.173648 -0.000000 0.036 0.000000 0.000000 -1.000000 0.001 0.000000 0.000000 0.000000 1.000000" />
+		</transform>
+	<emitter id="emit-blue1" type="iesarea">
+		<string name="filename" value="textures/ies_aniso_v4.exr" />
+		<rgb name="radiance" value="130 250 950" />
+	</emitter>
+<bsdf type="diffuse"/>
+</shape>
 
 	<!-- <emitter type="collimatedbeam" id="emit-blue5">
 		<rgb name="intensity" value="130 250 950" />

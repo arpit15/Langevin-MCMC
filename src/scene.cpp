@@ -19,6 +19,13 @@ Scene::Scene(std::shared_ptr<DptOptions> &options,
       lights(lights),
       envLight(envLight),
       outputName(outputName) {
+    
+    if (lights.size() == 0) {
+        NANOLOG_ERROR("No lights found!");
+    } else {
+        NANOLOG_INFO("Found {} lights", lights.size());
+    }
+
     // Build light cdf
     std::vector<Float> weights(lights.size());
     lightWeightSum = Float(0.0);
@@ -28,6 +35,11 @@ Scene::Scene(std::shared_ptr<DptOptions> &options,
     }
     lightDist =
         std::unique_ptr<PiecewiseConstant1D>(new PiecewiseConstant1D(&weights[0], weights.size()));
+
+    // light sampling dist
+    for (size_t i = 0; i < weights.size(); i++) {
+        NANOLOG_INFO("{} : {}", i, lightDist->Pmf(i));
+    }    
     rtcDevice = rtcNewDevice(NULL);
     rtcScene = rtcNewScene(rtcDevice);
     // rtcSetSceneFlags(rtcScene,RTC_BUILD_QUALITY_MEDIUM | RTC_SCENE_FLAG_NONE | RTC_BUILD_QUALITY_HIGH | RTC_SCENE_FLAG_ROBUST); // EMBREE_FIXME: set proper scene flags
@@ -152,6 +164,7 @@ bool Occluded(const Scene *scene, const Float time, const RaySegment &raySeg) {
 
 const Light *PickLight(const Scene *scene, const Float u, Float &prob) {
     int lightId = scene->lightDist->SampleDiscrete(u, &prob);
+    NANOLOG_DEBUG("PickLight: {}", lightId);
     return scene->lights[lightId].get();
 }
 

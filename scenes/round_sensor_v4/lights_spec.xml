@@ -9,7 +9,7 @@
 		<ref id="default-bsdf" name="bsdf" />
 		<emitter  type="iesarea">
 		<string name="filename" value="textures/ies_aniso_v4.exr" />
-		<spectrum name="radiance" filename="blue.spd" />
+		<spectrum name="radiance" filename="blue40000.spd" />
 	</emitter>
 	</shape>
 	<shape type="ply" id="mesh-unitDisk.001">
@@ -17,7 +17,7 @@
 		<ref id="default-bsdf" name="bsdf" />
 		<emitter  type="iesarea">
 		<string name="filename" value="textures/ies_aniso_v4.exr" />
-		<spectrum name="radiance" filename="blue.spd" />
+		<spectrum name="radiance" filename="blue40000.spd" />
 	</emitter>
 	</shape>
 	<shape type="ply" id="mesh-unitDisk.002">
@@ -25,7 +25,7 @@
 		<ref id="default-bsdf" name="bsdf" />
 		<emitter  type="iesarea">
 		<string name="filename" value="textures/ies_aniso_v4.exr" />
-		<spectrum name="radiance" filename="blue.spd" />
+		<spectrum name="radiance" filename="blue40000.spd" />
 	</emitter>
 	</shape>
 	<shape type="ply" id="mesh-unitDisk.003">
@@ -33,7 +33,7 @@
 		<ref id="default-bsdf" name="bsdf" />
 		<emitter  type="iesarea">
 		<string name="filename" value="textures/ies_aniso_v4.exr" />
-		<spectrum name="radiance" filename="blue.spd" />
+		<spectrum name="radiance" filename="blue40000.spd" />
 	</emitter>
 	</shape>
 	<shape type="ply" id="mesh-unitDisk.004">
@@ -41,7 +41,7 @@
 		<ref id="default-bsdf" name="bsdf" />
 		<emitter  type="iesarea">
 		<string name="filename" value="textures/ies_aniso_v4.exr" />
-		<spectrum name="radiance" filename="blue.spd" />
+		<spectrum name="radiance" filename="blue40000.spd" />
 	</emitter>
 	</shape>
 	<shape type="ply" id="mesh-unitDisk.005">
@@ -49,7 +49,7 @@
 		<ref id="default-bsdf" name="bsdf" />
 		<emitter  type="iesarea">
 		<string name="filename" value="textures/ies_aniso_v4.exr" />
-		<spectrum name="radiance" filename="blue.spd" />
+		<spectrum name="radiance" filename="blue40000.spd" />
 	</emitter>
 	</shape>
 	<shape type="ply" id="mesh-unitDisk.006">
@@ -57,7 +57,7 @@
 		<ref id="default-bsdf" name="bsdf" />
 		<emitter  type="iesarea">
 		<string name="filename" value="textures/ies_aniso_v4.exr" />
-		<spectrum name="radiance" filename="blue.spd" />
+		<spectrum name="radiance" filename="blue40000.spd" />
 	</emitter>
 	</shape>
 	<shape type="ply" id="mesh-unitDisk.007">
@@ -65,15 +65,16 @@
 		<ref id="default-bsdf" name="bsdf" />
 		<emitter  type="iesarea">
 		<string name="filename" value="textures/ies_aniso_v4.exr" />
-		<spectrum name="radiance" filename="blue.spd" />
+		<spectrum name="radiance" filename="blue40000.spd" />
 	</emitter>
 	</shape>
+
 	<shape type="ply" id="mesh-unitDisk.008">
 		<string name="filename" value="meshes/unit_disk.008.ply" />
 		<ref id="default-bsdf" name="bsdf" />
 		<emitter  type="iesarea">
 		<string name="filename" value="textures/ies_aniso_v5.exr" />
-		<spectrum  name="radiance" filename="red.spd" />
+		<spectrum  name="radiance" filename="red20000.spd" />
 	</emitter>
 	</shape>
 	<shape type="ply" id="mesh-unitDisk.009">
@@ -81,7 +82,7 @@
 		<ref id="default-bsdf" name="bsdf" />
 		<emitter  type="iesarea">
 		<string name="filename" value="textures/ies_aniso_v5.exr" />
-		<spectrum  name="radiance" filename="red.spd" />
+		<spectrum  name="radiance" filename="red20000.spd" />
 	</emitter>
 	</shape>
 	<shape type="ply" id="mesh-unitDisk.010">
@@ -89,31 +90,17 @@
 		<ref id="default-bsdf" name="bsdf" />
 		<emitter  type="iesarea">
 		<string name="filename" value="textures/ies_aniso_v5.exr" />
-		<spectrum  name="radiance" filename="red.spd" />
+		<spectrum  name="radiance" filename="red20000.spd" />
 	</emitter>
 	</shape>
-	<shape type="ply" id="mesh-unitDisk.011">
-		<string name="filename" value="meshes/unit_disk.011.ply" />
+	
+	
+	<shape type="ply" id="mesh-unitDisk.015">
+		<string name="filename" value="meshes/unit_disk.015.ply" />
 		<ref id="default-bsdf" name="bsdf" />
 		<emitter  type="iesarea">
 		<string name="filename" value="textures/ies_aniso_v5.exr" />
-		<spectrum  name="radiance" filename="red.spd" />
-	</emitter>
-	</shape>
-	<shape type="ply" id="mesh-unitDisk.012">
-		<string name="filename" value="meshes/unit_disk.012.ply" />
-		<ref id="default-bsdf" name="bsdf" />
-		<emitter  type="iesarea">
-		<string name="filename" value="textures/ies_aniso_v5.exr" />
-		<spectrum  name="radiance" filename="red.spd" />
-	</emitter>
-	</shape>
-	<shape type="ply" id="mesh-unitDisk.013">
-		<string name="filename" value="meshes/unit_disk.013.ply" />
-		<ref id="default-bsdf" name="bsdf" />
-		<emitter  type="iesarea">
-		<string name="filename" value="textures/ies_aniso_v5.exr" />
-		<spectrum  name="radiance" filename="red.spd" />
+		<spectrum name="radiance" filename="red20000.spd" />
 	</emitter>
 	</shape>
 	<shape type="ply" id="mesh-unitDisk.014">
@@ -121,15 +108,33 @@
 		<ref id="default-bsdf" name="bsdf" />
 		<emitter  type="iesarea">
 		<string name="filename" value="textures/ies_aniso_v5.exr" />
-		<spectrum  name="radiance" filename="red.spd" />
+		<spectrum  name="radiance" filename="red20000.spd" />
 	</emitter>
 	</shape>
-	<shape type="ply" id="mesh-unitDisk.015">
-		<string name="filename" value="meshes/unit_disk.015.ply" />
+	
+
+	<shape type="ply" id="mesh-unitDisk.013">
+		<string name="filename" value="meshes/unit_disk.013.ply" />
 		<ref id="default-bsdf" name="bsdf" />
 		<emitter  type="iesarea">
 		<string name="filename" value="textures/ies_aniso_v5.exr" />
-		<spectrum name="radiance" filename="red.spd" />
+		<spectrum  name="radiance" filename="red20000.spd" />
+	</emitter>
+	</shape>
+	<shape type="ply" id="mesh-unitDisk.012">
+		<string name="filename" value="meshes/unit_disk.012.ply" />
+		<ref id="default-bsdf" name="bsdf" />
+		<emitter  type="iesarea">
+		<string name="filename" value="textures/ies_aniso_v5.exr" />
+		<spectrum  name="radiance" filename="red20000.spd" />
+	</emitter>
+	</shape>
+	<shape type="ply" id="mesh-unitDisk.011">
+		<string name="filename" value="meshes/unit_disk.011.ply" />
+		<ref id="default-bsdf" name="bsdf" />
+		<emitter  type="iesarea">
+		<string name="filename" value="textures/ies_aniso_v5.exr" />
+		<spectrum  name="radiance" filename="red20000.spd" />
 	</emitter>
 	</shape>
 </scene>
