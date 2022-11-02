@@ -60,7 +60,7 @@ std::shared_ptr<TriMeshData> ParsePly(const std::string &filename,
     if (!ifs.is_open())
         throw std::runtime_error("Unable to open the PLY file: " + filename);
     else
-        NANOLOG_TRACE("Parsing {}", filename);
+        NANOLOG_INFO("Parsing {}", filename);
 
     bool ply_tag_seen = false,
      ascii = false,

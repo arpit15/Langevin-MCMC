@@ -7,7 +7,9 @@ void Direct(const Scene *scene){
   film->Clear();
   const int pixelHeight = GetPixelHeight(camera.get());
   const int pixelWidth = GetPixelWidth(camera.get());
-  SampleBuffer directBuffer(pixelWidth, pixelHeight);
+  const int cropHeight = GetCropHeight(camera.get());
+  const int cropWidth = GetCropWidth(camera.get());
+  SampleBuffer directBuffer(cropWidth, cropHeight);
 
   Timer timer;
   Tick(timer);

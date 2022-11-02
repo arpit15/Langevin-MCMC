@@ -28,12 +28,18 @@ void MLT(const Scene *scene, const std::shared_ptr<const PathFuncLib> pathFuncLi
     const Float largeStepProb = scene->options->largeStepProbability;
     std::shared_ptr<Image3> film = camera->film;
     film->Clear();
+
     const int pixelHeight = GetPixelHeight(camera.get());
     const int pixelWidth = GetPixelWidth(camera.get());
-    SampleBuffer directBuffer(pixelWidth, pixelHeight);
+    const int cropHeight = GetCropHeight(camera.get());
+    const int cropWidth = GetCropWidth(camera.get());
+    const int cropOffsetX = GetCropOffsetX(camera.get());
+    const int cropOffsetY = GetCropOffsetY(camera.get());
+    
+    SampleBuffer directBuffer(pixelWidth, pixelHeight, cropOffsetX, cropOffsetY, cropWidth, cropHeight);
     DirectLighting(scene, directBuffer);
 
-    const int64_t numPixels = int64_t(pixelWidth) * int64_t(pixelHeight);
+    const int64_t numPixels = int64_t(cropWidth) * int64_t(cropHeight);
     const int64_t totalSamples = int64_t(spp) * numPixels;
     const int64_t numChains = scene->options->numChains;
     const int64_t numSamplesPerChain = totalSamples / numChains;
@@ -55,7 +61,7 @@ void MLT(const Scene *scene, const std::shared_ptr<const PathFuncLib> pathFuncLi
     
     GlobalCache globalCache; 
 
-    SampleBuffer indirectBuffer(pixelWidth, pixelHeight);
+    SampleBuffer indirectBuffer(pixelWidth, pixelHeight, cropOffsetX, cropOffsetY, cropWidth, cropHeight);
     Timer timer;
     Tick(timer);
 
@@ -235,7 +241,7 @@ void MLT(const Scene *scene, const std::shared_ptr<const PathFuncLib> pathFuncLi
 
     NANOLOG_DEBUG("num Inf : {}", numInf);
    
-    SampleBuffer buffer(pixelWidth, pixelHeight);
+    SampleBuffer buffer(pixelWidth, pixelHeight, cropOffsetX, cropOffsetY, cropWidth, cropHeight);
     Float directWeight = scene->options->directSpp > 0 ? inverse(Float(scene->options->directSpp)) : Float(0.0);
     Float indirectWeight = spp > 0 ? inverse(Float(spp)) : Float(0.0);
     MergeBuffer(directBuffer, directWeight, indirectBuffer, indirectWeight, buffer);

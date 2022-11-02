@@ -487,7 +487,7 @@ std::shared_ptr<const Shape> ParseShape(pugi::xml_node node,
             }
         }
 
-        std::cout << "Created PLY with id: " << id << std::endl;
+        NANOLOG_INFO("Created PLY with id: {}", id);
         shape = std::make_shared<TriangleMesh>(
             bsdf, ParsePly(filename, toWorld[0], toWorld[1], isMoving, flipNormals, faceNormals), id);
 

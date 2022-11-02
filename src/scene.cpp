@@ -38,7 +38,7 @@ Scene::Scene(std::shared_ptr<DptOptions> &options,
 
     // light sampling dist
     for (size_t i = 0; i < weights.size(); i++) {
-        NANOLOG_INFO("{} : {}", i, lightDist->Pmf(i));
+        NANOLOG_TRACE("{} : {}", i, lightDist->Pmf(i));
     }    
     rtcDevice = rtcNewDevice(NULL);
     rtcScene = rtcNewScene(rtcDevice);

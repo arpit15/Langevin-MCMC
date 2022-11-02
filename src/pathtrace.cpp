@@ -40,8 +40,8 @@ void PathTrace(const Scene *scene, const std::shared_ptr<const PathFuncLib> path
 
     ProgressReporter reporter(nXTiles * nYTiles);
     // SampleBuffer buffer(pixelWidth, pixelHeight);
-    // SampleBuffer buffer(pixelWidth, pixelHeight, cropWidth, cropHeight, cropOffsetX, cropOffsetY);
-    SampleBuffer buffer(cropWidth, cropHeight);
+    SampleBuffer buffer(pixelWidth, pixelHeight, cropOffsetX, cropOffsetY, cropWidth, cropHeight);
+    // SampleBuffer buffer(cropWidth, cropHeight);
 
     auto pathFunc = scene->options->bidirectional ? GeneratePathBidir : GeneratePath;
     Timer timer;
@@ -65,7 +65,7 @@ void PathTrace(const Scene *scene, const std::shared_ptr<const PathFuncLib> path
                     
                     // std::cout << "x:" << x << ", y:" << y << std::endl;
                     pathFunc(scene,
-                             Vector2i(x, y),
+                             Vector2i(cropOffsetX + x, cropOffsetY + y),  // screenPos
                              scene->options->minDepth,
                              scene->options->maxDepth,
                              path,
@@ -80,7 +80,8 @@ void PathTrace(const Scene *scene, const std::shared_ptr<const PathFuncLib> path
                             continue;
                         }
                         Vector3 contrib = spContrib.contrib / Float(spp);
-                        // NANOLOG_INFO("++++++++++++SPLAT contrib: {}", contrib.transpose());
+                        NANOLOG_DEBUG("++++++++++++SPLAT contrib: {}, pos: x:{}, y:{}", 
+                            contrib.transpose(), spContrib.screenPos[0], spContrib.screenPos[1]);
                         Splat(buffer, spContrib.screenPos, contrib);
                     }
                 }
@@ -100,7 +101,7 @@ void PathTrace(const Scene *scene, const std::shared_ptr<const PathFuncLib> path
     WriteImage(outputNameHDR, GetFilm(scene->camera.get()).get());
     
     std::string addRenderingTime = std::string("oiiotool ") + outputNameHDR + " --attrib 'RenderingTime' " + std::to_string(elapsed) + " -o " + outputNameHDR;
-    system(addRenderingTime.c_str());
+    int rval = system(addRenderingTime.c_str());
 
     if(tonemap){
         std::string hdr2ldr = std::string("hdrmanip --tonemap filmic -o ") + outputNameLDR + " " + outputNameHDR;

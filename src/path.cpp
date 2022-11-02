@@ -482,11 +482,20 @@ void GeneratePath(const Scene *scene,
     path.isSubpath = false;
 
     const Camera *camera = scene->camera.get();
+
+    const int pixelHeight = GetPixelHeight(camera);
+    const int pixelWidth = GetPixelWidth(camera);
+    const int cropHeight = GetCropHeight(camera);
+    const int cropWidth = GetCropWidth(camera);
+    const int cropOffsetX = GetCropOffsetX(camera);
+    const int cropOffsetY = GetCropOffsetY(camera);
+
     Vector2 screenPos = Vector2(
-        screenPosi[0] == -1 ? uniDist(rng)
-                            : ((screenPosi[0] + uniDist(rng)) / Float(GetCropWidth(camera))),
-        screenPosi[1] == -1 ? uniDist(rng)
-                            : ((screenPosi[1] + uniDist(rng)) / Float(GetCropHeight(camera))));
+        screenPosi[0] == -1 ? Float(cropOffsetX)/Float(pixelWidth) + (uniDist(rng)*Float(cropWidth)/Float(pixelWidth))  // generate only in crop box
+                            : ((screenPosi[0] + uniDist(rng)) / Float(pixelWidth) ),
+        screenPosi[1] == -1 ? Float(cropOffsetY)/Float(pixelHeight) + (uniDist(rng)*Float(cropHeight)/Float(pixelHeight))  // generate only in crop box
+                            : ((screenPosi[1] + uniDist(rng)) / Float(pixelHeight) ) 
+            );
     path.camVertex = CameraVertex{screenPos};
 
     // std::cout << "xpos:" << screenPos[0] <<
@@ -634,11 +643,20 @@ static inline void EmitFromCameraInit(const Camera *camera,
                                       CameraVertex &camVertex,
                                       RNG &rng) {
     std::uniform_real_distribution<Float> uniDist(Float(0.0), Float(1.0));
+
+    const int pixelHeight = GetPixelHeight(camera);
+    const int pixelWidth = GetPixelWidth(camera);
+    const int cropHeight = GetCropHeight(camera);
+    const int cropWidth = GetCropWidth(camera);
+    const int cropOffsetX = GetCropOffsetX(camera);
+    const int cropOffsetY = GetCropOffsetY(camera);
+    
     camVertex.screenPos = Vector2(
-        screenPosi[0] == -1 ? uniDist(rng)
-                            : ((screenPosi[0] + uniDist(rng)) / Float(GetCropWidth(camera))),
-        screenPosi[1] == -1 ? uniDist(rng)
-                            : ((screenPosi[1] + uniDist(rng)) / Float(GetCropHeight(camera))));
+        screenPosi[0] == -1 ? Float(cropOffsetX)/Float(pixelWidth) + (uniDist(rng)*Float(cropWidth)/Float(pixelWidth))  // generate only in crop box
+                            : ((screenPosi[0] + uniDist(rng)) / Float(pixelWidth) ),
+        screenPosi[1] == -1 ? Float(cropOffsetY)/Float(pixelHeight) + (uniDist(rng)*Float(cropHeight)/Float(pixelHeight))  // generate only in crop box
+                            : ((screenPosi[1] + uniDist(rng)) / Float(pixelHeight) ) 
+            );
 }
 
 static void EmitFromCamera(const Float time,

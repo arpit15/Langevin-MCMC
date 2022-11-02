@@ -53,21 +53,36 @@ using Pixel = std::array<AtomicFloat, 3>;
 
 struct SampleBuffer {
     SampleBuffer(const int pixelWidth, const int pixelHeight)
-        : pixelWidth(pixelWidth), pixelHeight(pixelHeight) {
+        : pixelWidth(pixelWidth), pixelHeight(pixelHeight), 
+        cropOffsetX(0), cropOffsetY(0), cropWidth(pixelWidth), cropHeight(pixelHeight) {
         pixels = std::unique_ptr<Pixel[]>(new Pixel[pixelWidth * pixelHeight]);
+    }
+
+    SampleBuffer(const int _pixelWidth, const int _pixelHeight,
+        const int _cropOffsetX, const int _cropOffsetY,
+        const int _cropWidth, const int _cropHeight)
+        : pixelWidth(_pixelWidth), pixelHeight(_pixelHeight),
+        cropOffsetX(_cropOffsetX), cropOffsetY(_cropOffsetY),
+        cropWidth(_cropWidth), cropHeight(_cropHeight) {
+
+        pixels = std::unique_ptr<Pixel[]>(new Pixel[cropWidth * cropHeight]);
     }
 
     std::unique_ptr<Pixel[]> pixels;
 
     const int pixelWidth;
     const int pixelHeight;
+    const int cropOffsetX;
+    const int cropOffsetY;
+    const int cropWidth;
+    const int cropHeight;
 };
 
 inline void Splat(SampleBuffer &buffer, const Vector2 screenPos, const Vector3 &contrib) {
-    int ix = Clamp(int(screenPos[0] * buffer.pixelWidth), 0, buffer.pixelWidth - 1);
-    int iy = Clamp(int(screenPos[1] * buffer.pixelHeight), 0, buffer.pixelHeight - 1);
+    int ix = Clamp(int(screenPos[0] * buffer.pixelWidth) - buffer.cropOffsetX, 0, buffer.cropWidth - 1);
+    int iy = Clamp(int(screenPos[1] * buffer.pixelHeight) - buffer.cropOffsetY, 0, buffer.cropHeight - 1);
 
-    Pixel &pixel = buffer.pixels[iy * buffer.pixelWidth + ix];
+    Pixel &pixel = buffer.pixels[iy * buffer.cropWidth + ix];
 
     if (contrib.allFinite()) {
         for (int i = 0; i < int(pixel.size()); i++) {
@@ -85,7 +100,8 @@ inline void MergeBuffer(const SampleBuffer &buffer1,
     assert(buffer1.pixelHeight == buffer2.pixelHeight);
     assert(buffer2.pixelWidth == bufferOut.pixelWidth);
     assert(buffer2.pixelHeight == bufferOut.pixelHeight);
-    for (int i = 0; i < bufferOut.pixelWidth * bufferOut.pixelHeight; i++) {
+    // TODO: add checks for crop params
+    for (int i = 0; i < bufferOut.cropWidth * bufferOut.cropHeight; i++) {
         const Pixel &pixel1 = buffer1.pixels[i];
         const Pixel &pixel2 = buffer2.pixels[i];
         Pixel &pixelOut = bufferOut.pixels[i];
@@ -99,7 +115,7 @@ inline void MergeBuffer(const SampleBuffer &buffer1,
 inline void BufferToFilm(const SampleBuffer &buffer,
                          Image3 *film,
                          const Float factor = Float(1.0)) {
-    for (int i = 0; i < buffer.pixelWidth * buffer.pixelHeight; i++) {
+    for (int i = 0; i < buffer.cropWidth * buffer.cropHeight; i++) {
         const Pixel &pixel = buffer.pixels[i];
         Vector3 color = factor * Vector3(Float(pixel[0]), Float(pixel[1]), Float(pixel[2]));
         film->At(i) = color;
