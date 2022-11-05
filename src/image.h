@@ -79,8 +79,15 @@ struct SampleBuffer {
 };
 
 inline void Splat(SampleBuffer &buffer, const Vector2 screenPos, const Vector3 &contrib) {
-    int ix = Clamp(int(screenPos[0] * buffer.pixelWidth) - buffer.cropOffsetX, 0, buffer.cropWidth - 1);
-    int iy = Clamp(int(screenPos[1] * buffer.pixelHeight) - buffer.cropOffsetY, 0, buffer.cropHeight - 1);
+    // int ix = Clamp(int(screenPos[0] * buffer.pixelWidth) - buffer.cropOffsetX, 0, buffer.cropWidth - 1);
+    // int iy = Clamp(int(screenPos[1] * buffer.pixelHeight) - buffer.cropOffsetY, 0, buffer.cropHeight - 1);
+
+    // ignore out of bound contribs
+    int ix = int(screenPos[0] * buffer.pixelWidth) - buffer.cropOffsetX;
+    int iy = int(screenPos[1] * buffer.pixelHeight) - buffer.cropOffsetY;
+
+    if( ix < 0 || ix > (buffer.cropWidth - 1) || iy < 0 || iy > (buffer.cropHeight - 1))
+        return;
 
     Pixel &pixel = buffer.pixels[iy * buffer.cropWidth + ix];
 
