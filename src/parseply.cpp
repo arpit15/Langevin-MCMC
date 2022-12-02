@@ -54,6 +54,7 @@ std::shared_ptr<TriMeshData> ParsePly(const std::string &filename,
     
     std::shared_ptr<TriMeshData> data = std::make_shared<TriMeshData>();
     data->isMoving = isMoving;
+    data->faceNormals = faceNormals;
 
     std::ifstream ifs(filename.c_str(), std::ifstream::in);
 

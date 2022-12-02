@@ -6,7 +6,8 @@ int GetTriangleMeshSerializedSize() {
            2 * (3 * 3 + 3 * 3) +  // (3 normal + 1 pos + 2 edges) * 2 time
            1 +                    // hasST
            3 * 2 +                // 3 st
-           1;                     // invTotalArea
+           1 +                     // invTotalArea
+           1;                     // faceNormals
 }
 
 BBox ComputeBBox(const std::shared_ptr<TriMeshData> data) {
@@ -187,7 +188,8 @@ void TriangleMesh::Serialize(const PrimID primID, Float *buffer) const {
     } else {
         buffer += 6;  // uv values not defined
     }
-    ::Serialize(inverse(totalArea), buffer);
+    buffer = ::Serialize(inverse(totalArea), buffer);
+    ::Serialize(BoolToFloat(data->faceNormals), buffer);
 }
 
 bool TriangleMesh::Intersect(const PrimID &primID,
@@ -225,6 +227,10 @@ bool TriangleMesh::Intersect(const PrimID &primID,
         if (!TriangleIntersect(raySeg, p0, e1, e2, n0, n1, n2, isect, uv)) {
             return false;
         }
+    }
+
+    if (data->faceNormals){
+        isect.shadingNormal = isect.geomNormal;
     }
 
     if (data->st.size() != 0) {
@@ -363,6 +369,13 @@ void TriangleMesh::Sample(const Vector2 rndParam,
         const Vector3 n2 = n2_0 * oneMinusTime + n2_1 * time;
         SampleDirect(p0, e1, e2, n0, n1, n2, rndParam, position, normal);
     }
+
+    if (data->faceNormals){
+        const Vector3 e1_0 = p1_0 - p0_0;
+        const Vector3 e2_0 = p2_0 - p0_0;
+        normal = Normalize(Cross(e1_0, e2_0));
+    }
+
     if (pdf != nullptr) {
         *pdf = inverse(totalArea);
     }
@@ -403,6 +416,9 @@ void IntersectTriangleMesh(const ADFloat *buffer,
 
     ADFloat invTotalArea;
     buffer = Deserialize(buffer, invTotalArea);
+
+    ADFloat faceNormals;
+    buffer = Deserialize(buffer, faceNormals);
 
     ADVector2 uv;
     if (isStatic) {
@@ -474,6 +490,23 @@ void IntersectTriangleMesh(const ADFloat *buffer,
     EndIf();
     st[0] = vst[0];
     st[1] = vst[1];
+
+    std::vector<CondExprCPtr> shNormals = CreateCondExprVec(3);
+    BeginIf( Eq(faceNormals, Float(1.0)), shNormals);
+    {
+        SetCondOutput({isect.geomNormal[0], isect.geomNormal[1], isect.geomNormal[2]});
+    }
+    BeginElse();
+    {
+        // keep the old way
+        SetCondOutput({isect.shadingNormal[0], isect.shadingNormal[1], isect.shadingNormal[2]});
+    }
+    EndIf();
+
+    isect.shadingNormal[0] = shNormals[0];
+    isect.shadingNormal[1] = shNormals[1];
+    isect.shadingNormal[2] = shNormals[2];
+
 }
 
 void SampleTriangleMesh(const ADFloat *buffer,
@@ -512,6 +545,9 @@ void SampleTriangleMesh(const ADFloat *buffer,
     ADFloat invTotalArea;
     buffer = Deserialize(buffer, invTotalArea);
 
+    ADFloat faceNormals;
+    buffer = Deserialize(buffer, faceNormals);
+
     if (isStatic) {
         SampleDirect(p0_0, e1_0, e2_0, n0_0, n1_0, n2_0, rndParam, position, normal);
     } else {
@@ -546,6 +582,23 @@ void SampleTriangleMesh(const ADFloat *buffer,
         normal[2] = ret[5];
     }
     pdf = invTotalArea;
+
+    std::vector<CondExprCPtr> shNormals = CreateCondExprVec(3);
+    BeginIf(Eq(faceNormals, Float(1.0)), shNormals);
+    {
+        ADVector3 geomNormal = Normalize(Cross(e1_0, e2_0));
+        SetCondOutput({geomNormal[0], geomNormal[1], geomNormal[2]});
+    }
+    BeginElse();
+    {
+        // keep the old way
+        SetCondOutput({normal[0], normal[1], normal[2]});
+    }
+    EndIf();
+
+    normal[0] = shNormals[0];
+    normal[1] = shNormals[1];
+    normal[2] = shNormals[2];
 }
 
 ADFloat SampleTriangleMeshPdf(const ADFloat *buffer) {
@@ -577,6 +630,8 @@ ADFloat SampleTriangleMeshPdf(const ADFloat *buffer) {
     buffer = Deserialize(buffer, uv2);
     ADFloat invTotalArea;
     buffer = Deserialize(buffer, invTotalArea);
+    ADFloat faceNormals;
+    buffer = Deserialize(buffer, faceNormals);
 
     return invTotalArea;
 }

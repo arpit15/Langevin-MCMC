@@ -27,6 +27,7 @@ struct TriMeshData {
     std::vector<Vector3> colors;
     std::vector<TriIndex> indices;
     bool isMoving;
+    bool faceNormals;
 };
 
 // Numerical robust computation of angle between unit vectors
