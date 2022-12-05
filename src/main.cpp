@@ -2,28 +2,28 @@
 // #include "spdlog/spdlog.h"
 #include "nanolog.hh"
 
-#include "parsescene.h"
-#include "pathtrace.h"
-#include "directintegrator.h"
-#include "mlt.h"
-#include "image.h"
 #include "camera.h"
-#include "texturesystem.h"
+#include "directintegrator.h"
+#include "image.h"
+#include "mlt.h"
 #include "parallel.h"
+#include "parsescene.h"
 #include "path.h"
+#include "pathtrace.h"
+#include "texturesystem.h"
 #include "timer.h"
 
 #include <iostream>
 #include <string>
-#include <unistd.h>
 #include <sys/resource.h>
+#include <unistd.h>
 #ifdef __APPLE__
-    #include <limits.h>
+#include <limits.h>
 #else
-    #include <linux/limits.h>   // PATH_MAX
+#include <linux/limits.h>  // PATH_MAX
 #endif
-#include <libgen.h>
 #include <filesystem>
+#include <libgen.h>
 #include <regex>
 
 namespace fs = std::filesystem;
@@ -54,13 +54,12 @@ std::vector<std::string> tokenize(const std::string &line) {
     std::stringstream check1(line);
     std::vector<std::string> tokens;
     std::string intermediate;
-      
+
     // Tokenizing w.r.t. space ' '
-    while(getline(check1, intermediate, '='))
-    {
+    while (getline(check1, intermediate, '=')) {
         tokens.push_back(intermediate);
     }
-      
+
     // Printing the token vector
     // for(int i = 0; i < tokens.size(); i++)
     //     cout << tokens[i] << '\n';
@@ -74,12 +73,13 @@ std::vector<std::string> tokenize2(const std::string &value) {
     return list;
 }
 
-void parseExtraArgs(std::unordered_map<std::string, std::string> &subs, args::ArgumentParser &parser, args::ValueFlagList<std::string> &subsArgs) {
-    
-    if (subsArgs) { 
-        for (const auto ch: args::get(subsArgs)) { 
+void parseExtraArgs(std::unordered_map<std::string, std::string> &subs,
+                    args::ArgumentParser &parser,
+                    args::ValueFlagList<std::string> &subsArgs) {
+    if (subsArgs) {
+        for (const auto ch : args::get(subsArgs)) {
             // split at =
-            // std::cout << "D: " << ch << std::endl; 
+            // std::cout << "D: " << ch << std::endl;
             NANOLOG_DEBUG("D: {}", ch);
             const std::vector<std::string> tokens = tokenize2(ch);
             if (tokens.size() == 2) {
@@ -88,9 +88,7 @@ void parseExtraArgs(std::unordered_map<std::string, std::string> &subs, args::Ar
                 std::cout << "Invalid substitution arguments : " << ch << std::endl;
                 exit(0);
             }
-            
-
-        } 
+        }
     }
 }
 
@@ -106,7 +104,8 @@ int main(int argc, char *argv[]) {
     args::Flag pathlib(group, "pathlib", "Compile pathlib", {'p', "pathlib"});
     args::Flag hessians(group, "hessians", "Compile hessians", {"h2mc", "bidirpathlib"});
     args::Flag mala(group, "mala", "Compile mala", {'m', "mala"});
-    args::ValueFlag<int> maxDervDepth(parser, "maxDervDepth", "Maximum Derivative Depth", {"maxD"}, 8);
+    args::ValueFlag<int> maxDervDepth(
+        parser, "maxDervDepth", "Maximum Derivative Depth", {"maxD"}, 8);
     args::ValueFlag<int> seedoffset(parser, "seedOffset", "Seed Offset", {"seedOffset"}, 0);
     args::PositionalList<std::string> filenamesArgs(parser, "filenamesArgs", "Filename args");
 
@@ -118,29 +117,22 @@ int main(int argc, char *argv[]) {
 
     std::unordered_map<std::string, std::string> subs;
 
-    try
-    {
+    try {
         parser.ParseCLI(argc, argv);
-    }
-    catch (args::Help)
-    {
+    } catch (args::Help) {
         std::cout << parser;
         return 0;
-    }
-    catch (args::ParseError e)
-    {
+    } catch (args::ParseError e) {
         std::cerr << e.what() << std::endl;
         std::cerr << parser;
         return 1;
-    }
-    catch (args::ValidationError e)
-    {
+    } catch (args::ValidationError e) {
         std::cerr << e.what() << std::endl;
         std::cerr << parser;
         return 1;
     }
 
-    // default 
+    // default
     // spdlog::set_level(nanolog::info);
     // // get log level
     // if (logLevel.Get() == "info"){
@@ -159,29 +151,25 @@ int main(int argc, char *argv[]) {
     //     spdlog::set_level(nanolog::trace);
     // }
 
-    // order 
+    // order
     // trace < debug < info < warn < error < fatal
     nanolog::set_level(nanolog::kINFO);
     // // get log level
-    if (logLevel.Get() == "info"){
+    if (logLevel.Get() == "info") {
         nanolog::set_level(nanolog::kINFO);
-    }
-    else if (logLevel.Get() == "debug") {
+    } else if (logLevel.Get() == "debug") {
         nanolog::set_level(nanolog::kDEBUG);
-    }
-    else if (logLevel.Get() == "err") {
+    } else if (logLevel.Get() == "err") {
         nanolog::set_level(nanolog::kERROR);
-    }
-    else if (logLevel.Get() == "warn") {
+    } else if (logLevel.Get() == "warn") {
         nanolog::set_level(nanolog::kWARN);
-    }
-    else if (logLevel.Get() == "trace") {
+    } else if (logLevel.Get() == "trace") {
         nanolog::set_level(nanolog::kTRACE);
     }
 
     try {
         DptInit();
-        
+
         std::vector<std::string> filenames;
 
         parseExtraArgs(subs, parser, subsArgs);
@@ -202,13 +190,12 @@ int main(int argc, char *argv[]) {
             std::cout << "MALA compile time:" << elapsed << std::endl;
         }
 
-        if ( !(pathlib || hessians || mala) &&
-            !filenamesArgs) {
+        if (!(pathlib || hessians || mala) && !filenamesArgs) {
             std::cout << "No fname were found" << std::endl;
             return 0;
         } else {
-            for (const std::string fname: args::get(filenamesArgs)) { 
-                // std::cout << "fname: " << fname << std::endl; 
+            for (const std::string fname : args::get(filenamesArgs)) {
+                // std::cout << "fname: " << fname << std::endl;
                 filenames.push_back(fname);
             }
         }
@@ -216,7 +203,7 @@ int main(int argc, char *argv[]) {
         // call invoking dir
         std::string cwd = getcwd(NULL, 0);
         std::string exeDir = getCurrExeDir();
-        
+
         for (std::string filename : filenames) {
             if (filename.rfind('/') != std::string::npos &&
                 chdir(filename.substr(0, filename.rfind('/')).c_str()) != 0) {
@@ -230,8 +217,8 @@ int main(int argc, char *argv[]) {
             std::unique_ptr<Scene> scene = ParseScene(basename, outFn.Get(), subs);
             // use the xml dirname
             fs::path xmlPath(filename);
-            scene->outputName =  xmlPath.parent_path() / (scene->outputName); 
-            
+            scene->outputName = xmlPath.parent_path() / (scene->outputName);
+
             std::cout << "Output filename : " << scene->outputName << std::endl;
             // return to the original executable dir after parsing scene
             if (chdir(exeDir.c_str()) != 0) {
@@ -239,37 +226,36 @@ int main(int argc, char *argv[]) {
             }
 
             std::string integrator = scene->options->integrator;
-                
+
             scene->options->seedOffset = seedoffset;
-            
+
             std::cout << "Scene parsing done !" << std::endl;
-            if (integrator == "direct"){
+            if (integrator == "direct") {
                 // return to the original executable dir after parsing scene
                 if (chdir(cwd.c_str()) != 0) {
                     Error("chdir failed");
                 }
                 Direct(scene.get());
-            }
-            else if (integrator == "mc") {
+            } else if (integrator == "mc") {
                 std::shared_ptr<const PathFuncLib> library =
                     BuildPathFuncLibrary(scene->options->bidirectional, maxDervDepth);
-                
+
                 // return to the original executable dir after parsing scene
                 if (chdir(cwd.c_str()) != 0) {
                     Error("chdir failed");
                 }
                 PathTrace(scene.get(), library, tonemap);
             } else if (integrator == "mcmc") {
-                if (scene->options->mala) { // MALA builds only first-order derivatives
-                    std::shared_ptr<const PathFuncLib> library = 
+                if (scene->options->mala) {  // MALA builds only first-order derivatives
+                    std::shared_ptr<const PathFuncLib> library =
                         BuildPathFuncLibrary2(maxDervDepth);
-                    
+
                     // return to the original executable dir after parsing scene
                     if (chdir(cwd.c_str()) != 0) {
                         Error("chdir failed");
                     }
                     MLT(scene.get(), library, tonemap);
-                } else if (scene->options->h2mc) {    // Hessian otherwise 
+                } else if (scene->options->h2mc) {  // Hessian otherwise
                     std::shared_ptr<const PathFuncLib> library =
                         BuildPathFuncLibrary(scene->options->bidirectional, maxDervDepth);
                     // return to the original executable dir after parsing scene
@@ -280,7 +266,7 @@ int main(int argc, char *argv[]) {
                 } else {
                     // TODO: create a separate lib for isotropic mutations
                     // HACK: send MALA lib
-                    std::shared_ptr<const PathFuncLib> library = 
+                    std::shared_ptr<const PathFuncLib> library =
                         BuildPathFuncLibrary2(maxDervDepth);
 
                     if (chdir(cwd.c_str()) != 0) {
@@ -291,15 +277,13 @@ int main(int argc, char *argv[]) {
             } else {
                 Error("Unknown integrator");
             }
-            
         }
         DptCleanup();
-    } 
-    catch (std::exception &ex) {
+    } catch (std::exception &ex) {
         std::cerr << ex.what() << std::endl;
         TerminateWorkerThreads();
         return 1;
     }
-    
+
     return 0;
 }

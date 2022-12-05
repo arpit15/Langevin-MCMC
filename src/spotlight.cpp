@@ -134,10 +134,8 @@ void SpotLight::Emit(const BSphere & /*sceneSphere*/,
     Vector3 lightPos = XformPoint(trao, origin);
     ray.org = lightPos;
 
-    ray.dir = SampleCone(rndParamDir, cosCutoffAngle);
-
-    Matrix4x4 trao_l = Interpolate(toLight, 0.f);
-    Vector3 local = XformVector(trao_l, ray.dir);
+    Vector3 local = SampleCone(rndParamDir, cosCutoffAngle);
+    ray.dir = XformVector(trao, local);
 
     Vector3 fallOffTerm = falloffCurve(local, cutoffAngle, beamWidth);
     emission = this->emission.cwiseProduct(fallOffTerm);
@@ -197,8 +195,9 @@ void EmitSpotLight(const ADFloat *buffer,
     lightPos = XformPoint(trao, origin);
 
     ray.org = lightPos;
-    ray.dir = SampleCone(rndParamDir, cos(cutoffAngle));
-    ADVector3 local = ray.dir;
+    ADVector3 local = SampleCone(rndParamDir, cos(cutoffAngle));
+    ray.dir = XformVector(trao, local);
+
     emission = emission_.cwiseProduct(falloffCurve(local, cutoffAngle, beamWidth));
     emissionPdf = c_INVTWOPI/ (1.f - cos(cutoffAngle));
     cosAtLight = Const<ADFloat>(1.0);
